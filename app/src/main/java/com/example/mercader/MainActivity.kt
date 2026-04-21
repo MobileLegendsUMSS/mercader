@@ -1,4 +1,5 @@
 package com.example.mercader
+import com.example.mercader.ui.admin.AdminHomeScreen
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -25,13 +26,14 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val viewModel: GameFormViewModel = hiltViewModel()
+                    AdminHomeScreen()
+                    //val viewModel: GameFormViewModel = hiltViewModel()
 
-                    GameFormScreen(
-                        viewModel = viewModel,
-                        onEventSaved = {
-                        }
-                    )
+                    //GameFormScreen(
+                    //    viewModel = viewModel,
+                    //    onEventSaved = {
+                    //    }
+                    //)
                 }
             }
         }
