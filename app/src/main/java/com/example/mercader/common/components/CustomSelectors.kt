@@ -11,6 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,29 +31,42 @@ fun <T> CustomSelector(
     var showDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
-        OutlinedTextField(
-            value = value?.let { itemToString(it) } ?: "",
-            onValueChange = {},
-            label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-            placeholder = { Text(placeholder) },
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
-                .clickable(enabled = enabled) { showDialog = true },
-            readOnly = true,
-            enabled = enabled,
-            isError = isError,
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Desplegar opciones"
+                .clickable { if (options.isNotEmpty()) showDialog = true }
+        ) {
+            OutlinedTextField(
+                value = value?.let { itemToString(it) } ?: "",
+                onValueChange = {},
+                label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                placeholder = { Text(placeholder) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                readOnly = true,
+                enabled = true,
+                isError = isError,
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = "Desplegar opciones"
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedTextColor = if (options.isEmpty())
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    else
+                        MaterialTheme.colorScheme.onSurface,
+                    unfocusedBorderColor = if (options.isEmpty())
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    else
+                        MaterialTheme.colorScheme.outline,
                 )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
-        )
+        }
 
         if (isError && errorMessage.isNotBlank()) {
             Text(
@@ -62,49 +77,76 @@ fun <T> CustomSelector(
             )
         }
 
+        // Dialog nativo — se renderiza en una ventana separada del sistema,
+        // completamente por encima del verticalScroll del FormContainer
         if (showDialog) {
-            AlertDialog(
+            Dialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("Seleccionar $label") },
-                text = {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 400.dp)
+                properties = DialogProperties(
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true,
+                    usePlatformDefaultWidth = true
+                )
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .wrapContentHeight(),
+                    shape = MaterialTheme.shapes.large,
+                    tonalElevation = 6.dp
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp)
                     ) {
-                        items(options) { option ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onValueChange(option)
-                                        showDialog = false
-                                    }
-                                    .padding(vertical = 12.dp, horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = option == value,
-                                    onClick = {
-                                        onValueChange(option)
-                                        showDialog = false
-                                    }
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = itemToString(option),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
+                        Text(
+                            text = "Seleccionar $label",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp)
+                        ) {
+                            items(options) { option ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            onValueChange(option)
+                                            showDialog = false
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = option == value,
+                                        onClick = {
+                                            onValueChange(option)
+                                            showDialog = false
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = itemToString(option),
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
                             }
                         }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showDialog = false }) {
-                        Text("Cancelar")
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        TextButton(
+                            onClick = { showDialog = false },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text("Cancelar")
+                        }
                     }
                 }
-            )
+            }
         }
     }
 }
@@ -134,4 +176,3 @@ fun StringSelector(
         itemToString = { it }
     )
 }
-
