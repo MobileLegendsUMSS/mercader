@@ -54,7 +54,6 @@ class GameRepositoryImpl @Inject constructor(
             }
 
             val response = apiService.getGameTypes()
-            println("Hola ejandskajsdasd $response")
             if (response.isSuccessful) {
                 val gameCategoryResponse = response.body()
                 if (gameCategoryResponse != null && gameCategoryResponse.success) {
@@ -79,7 +78,13 @@ class GameRepositoryImpl @Inject constructor(
 
             val response = apiService.getDifficulties()
             if (response.isSuccessful) {
-                Result.success(response.body() ?: emptyList())
+                val gameDifficultiesResponse = response.body()
+                if (gameDifficultiesResponse != null && gameDifficultiesResponse.success) {
+                    val gameDiff = gameDifficultiesResponse.data.map { it.descripcion }
+                    Result.success(gameDiff)
+                } else {
+                    Result.failure(Exception("Error en la respuesta del servidor"))
+                }
             } else {
                 Result.failure(HttpException(response))
             }
@@ -96,7 +101,13 @@ class GameRepositoryImpl @Inject constructor(
 
             val response = apiService.getEditorials()
             if (response.isSuccessful) {
-                Result.success(response.body() ?: emptyList())
+                val gameEditorialResponse = response.body()
+                if (gameEditorialResponse != null && gameEditorialResponse.success) {
+                    val gameEditorials  = gameEditorialResponse.data.map { it.nombre }
+                    Result.success(gameEditorials)
+                } else {
+                    Result.failure(Exception("Error en la respuesta del servidor"))
+                }
             } else {
                 Result.failure(HttpException(response))
             }

@@ -21,7 +21,7 @@ class GameFormViewModel @Inject constructor(
     val state: StateFlow<GameFormState> = _state.asStateFlow()
 
     init {
-        println("=====> ViewModel CREADO")
+
         loadInitialData()
     }
 
@@ -31,8 +31,6 @@ class GameFormViewModel @Inject constructor(
 
             try {
                 val gameTypesResult = gameRepository.getGameTypes()
-                println("Categorias")
-                println("Categorias $gameTypesResult")
                 val gameTypes = if (gameTypesResult.isSuccess) {
                     gameTypesResult.getOrNull() ?: emptyList()
                     //println("Categorias $gameTypesResult")
@@ -86,7 +84,7 @@ class GameFormViewModel @Inject constructor(
     }
 
     fun updateCategory(category: String) {
-        _state.update { it.copy(category = category) }  // ← Antes era description
+        _state.update { it.copy(category = category) }
     }
 
     fun updateMinPerson(minP: Float) {
@@ -171,10 +169,6 @@ class GameFormViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun clearError() {
-        _state.update { it.copy(errorMessage = null) }
     }
 
     fun resetSuccess() {

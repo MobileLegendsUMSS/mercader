@@ -16,9 +16,9 @@ interface GameApiService {
     @GET("api/categorias")
     suspend fun getGameTypes(): Response<GameCategoryResponseDTO<List<GameCategory>>>
     @GET("api/dificultades")
-    suspend fun getDifficulties(): Response<List<String>>
+    suspend fun getDifficulties(): Response<GameDifficultyResponseDTO<List<GameDifficulty>>>
 
     @GET("api/editoriales")
-    suspend fun getEditorials(): Response<List<String>>
+    suspend fun getEditorials(): Response<GameEditorialResponseDTO<List<GameEditorial>>>
 }
 

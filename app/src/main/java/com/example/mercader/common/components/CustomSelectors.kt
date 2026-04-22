@@ -11,8 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,45 +26,37 @@ fun <T> CustomSelector(
     itemToString: (T) -> String = { it.toString() },
     placeholder: String = "Seleccionar..."
 ) {
+    println("CustomSelector - Label: $label, Enabled: $enabled, Options count: ${options.size}, Value: $value")
+
     var showDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
-        Box(
+        OutlinedTextField(
+            value = value?.let { itemToString(it) } ?: "",
+            onValueChange = {},
+            label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+            placeholder = { Text(placeholder) },
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { if (options.isNotEmpty()) showDialog = true }
-        ) {
-            OutlinedTextField(
-                value = value?.let { itemToString(it) } ?: "",
-                onValueChange = {},
-                label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-                placeholder = { Text(placeholder) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                readOnly = true,
-                enabled = true,
-                isError = isError,
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Desplegar opciones"
-                    )
+                .height(62.dp)
+                .clickable(enabled = enabled) {
+                    println("CustomSelector clicked - Label: $label, ShowDialog: true")
+                    showDialog = true
                 },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedTextColor = if (options.isEmpty())
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                    else
-                        MaterialTheme.colorScheme.onSurface,
-                    unfocusedBorderColor = if (options.isEmpty())
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                    else
-                        MaterialTheme.colorScheme.outline,
+            readOnly = true,
+            enabled = enabled,
+            isError = isError,
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Desplegar opciones"
                 )
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
-        }
+        )
 
         if (isError && errorMessage.isNotBlank()) {
             Text(
@@ -76,78 +66,60 @@ fun <T> CustomSelector(
                 modifier = Modifier.padding(start = 12.dp, top = 2.dp)
             )
         }
+    }
 
-        // Dialog nativo — se renderiza en una ventana separada del sistema,
-        // completamente por encima del verticalScroll del FormContainer
-        if (showDialog) {
-            Dialog(
-                onDismissRequest = { showDialog = false },
-                properties = DialogProperties(
-                    dismissOnBackPress = true,
-                    dismissOnClickOutside = true,
-                    usePlatformDefaultWidth = true
-                )
-            ) {
-                Surface(
+    if (showDialog) {
+        println("CustomSelector Dialog opened - Label: $label, Options: $options")
+        AlertDialog(
+            onDismissRequest = {
+                println("CustomSelector Dialog dismissed - Label: $label")
+                showDialog = false
+            },
+            title = { Text("Seleccionar $label") },
+            text = {
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .wrapContentHeight(),
-                    shape = MaterialTheme.shapes.large,
-                    tonalElevation = 6.dp
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(24.dp)
-                    ) {
-                        Text(
-                            text = "Seleccionar $label",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-
-                        LazyColumn(
+                    items(options) { option ->
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 400.dp)
-                        ) {
-                            items(options) { option ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            onValueChange(option)
-                                            showDialog = false
-                                        }
-                                        .padding(vertical = 12.dp, horizontal = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    RadioButton(
-                                        selected = option == value,
-                                        onClick = {
-                                            onValueChange(option)
-                                            showDialog = false
-                                        }
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = itemToString(option),
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
+                                .clickable {
+                                    println("CustomSelector option selected - Label: $label, Selected: ${itemToString(option)}")
+                                    onValueChange(option)
+                                    showDialog = false
                                 }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        TextButton(
-                            onClick = { showDialog = false },
-                            modifier = Modifier.align(Alignment.End)
+                                .padding(vertical = 12.dp, horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Cancelar")
+                            RadioButton(
+                                selected = option == value,
+                                onClick = {
+                                    println("CustomSelector RadioButton clicked - Label: $label, Selected: ${itemToString(option)}")
+                                    onValueChange(option)
+                                    showDialog = false
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = itemToString(option),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     }
                 }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    println("CustomSelector Cancel button clicked - Label: $label")
+                    showDialog = false
+                }) {
+                    Text("Cancelar")
+                }
             }
-        }
+        )
     }
 }
 
@@ -163,8 +135,9 @@ fun StringSelector(
     enabled: Boolean = true,
     placeholder: String = "Seleccionar..."
 ) {
+    println("StringSelector - Label: $label, Value: '$value', Options count: ${options.size}, Enabled: $enabled")
     CustomSelector(
-        value = value,
+        value = value.ifEmpty { null },
         onValueChange = onValueChange,
         label = label,
         options = options,
