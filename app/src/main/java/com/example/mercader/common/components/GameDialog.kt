@@ -27,7 +27,7 @@ fun GameDetailDialog(
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(f
+        properties = DialogProperties(
             dismissOnBackPress = true,
             dismissOnClickOutside = true
         )
