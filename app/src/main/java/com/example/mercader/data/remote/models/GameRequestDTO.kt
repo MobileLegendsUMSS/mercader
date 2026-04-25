@@ -1,16 +1,16 @@
 package com.example.mercader.data.remote.models
 
 data class GameRequestDTO(
-    val title: String,
-    val description: String,
+    val titulo: String,
+    val descripcion: String,
     val tutorial: String,
     val category: String,
-    val nMinPerson: Int,
-    val nMaxPerson: Int,
-    val minMinutes: Int,
-    val maxMinutes: Int,
-    val difficulty: String,
-    val editorial: String,
-    val stock: Int,
-    val price: Float
+    val cant_min_pers: Int,
+    val cant_max_pers: Int,
+    val duracion_min: Int,
+    val duracion_max: Int,
+    val id_dificultad: String,
+    val id_editorial: String,
+    val cantidad: Int,
+    val precio: Float
 )

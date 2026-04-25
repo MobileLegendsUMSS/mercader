@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> CustomSelector(
@@ -26,8 +25,6 @@ fun <T> CustomSelector(
     itemToString: (T) -> String = { it.toString() },
     placeholder: String = "Seleccionar..."
 ) {
-    println("CustomSelector - Label: $label, Enabled: $enabled, Options count: ${options.size}, Value: $value")
-
     var showDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
@@ -39,10 +36,7 @@ fun <T> CustomSelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(62.dp)
-                .clickable(enabled = enabled) {
-                    println("CustomSelector clicked - Label: $label, ShowDialog: true")
-                    showDialog = true
-                },
+                .clickable(enabled = enabled) { showDialog = true },
             readOnly = true,
             enabled = enabled,
             isError = isError,
@@ -69,12 +63,8 @@ fun <T> CustomSelector(
     }
 
     if (showDialog) {
-        println("CustomSelector Dialog opened - Label: $label, Options: $options")
         AlertDialog(
-            onDismissRequest = {
-                println("CustomSelector Dialog dismissed - Label: $label")
-                showDialog = false
-            },
+            onDismissRequest = { showDialog = false },
             title = { Text("Seleccionar $label") },
             text = {
                 LazyColumn(
@@ -87,7 +77,6 @@ fun <T> CustomSelector(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    println("CustomSelector option selected - Label: $label, Selected: ${itemToString(option)}")
                                     onValueChange(option)
                                     showDialog = false
                                 }
@@ -97,7 +86,6 @@ fun <T> CustomSelector(
                             RadioButton(
                                 selected = option == value,
                                 onClick = {
-                                    println("CustomSelector RadioButton clicked - Label: $label, Selected: ${itemToString(option)}")
                                     onValueChange(option)
                                     showDialog = false
                                 }
@@ -112,10 +100,7 @@ fun <T> CustomSelector(
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    println("CustomSelector Cancel button clicked - Label: $label")
-                    showDialog = false
-                }) {
+                TextButton(onClick = { showDialog = false }) {
                     Text("Cancelar")
                 }
             }
@@ -123,6 +108,7 @@ fun <T> CustomSelector(
     }
 }
 
+// StringSelector mejorado - trabaja con objetos por debajo
 @Composable
 fun StringSelector(
     value: String,
@@ -135,17 +121,28 @@ fun StringSelector(
     enabled: Boolean = true,
     placeholder: String = "Seleccionar..."
 ) {
-    println("StringSelector - Label: $label, Value: '$value', Options count: ${options.size}, Enabled: $enabled")
+    // Convertir lista de strings a objetos con id y descripción
+    val mappedOptions = remember(options) {
+        options.map { Pair(it, it) } // id = string, descripcion = string
+    }
+
+    // Encontrar el objeto correspondiente al valor actual
+    val selectedOption = remember(value, mappedOptions) {
+        mappedOptions.find { it.first == value }
+    }
+
     CustomSelector(
-        value = value.ifEmpty { null },
-        onValueChange = onValueChange,
+        value = selectedOption,
+        onValueChange = { selectedPair ->
+            onValueChange(selectedPair.first)
+        },
         label = label,
-        options = options,
+        options = mappedOptions,
         modifier = modifier,
         isError = isError,
         errorMessage = errorMessage,
         enabled = enabled,
-        placeholder = placeholder,
-        itemToString = { it }
+        itemToString = { it.second }, // Muestra la descripción
+        placeholder = placeholder
     )
 }

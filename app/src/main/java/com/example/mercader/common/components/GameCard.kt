@@ -73,7 +73,7 @@ fun GameCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = game.category,
+                    text = game.category.descripcion,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,

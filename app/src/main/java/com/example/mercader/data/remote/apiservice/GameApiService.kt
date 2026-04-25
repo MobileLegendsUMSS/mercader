@@ -8,7 +8,7 @@ import retrofit2.http.POST
 
 interface GameApiService {
 
-    @POST("api/games")
+    @POST("api/juegos")
     suspend fun saveGame(
         @Body game: GameRequestDTO
     ): Response<GameResponseDTO>

@@ -26,21 +26,21 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
-                ) /*{
-                    //val viewModel: GameFormViewModel = hiltViewModel()
+                ) {
+                    val viewModel: GameFormViewModel = hiltViewModel()
                    GameFormScreen(
                        viewModel = viewModel,
                        onEventSaved = {
                       }
                   )
-               }*/
-                {
-                    val viewModel: CollectionViewModel = hiltViewModel()
-                    CollectionScreen(
-                        viewModel = viewModel
-                    )
+               }
+                /*{
+                    /*val viewModel: CollectionViewModel = hiltViewModel()
+                    //CollectionScreen(
+                    //    viewModel = viewModel
+                    )*/
 
-                }
+                }*/
 
            }
        }

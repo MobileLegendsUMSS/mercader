@@ -2,6 +2,9 @@ package com.example.mercader.ui.screen.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mercader.data.remote.models.Category
+import com.example.mercader.data.remote.models.Difficulty
+import com.example.mercader.data.remote.models.Editorial
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.repositories.GameRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,13 +36,13 @@ class GameFormViewModel @Inject constructor(
                 val gameTypesResult = gameRepository.getGameTypes()
                 val gameTypes = if (gameTypesResult.isSuccess) {
                     gameTypesResult.getOrNull() ?: emptyList()
-                    //println("Categorias $gameTypesResult")
                 } else {
                     emptyList()
                 }
-
                 val difficultiesResult = gameRepository.getDifficulties()
+
                 val difficulties = if (difficultiesResult.isSuccess) {
+                    println("Paso Penultimo${difficultiesResult.getOrNull()}")
                     difficultiesResult.getOrNull() ?: emptyList()
                 } else {
                     emptyList()
@@ -83,7 +86,7 @@ class GameFormViewModel @Inject constructor(
         _state.update { it.copy(tutorial = tutorial) }
     }
 
-    fun updateCategory(category: String) {
+    fun updateCategory(category: Category) {
         _state.update { it.copy(category = category) }
     }
 
@@ -103,11 +106,11 @@ class GameFormViewModel @Inject constructor(
         _state.update { it.copy(maxMinutes = maxT.toInt()) }
     }
 
-    fun updateDifficulty(difficulty: String) {
+    fun updateDifficulty(difficulty: Difficulty) {
         _state.update { it.copy(difficulty = difficulty) }
     }
 
-    fun updateEditorial(editorial: String) {
+    fun updateEditorial(editorial: Editorial) {
         _state.update { it.copy(editorial = editorial) }
     }
 

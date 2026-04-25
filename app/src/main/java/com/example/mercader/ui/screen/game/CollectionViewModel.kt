@@ -2,6 +2,9 @@ package com.example.mercader.ui.screen.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mercader.data.remote.models.Category
+import com.example.mercader.data.remote.models.Difficulty
+import com.example.mercader.data.remote.models.Editorial
 import com.example.mercader.domain.models.Game
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,13 +42,13 @@ class CollectionViewModel : ViewModel() {
             title = "Catan",
             description = "Juegazo dadasd",
             tutorial = "http.hola.com",
-            category = "Estrategia",
+            category = Category("5","Estrategia"),
             nMinPerson = 3,
             nMaxPerson=5,
             minMinutes=30,
             maxMinutes=60,
-            difficulty = "Hard",
-            editorial = "Devir",
+            difficulty = Difficulty("5","Estrategia"),
+            editorial = Editorial("5","Estrategia"),
             stock =20,
             price=21f
         ),
@@ -54,13 +57,13 @@ class CollectionViewModel : ViewModel() {
             title = "kuy",
             description = "ykuyy dadasd",
             tutorial = "yiuyui.hola",
-            category = "Estrayiuyuitegia",
+            category = Category("5","Estrategia"),
             nMinPerson = 3,
             nMaxPerson=5,
             minMinutes=30,
             maxMinutes=60,
-            difficulty = "yiuyui",
-            editorial = "jkljklghd",
+            difficulty = Difficulty("5","Estrategia"),
+            editorial = Editorial("5","Estrategia"),
             stock =20,
             price=21f
         ),
@@ -69,13 +72,13 @@ class CollectionViewModel : ViewModel() {
             title = "Hola",
             description = "sdas dadasd",
             tutorial = "asdasda.hola",
-            category = "asdadsa",
+            category = Category("5","Estrategia"),
             nMinPerson = 3,
             nMaxPerson=5,
             minMinutes=30,
             maxMinutes=60,
-            difficulty = "asd",
-            editorial = "Devasdadir",
+            difficulty = Difficulty("5","Estrategia"),
+            editorial = Editorial("5","Estrategia"),
             stock =20,
             price=21f
         )

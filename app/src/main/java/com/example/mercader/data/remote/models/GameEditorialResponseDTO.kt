@@ -1,11 +1,16 @@
 package com.example.mercader.data.remote.models
 
 data class GameEditorial(
-    val id: String,
+    val _id: String,
     val pais: String,
     val nombre: String,
     val createdAt: String,
     val updatedAt: String
+)
+
+data class Editorial(
+    val id: String,
+    val nombre: String
 )
 data class GameEditorialResponseDTO<T>(
     val success: Boolean,

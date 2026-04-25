@@ -146,7 +146,7 @@ fun GameDetailDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    if (game.category.isEmpty()) {
+                    if (game.category.id=="") {
                         Text(
                             text = "Sin categorías",
                             style = MaterialTheme.typography.bodyMedium,
@@ -188,13 +188,13 @@ fun GameDetailDialog(
                     ) {
                         LabeledField(
                             label = "Dificultad",
-                            value = game.difficulty,
+                            value = game.difficulty.descripcion,
                             modifier = Modifier.weight(1f)
                         )
 
                         LabeledField(
                             label = "Editorial",
-                            value = game.editorial,
+                            value = game.editorial.nombre,
                             modifier = Modifier.weight(1f)
                         )
                     }

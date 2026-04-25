@@ -52,13 +52,12 @@ fun GameFormScreen(
             onValueChange = { viewModel.updateTutorial(it) },
             label = "Enlace de Tutorial",
         )
-        println("Categorias $state.gameCategories")
-        StringSelector(
+        CustomSelector(
             value = state.category,
             onValueChange = { viewModel.updateCategory(it) },
             label = "Categoria del juego",
-
             options = state.gameCategories,
+            itemToString = { it.descripcion },
             enabled = true
         )
 
@@ -86,20 +85,22 @@ fun GameFormScreen(
             value = state.maxMinutes.toFloat(),
             onValueChange = { viewModel.updateMaxTime(it) }
         )
-
-        StringSelector(
+        println("Paso Final"+state.difficulties)
+        CustomSelector(
             value = state.difficulty,
             onValueChange = { viewModel.updateDifficulty(it) },
             label = "Dificultad del juego",
             options = state.difficulties,
+            itemToString = { it.descripcion },
             enabled = true
         )
 
-        StringSelector(
+        CustomSelector(
             value = state.editorial,
             onValueChange = { viewModel.updateEditorial(it) },
-            label = "Editorial",
+            label = "Editorial del juego",
             options = state.editorials,
+            itemToString = {it.nombre},
             enabled = true
         )
 
@@ -122,8 +123,7 @@ fun GameFormScreen(
             text = "Guardar Juego",
             onClick = { viewModel.saveGame() },
             isLoading = state.isSaving,
-            enabled = state.title.isNotBlank() &&
-                    state.category.isNotBlank()
+            enabled = state.title.isNotBlank()
         )
     }
 }
