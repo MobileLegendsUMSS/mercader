@@ -1,5 +1,6 @@
-package com.example.mercader.ui.screen.game
+package com.example.mercader.ui.screens.games
 import com.example.mercader.data.remote.models.*
+
 data class GameFormState(
     val id: String = "",
     val title: String = "",

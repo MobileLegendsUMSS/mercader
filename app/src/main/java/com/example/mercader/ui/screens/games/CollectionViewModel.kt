@@ -1,4 +1,4 @@
-package com.example.mercader.ui.screen.game
+package com.example.mercader.ui.screens.games
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

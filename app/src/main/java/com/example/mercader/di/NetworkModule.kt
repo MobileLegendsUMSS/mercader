@@ -1,5 +1,6 @@
 package com.example.mercader.di
 
+import com.example.mercader.common.constants.AppConstants
 import com.example.mercader.data.remote.apiservice.GameApiService
 import dagger.Module
 import dagger.Provides
@@ -15,7 +16,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
@@ -35,7 +35,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("https://mercader-server.onrender.com/")
+            .baseUrl(AppConstants.BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

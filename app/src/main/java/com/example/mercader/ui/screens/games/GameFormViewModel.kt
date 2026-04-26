@@ -1,4 +1,4 @@
-package com.example.mercader.ui.screen.game
+package com.example.mercader.ui.screens.games
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,7 +24,6 @@ class GameFormViewModel @Inject constructor(
     val state: StateFlow<GameFormState> = _state.asStateFlow()
 
     init {
-
         loadInitialData()
     }
 
