@@ -1,9 +1,11 @@
-package com.example.mercader.ui.screens.games
+package com.example.mercader.ui.screen.games
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mercader.data.remote.models.Category
+import com.example.mercader.data.remote.models.Difficulty
+import com.example.mercader.data.remote.models.Editorial
 import com.example.mercader.domain.models.Game
-import com.example.mercader.data.repositories.GameRepositoryImpl
 import com.example.mercader.domain.repositories.GameRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +24,7 @@ class GameFormViewModel @Inject constructor(
     val state: StateFlow<GameFormState> = _state.asStateFlow()
 
     init {
+
         loadInitialData()
     }
 
@@ -30,11 +33,33 @@ class GameFormViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
 
             try {
+                val gameTypesResult = gameRepository.getGameTypes()
+                val gameTypes = if (gameTypesResult.isSuccess) {
+                    gameTypesResult.getOrNull() ?: emptyList()
+                } else {
+                    emptyList()
+                }
+                val difficultiesResult = gameRepository.getDifficulties()
+
+                val difficulties = if (difficultiesResult.isSuccess) {
+                    println("Paso Penultimo${difficultiesResult.getOrNull()}")
+                    difficultiesResult.getOrNull() ?: emptyList()
+                } else {
+                    emptyList()
+                }
+
+                val editorialsResult = gameRepository.getEditorials()
+                val editorials = if (editorialsResult.isSuccess) {
+                    editorialsResult.getOrNull() ?: emptyList()
+                } else {
+                    emptyList()
+                }
+
                 _state.update { currentState ->
                     currentState.copy(
-                        gameCategories = gameRepository.getGameTypes(),
-                        difficulties = gameRepository.getDifficulties(),
-                        editorials = gameRepository.getEditorials(),
+                        gameCategories = gameTypes,
+                        difficulties = difficulties,
+                        editorials = editorials,
                         isLoading = false
                     )
                 }
@@ -57,13 +82,12 @@ class GameFormViewModel @Inject constructor(
         _state.update { it.copy(description = description) }
     }
 
-    fun updateTutorial(tutorial : String){
+    fun updateTutorial(tutorial: String) {
         _state.update { it.copy(tutorial = tutorial) }
-
     }
 
-    fun updateCategory(category : String){
-        _state.update { it.copy(description = category) }
+    fun updateCategory(category: Category) {
+        _state.update { it.copy(category = category) }
     }
 
     fun updateMinPerson(minP: Float) {
@@ -82,23 +106,23 @@ class GameFormViewModel @Inject constructor(
         _state.update { it.copy(maxMinutes = maxT.toInt()) }
     }
 
-    fun updateDifficulty(difficulty: String) {
+    fun updateDifficulty(difficulty: Difficulty) {
         _state.update { it.copy(difficulty = difficulty) }
     }
 
-    fun updateEditorial(editorial: String) {
+    fun updateEditorial(editorial: Editorial) {
         _state.update { it.copy(editorial = editorial) }
     }
 
     fun updateStock(stock: String) {
-        _state.update { it.copy(stock = stock.toInt()) }
+        _state.update { it.copy(stock = stock.toIntOrNull() ?: 0) }
     }
 
     fun updatePrice(price: String) {
-        _state.update { it.copy(price = price.toFloat()) }
+        _state.update { it.copy(price = price.toFloatOrNull() ?: 0f) }
     }
 
-    fun saveEvent() {
+    fun saveGame() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
 
@@ -123,12 +147,19 @@ class GameFormViewModel @Inject constructor(
                 val result = gameRepository.saveGame(game)
 
                 if (result.isSuccess) {
-                    _state.update { it.copy(isSaving = false, saveSuccess = true) }
-                } else {
                     _state.update {
                         it.copy(
                             isSaving = false,
-                            errorMessage = "Error al guardar el juego"
+                            saveSuccess = true,
+                            errorMessage = null
+                        )
+                    }
+                } else {
+                    val error = result.exceptionOrNull()?.message ?: "Error desconocido"
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Error al guardar el juego: $error"
                         )
                     }
                 }
@@ -141,10 +172,6 @@ class GameFormViewModel @Inject constructor(
                 }
             }
         }
-    }
-
-    fun clearError() {
-        _state.update { it.copy(errorMessage = null) }
     }
 
     fun resetSuccess() {

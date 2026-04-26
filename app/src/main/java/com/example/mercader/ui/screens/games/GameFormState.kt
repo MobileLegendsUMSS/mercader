@@ -1,23 +1,24 @@
 package com.example.mercader.ui.screens.games
+import com.example.mercader.data.remote.models.*
 
 data class GameFormState(
     val id: String = "",
     val title: String = "",
     val description: String = "",
     val tutorial: String = "",
-    val category: String = "",
+    val category: Category = Category("",""),
     val nMinPerson: Int = 0,
     val nMaxPerson: Int = 0,
     val minMinutes: Int = 0,
     val maxMinutes: Int = 0,
-    val difficulty: String = "",
-    val editorial: String = "",
+    val difficulty: Difficulty = Difficulty("",""),
+    val editorial: Editorial = Editorial("",""),
     val stock: Int = 0,
     val price: Float = 0f,
 
-    val gameCategories: List<String> = emptyList(),
-    val difficulties: List<String> = emptyList(),
-    val editorials: List<String> = emptyList(),
+    val gameCategories: List<Category> = emptyList(),
+    val difficulties: List<Difficulty> = emptyList(),
+    val editorials: List<Editorial> = emptyList(),
 
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,

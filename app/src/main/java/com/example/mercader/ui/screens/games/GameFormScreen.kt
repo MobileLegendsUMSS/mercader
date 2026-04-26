@@ -50,14 +50,13 @@ fun GameFormScreen(
             onValueChange = { viewModel.updateTutorial(it) },
             label = "Enlace de Tutorial",
         )
-
-
-        StringSelector(
+        CustomSelector(
             value = state.category,
             onValueChange = { viewModel.updateCategory(it) },
             label = "Categoria del juego",
             options = state.gameCategories,
-            enabled = state.category.isNotBlank()
+            itemToString = { it.descripcion },
+            enabled = true
         )
 
 
@@ -84,21 +83,23 @@ fun GameFormScreen(
             value = state.maxMinutes.toFloat(),
             onValueChange = { viewModel.updateMaxTime(it) }
         )
-
-        StringSelector(
+        println("Paso Final"+state.difficulties)
+        CustomSelector(
             value = state.difficulty,
             onValueChange = { viewModel.updateDifficulty(it) },
             label = "Dificultad del juego",
             options = state.difficulties,
-            enabled = state.difficulty.isNotBlank()
+            itemToString = { it.descripcion },
+            enabled = true
         )
 
-        StringSelector(
+        CustomSelector(
             value = state.editorial,
             onValueChange = { viewModel.updateEditorial(it) },
-            label = "Editorial",
+            label = "Editorial del juego",
             options = state.editorials,
-            enabled = state.editorial.isNotBlank()
+            itemToString = {it.nombre},
+            enabled = true
         )
 
         NumberTextField(
@@ -118,10 +119,9 @@ fun GameFormScreen(
         // ===== BOTONES =====
         PrimaryButton(
             text = "Guardar Juego",
-            onClick = { viewModel.saveEvent() },
+            onClick = { viewModel.saveGame() },
             isLoading = state.isSaving,
-            enabled = state.title.isNotBlank() &&
-                    state.category.isNotBlank()
+            enabled = state.title.isNotBlank()
         )
     }
 }

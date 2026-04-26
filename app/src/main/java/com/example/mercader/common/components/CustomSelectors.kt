@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> CustomSelector(
@@ -36,7 +35,7 @@ fun <T> CustomSelector(
             placeholder = { Text(placeholder) },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(62.dp)
                 .clickable(enabled = enabled) { showDialog = true },
             readOnly = true,
             enabled = enabled,
@@ -61,54 +60,55 @@ fun <T> CustomSelector(
                 modifier = Modifier.padding(start = 12.dp, top = 2.dp)
             )
         }
+    }
 
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text("Seleccionar $label") },
-                text = {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 400.dp)
-                    ) {
-                        items(options) { option ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onValueChange(option)
-                                        showDialog = false
-                                    }
-                                    .padding(vertical = 12.dp, horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = option == value,
-                                    onClick = {
-                                        onValueChange(option)
-                                        showDialog = false
-                                    }
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = itemToString(option),
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                            }
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Seleccionar $label") },
+            text = {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                ) {
+                    items(options) { option ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onValueChange(option)
+                                    showDialog = false
+                                }
+                                .padding(vertical = 12.dp, horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = option == value,
+                                onClick = {
+                                    onValueChange(option)
+                                    showDialog = false
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = itemToString(option),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
                         }
                     }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showDialog = false }) {
-                        Text("Cancelar")
-                    }
                 }
-            )
-        }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
+// StringSelector mejorado - trabaja con objetos por debajo
 @Composable
 fun StringSelector(
     value: String,
@@ -121,17 +121,28 @@ fun StringSelector(
     enabled: Boolean = true,
     placeholder: String = "Seleccionar..."
 ) {
+    // Convertir lista de strings a objetos con id y descripción
+    val mappedOptions = remember(options) {
+        options.map { Pair(it, it) } // id = string, descripcion = string
+    }
+
+    // Encontrar el objeto correspondiente al valor actual
+    val selectedOption = remember(value, mappedOptions) {
+        mappedOptions.find { it.first == value }
+    }
+
     CustomSelector(
-        value = value,
-        onValueChange = onValueChange,
+        value = selectedOption,
+        onValueChange = { selectedPair ->
+            onValueChange(selectedPair.first)
+        },
         label = label,
-        options = options,
+        options = mappedOptions,
         modifier = modifier,
         isError = isError,
         errorMessage = errorMessage,
         enabled = enabled,
-        placeholder = placeholder,
-        itemToString = { it }
+        itemToString = { it.second }, // Muestra la descripción
+        placeholder = placeholder
     )
 }
-
