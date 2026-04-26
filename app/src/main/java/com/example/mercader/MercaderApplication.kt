@@ -1,8 +1,7 @@
+    package com.example.mercader
 
-package com.example.mercader
+    import android.app.Application
+    import dagger.hilt.android.HiltAndroidApp
 
-import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
-
-@HiltAndroidApp
-class MercaderApplication : Application()
+    @HiltAndroidApp
+    class MercaderApplication : Application()

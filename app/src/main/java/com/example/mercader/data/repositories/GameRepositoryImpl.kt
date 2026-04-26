@@ -3,12 +3,14 @@ package com.example.mercader.data.repositories
 import com.example.mercader.common.utils.NetworkHandler
 import com.example.mercader.data.remote.apiservice.GameApiService
 import com.example.mercader.data.remote.models.GameRequestDTO
+import com.example.mercader.data.remote.dto.DeleteGameRequestDto
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.repositories.GameRepository
 import com.example.mercader.data.remote.models.*
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
+import android.util.Log
 
 class GameRepositoryImpl @Inject constructor(
     private val apiService: GameApiService,
@@ -117,6 +119,35 @@ class GameRepositoryImpl @Inject constructor(
                 Result.failure(HttpException(response))
             }
         } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit> {
+        Log.d("GameRepository", "========== REPOSITORY DELETE ==========")
+        Log.d("GameRepository", "ID: $id")
+        Log.d("GameRepository", "Justificación: $justificacionRetiro")
+
+        return try {
+            val request = DeleteGameRequestDto(justificacionRetiro = justificacionRetiro)
+            Log.d("GameRepository", "Request creado: $request")
+
+            Log.d("GameRepository", "Llamando a apiService.deleteGame...")
+            val response = apiService.deleteGame(id, request)
+
+            Log.d("GameRepository", "Respuesta de API: $response")
+            Result.success(Unit)
+
+        } catch (e: HttpException) {
+            Log.e("GameRepository", "❌ Error HTTP: ${e.code()} - ${e.message()}")
+            Log.e("GameRepository", "Response body: ${e.response()?.errorBody()?.string()}")
+            Result.failure(Exception("Error del servidor: ${e.code()}"))
+        } catch (e: IOException) {
+            Log.e("GameRepository", "❌ Error de red: ${e.message}")
+            Result.failure(Exception("Error de conexión: Verifica tu internet"))
+        } catch (e: Exception) {
+            Log.e("GameRepository", "❌ Error inesperado: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
