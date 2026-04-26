@@ -12,17 +12,17 @@ import retrofit2.http.Query
 
 interface GameApiService {
 
-    @POST("api/juegos")
+    @POST("juegos/")
     suspend fun saveGame(
         @Body game: GameRequestDTO
     ): Response<GameResponseDTO>
 
-    @GET("api/categorias")
+    @GET("categorias/")
     suspend fun getGameTypes(): Response<GameCategoryResponseDTO<List<GameCategory>>>
-    @GET("api/dificultades")
+    @GET("dificultades/")
     suspend fun getDifficulties(): Response<GameDifficultyResponseDTO<List<GameDifficulty>>>
 
-    @GET("api/editoriales")
+    @GET("editoriales/")
     suspend fun getEditorials(): Response<GameEditorialResponseDTO<List<GameEditorial>>>
 
     @HTTP(method = "DELETE", path = "juegos/", hasBody = true)
