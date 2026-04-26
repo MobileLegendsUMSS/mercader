@@ -9,10 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mercader.ui.screen.game.GameFormScreen
-import com.example.mercader.ui.screen.game.GameFormViewModel
+import com.example.mercader.ui.screens.games.GameFormScreen
+import com.example.mercader.ui.screens.games.GameFormViewModel
+import com.example.mercader.ui.screens.games.TestScreen
 import com.example.mercader.ui.theme.MercaderTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +33,8 @@ class MainActivity : ComponentActivity() {
                         onEventSaved = {
                         }
                     )
+
+                    //TestScreen()
                 }
             }
         }

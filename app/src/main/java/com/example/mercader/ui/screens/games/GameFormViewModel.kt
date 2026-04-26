@@ -1,20 +1,21 @@
-package com.example.mercader.ui.screen.game
+package com.example.mercader.ui.screens.games
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mercader.common.constants.SliderType
-import com.example.mercader.common.utils.OptionsProvider
 import com.example.mercader.domain.models.Game
 import com.example.mercader.data.repositories.GameRepositoryImpl
 import com.example.mercader.domain.repositories.GameRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class GameFormViewModel(
-    private val gameRepository: GameRepository = GameRepositoryImpl()
+@HiltViewModel
+class GameFormViewModel @Inject constructor(
+    private val gameRepository: GameRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GameFormState())
