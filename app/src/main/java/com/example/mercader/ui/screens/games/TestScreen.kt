@@ -21,32 +21,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.util.Log
 
-@HiltViewModel
-class TestViewModel @Inject constructor(
-    private val deleteGameUseCase: DeleteGameUseCase
-): ViewModel() {
-    fun deleteGame(id: String, justificacionRetiro: String) {
-        viewModelScope.launch {
-            Log.d("TestViewModel", "========== INICIO DELETE ==========")
-            Log.d("TestViewModel", "ID del juego: $id")
-            Log.d("TestViewModel", "Justificación: $justificacionRetiro")
-
-            val result = deleteGameUseCase.deleteGame(id, justificacionRetiro)
-
-            if (result.isSuccess) {
-                Log.d("TestViewModel", "✅ ÉXITO: Juego eliminado")
-            } else {
-                Log.e("TestViewModel", "❌ ERROR: ${result.exceptionOrNull()?.message}")
-                result.exceptionOrNull()?.printStackTrace()
-            }
-            Log.d("TestViewModel", "========== FIN DELETE ==========")
-        }
-    }
-}
-
 @Composable
 fun TestScreen(
-    viewModel: TestViewModel = hiltViewModel(),
+    viewModel: CollectionViewModel.DeleteViewModel = hiltViewModel(),
 ) {
     var showModal by remember { mutableStateOf(false) }
 

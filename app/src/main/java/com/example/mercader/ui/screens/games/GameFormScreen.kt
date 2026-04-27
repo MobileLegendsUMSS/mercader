@@ -12,7 +12,7 @@ import com.example.mercader.common.constants.SliderType
 @Composable
 fun GameFormScreen(
     viewModel: GameFormViewModel = viewModel(),
-    onEventSaved: () -> Unit = {}
+    onEventSaved: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
 

@@ -7,5 +7,7 @@ interface GameRepository {
     suspend fun getGameTypes(): Result<List<Category>>
     suspend fun getDifficulties(): Result<List<Difficulty>>
     suspend fun getEditorials(): Result<List<Editorial>>
+
+    suspend fun getGames(): Result<List<Game>>
     suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit>
 }

@@ -16,7 +16,7 @@ fun CollectionScreen(
     viewModel: CollectionViewModel,
     modifier: Modifier = Modifier
 ) {
-    val games by viewModel.games.collectAsState()
+    val state by viewModel.state.collectAsState()
     var selectedGame by remember { mutableStateOf<Game?>(null) }
 
     LazyVerticalGrid(
@@ -27,7 +27,7 @@ fun CollectionScreen(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(games) { game ->
+        items(state.games) { game ->
             GameCard(
                 game = game,
                 onClick = { selectedGame = game },

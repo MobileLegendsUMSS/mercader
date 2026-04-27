@@ -3,6 +3,7 @@ package com.example.mercader.data.remote.apiservice
 import com.example.mercader.data.remote.dto.DeleteGameRequestDto
 import com.example.mercader.data.remote.dto.DeleteGameResponseDto
 import com.example.mercader.data.remote.models.*
+import com.example.mercader.domain.models.Game
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -14,7 +15,8 @@ interface GameApiService {
 
     @POST("juegos/")
     suspend fun saveGame(
-        @Body game: GameRequestDTO
+        @Body game: GameRequestDTO,
+        @Query("idCategory") idCategory:String
     ): Response<GameResponseDTO>
 
     @GET("categorias/")
@@ -24,6 +26,9 @@ interface GameApiService {
 
     @GET("editoriales/")
     suspend fun getEditorials(): Response<GameEditorialResponseDTO<List<GameEditorial>>>
+
+    @GET("juegos/")
+    suspend fun getGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
 
     @HTTP(method = "DELETE", path = "juegos/", hasBody = true)
     suspend fun deleteGame(
