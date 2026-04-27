@@ -1,0 +1,16 @@
+package com.example.mercader.data.remote.models
+
+data class GameCategory(
+    val _id: String,
+    val descripcion: String,
+    val createdAt: String,
+    val updatedAt: String
+)
+data class Category(
+    val id: String,
+    val descripcion: String
+)
+data class GameCategoryResponseDTO<T>(
+    val success: Boolean,
+    val data: T
+)
