@@ -4,7 +4,6 @@ data class GameRequestDTO(
     val titulo: String,
     val descripcion: String,
     val tutorial: String,
-    val category: String,
     val cant_min_pers: Int,
     val cant_max_pers: Int,
     val duracion_min: Int,

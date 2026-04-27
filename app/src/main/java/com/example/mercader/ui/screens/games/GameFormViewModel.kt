@@ -41,7 +41,6 @@ class GameFormViewModel @Inject constructor(
                 val difficultiesResult = gameRepository.getDifficulties()
 
                 val difficulties = if (difficultiesResult.isSuccess) {
-                    println("Paso Penultimo${difficultiesResult.getOrNull()}")
                     difficultiesResult.getOrNull() ?: emptyList()
                 } else {
                     emptyList()

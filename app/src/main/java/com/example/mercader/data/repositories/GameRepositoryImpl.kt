@@ -27,7 +27,6 @@ class GameRepositoryImpl @Inject constructor(
                 titulo = game.title,
                 descripcion =game.description,
                 tutorial = game.tutorial,
-                category = game.category.id,
                 cant_min_pers = game.nMinPerson,
                 cant_max_pers = game.nMaxPerson,
                 duracion_min = game.minMinutes,
@@ -38,8 +37,8 @@ class GameRepositoryImpl @Inject constructor(
                 precio = game.price
             )
 
-            val response = apiService.saveGame(requestDTO)
-
+            val response = apiService.saveGame(requestDTO,game.category.id)
+            Log.d("GameRepository", "Respuesta de API: $response")
             if (response.isSuccessful) {
                 Result.success(Unit)
             } else {
@@ -47,6 +46,7 @@ class GameRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             Result.failure(e)
+
         }
     }
 
@@ -80,14 +80,10 @@ class GameRepositoryImpl @Inject constructor(
             }
 
             val response = apiService.getDifficulties()
-            println("Paso Primero${response.body()}")
             if (response.isSuccessful) {
                 val gameDifficultiesResponse = response.body()
-                println("Paso Medio${gameDifficultiesResponse}")
                 if (gameDifficultiesResponse != null && gameDifficultiesResponse.success) {
-                    println("Paso Sospechoso${gameDifficultiesResponse}")
                     val gameDiff = gameDifficultiesResponse.data.map { Difficulty(it._id, it.descripcion)  }
-                    println("Paso AntePenultimo${gameDiff.size}")
                     Result.success(gameDiff)
                 } else {
                     Result.failure(Exception("Error en la respuesta del servidor"))
@@ -112,6 +108,45 @@ class GameRepositoryImpl @Inject constructor(
                 if (gameEditorialResponse != null && gameEditorialResponse.success) {
                     val gameEditorials  = gameEditorialResponse.data.map {Editorial(it._id,it.nombre)  }
                     Result.success(gameEditorials)
+                } else {
+                    Result.failure(Exception("Error en la respuesta del servidor"))
+                }
+            } else {
+                Result.failure(HttpException(response))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getGames(): Result<List<Game>> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) {
+                return Result.failure(IOException("No hay conexión"))
+            }
+
+            val response = apiService.getGames()
+            if (response.isSuccessful) {
+                val gamesResponse = response.body()
+                if (gamesResponse != null && gamesResponse.success) {
+                    val games  = gamesResponse.data.map {
+                        Game(
+                            it._id,
+                            it.titulo,
+                            it.descripcion,
+                            it.tutorial,
+                            Category(it.id_editorial._id,it.id_editorial.nombre),
+                            it.cant_min_pers,
+                            it.cant_max_pers,
+                            it.duracion_min,
+                            it.duracion_max,
+                            Difficulty(it.id_dificultad._id,it.id_dificultad.descripcion),
+                            Editorial(it.id_editorial._id,it.id_editorial.nombre),
+                            it.cantidad,
+                            it.precio.toFloat()
+                            )
+                    }
+                    Result.success(games)
                 } else {
                     Result.failure(Exception("Error en la respuesta del servidor"))
                 }
