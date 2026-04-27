@@ -1,5 +1,8 @@
 package com.example.mercader.ui.screens.games
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mercader.data.remote.models.Category
@@ -17,12 +20,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GameFormViewModel @Inject constructor(
-    private val gameRepository: GameRepository
+    private val gameRepository: GameRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GameFormState())
     val state: StateFlow<GameFormState> = _state.asStateFlow()
-
+    private val isEditMode: Boolean = savedStateHandle.get<Boolean>("edit") ?: false
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val existingGame: Game? = savedStateHandle.get<Game>("game")
     init {
         loadInitialData()
     }
@@ -52,14 +58,25 @@ class GameFormViewModel @Inject constructor(
                 } else {
                     emptyList()
                 }
+                if(isEditMode){
+                    _state.update { currentState ->
+                        currentState.copy(
 
-                _state.update { currentState ->
-                    currentState.copy(
-                        gameCategories = gameTypes,
-                        difficulties = difficulties,
-                        editorials = editorials,
-                        isLoading = false
-                    )
+                            gameCategories = gameTypes,
+                            difficulties = difficulties,
+                            editorials = editorials,
+                            isLoading = false
+                        )
+                    }
+                }else {
+                    _state.update { currentState ->
+                        currentState.copy(
+                            gameCategories = gameTypes,
+                            difficulties = difficulties,
+                            editorials = editorials,
+                            isLoading = false
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _state.update {

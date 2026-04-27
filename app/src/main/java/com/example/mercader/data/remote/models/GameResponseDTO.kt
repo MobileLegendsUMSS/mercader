@@ -9,7 +9,7 @@ data class GameResponseDTO(
     val cant_max_pers: Int,
     val duracion_min: Int,
     val duracion_max: Int,
-    val precio: Int,
+    val precio: Float,
     val disponible: Boolean,
     val cantidad: Int,
     val id_dificultad: GameDifficulty,

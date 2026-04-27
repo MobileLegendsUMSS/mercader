@@ -238,11 +238,11 @@ fun GameDetailDialog(
 
                         if (showModal) {
                             DeleteGameModal(
-                                gameName = "Catan",
+                                gameName = game.title,
                                 onConfirm = { justificacionRetiro ->
                                     Log.d("TestScreen", "Justificacion: $justificacionRetiro")
                                     viewModel.deleteGame(
-                                        id = "69e5a7951edc217a4d7ab772",
+                                        id = game.id,
                                         justificacionRetiro = justificacionRetiro
                                     )
                                     showModal = false
@@ -253,7 +253,7 @@ fun GameDetailDialog(
 
 
                         SecondaryButton(
-                            text = "Reservar",
+                            text = "Editar Juego",
                             onClick = onReserve,
                             modifier = Modifier.weight(1f)
                         )

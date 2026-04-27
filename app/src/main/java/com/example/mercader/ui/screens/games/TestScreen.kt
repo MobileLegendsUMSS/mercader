@@ -23,7 +23,7 @@ import android.util.Log
 
 @Composable
 fun TestScreen(
-    viewModel: DeleteViewModel = hiltViewModel(),
+    viewModel: CollectionViewModel.DeleteViewModel = hiltViewModel(),
 ) {
     var showModal by remember { mutableStateOf(false) }
 

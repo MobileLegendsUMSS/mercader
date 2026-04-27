@@ -35,6 +35,8 @@ class CollectionViewModel @Inject constructor(
 
                 try {
                     val gamesResult = gameRepository.getGames()
+                    val size = gamesResult.toString()
+                    Log.d("GameRec", "ID del juego: $size")
                     val games = if (gamesResult.isSuccess) {
                         gamesResult.getOrNull() ?: emptyList()
                     } else {
