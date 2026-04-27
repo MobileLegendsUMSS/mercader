@@ -10,6 +10,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import com.example.mercader.ui.screens.games.GameFormScreen
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.mercader.ui.screens.games.CollectionScreen
+import com.example.mercader.ui.screens.games.CollectionViewModel
 import com.example.mercader.ui.screens.games.GameFormViewModel
 import com.example.mercader.ui.screens.games.TestScreen
 import com.example.mercader.ui.theme.MercaderTheme
@@ -22,26 +24,26 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MercaderTheme {
-                //Surface(
-                //    modifier = Modifier.fillMaxSize(),
-                //    color = MaterialTheme.colorScheme.background
-                //) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                 //    val viewModel: GameFormViewModel = hiltViewModel()
                 //   GameFormScreen(
                 //       viewModel = viewModel,
                 //       onEventSaved = {
-                //      }
+                      }
                 //  )
 
-                  TestScreen()
+                  //TestScreen()
                }
-                /*{
-                    /*val viewModel: CollectionViewModel = hiltViewModel()
-                    //CollectionScreen(
-                    //    viewModel = viewModel
-                    )*/
+                //{
+                    val viewModel: CollectionViewModel = hiltViewModel()
+                    CollectionScreen(
+                        viewModel = viewModel
+                    )
 
-                }*/
+                //}
            }
        }
    }
