@@ -28,23 +28,23 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Descomenta una de las dos opciones:
+                //    val viewModel: GameFormViewModel = hiltViewModel()
+                //   GameFormScreen(
+                //       viewModel = viewModel,
+                //       onEventSaved = {
+                      }
+                //  )
 
-                    // Opción 1: GameFormScreen
-                    /*val viewModel: GameFormViewModel = hiltViewModel()
-                    GameFormScreen(
-                        viewModel = viewModel,
-                        onEventSaved = {
-                        }
-                    )*/
-
-                    // Opción 2: CollectionScreen
+                  //TestScreen()
+               }
+                //{
                     val viewModel: CollectionViewModel = hiltViewModel()
                     CollectionScreen(
                         viewModel = viewModel
                     )
-                }
-            }
-        }
-    }
-}
+
+                //}
+           }
+       }
+   }
+//}

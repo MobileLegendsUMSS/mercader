@@ -38,14 +38,16 @@ fun GameDetailDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
             dismissOnBackPress = true,
-            dismissOnClickOutside = true
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false  // Esto permite que el dialogo ocupe mas ancho
         )
     ) {
         Card(
             modifier = modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.85f),
-            shape = RoundedCornerShape(16.dp),
+                .fillMaxHeight(0.9f)  // Aumentado de 0.85f a 0.9f para más altura
+                .padding(horizontal = 20.dp),  // Muy poco padding horizontal (solo 8dp)
+            shape = RoundedCornerShape(24.dp),  // Bordes un poco más redondeados
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
@@ -56,13 +58,13 @@ fun GameDetailDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(48.dp)  // Reducido de 56dp a 48dp
                 ) {
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(8.dp)
+                            .padding(4.dp)  // Reducido de 8dp a 4dp
                     ) {
                         Text(
                             text = "✕",
@@ -78,7 +80,7 @@ fun GameDetailDialog(
                         .weight(1f)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = 12.dp)  // Reducido de 16dp a 12dp
                 ) {
                     // Titulo
                     Text(
@@ -90,7 +92,7 @@ fun GameDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
 
                     // Imagen
                     ImagePlaceholder(
@@ -98,15 +100,15 @@ fun GameDetailDialog(
                         contentDescription = game.title,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp)
+                            .height(200.dp)  // Reducido de 250dp a 200dp para aprovechar espacio
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
 
                     // Tutorial y Precio
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),  // Reducido de 12dp a 10dp
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SecondaryButton(
@@ -114,7 +116,7 @@ fun GameDetailDialog(
                             onClick = onTutorial,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp)
+                                .height(44.dp)  // Reducido de 48dp a 44dp
                         )
 
                         PriceDisplay(
@@ -123,12 +125,12 @@ fun GameDetailDialog(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))  // Reducido de 12dp a 10dp
 
                     // Jugadores y Tiempo
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)  // Reducido de 12dp a 10dp
                     ) {
                         InfoChip(
                             value = "${game.nMinPerson} - ${game.nMaxPerson}",
@@ -143,7 +145,7 @@ fun GameDetailDialog(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
 
                     // Categorías
                     Text(
@@ -153,9 +155,9 @@ fun GameDetailDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))  // Reducido de 8dp a 6dp
 
-                    if (game.category.id=="") {
+                    if (game.category.id == "") {
                         Text(
                             text = "Sin categorías",
                             style = MaterialTheme.typography.bodyMedium,
@@ -172,7 +174,7 @@ fun GameDetailDialog(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
 
                     // Descripción
                     Text(
@@ -188,12 +190,12 @@ fun GameDetailDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
 
                     // Dificultad y Editorial
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)  // Reducido de 16dp a 12dp
                     ) {
                         LabeledField(
                             label = "Dificultad",
@@ -208,19 +210,19 @@ fun GameDetailDialog(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
                 }
 
                 // ── Botones ──────────────────────────────────────────────
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),  // Reducido padding
+                    verticalArrangement = Arrangement.spacedBy(6.dp)  // Reducido de 8dp a 6dp
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)  // Reducido de 8dp a 6dp
                     ) {
                         /*SecondaryButton(
                             text = "Alquilar",
@@ -264,7 +266,7 @@ fun GameDetailDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))  // Reducido de 8dp a 6dp
             }
         }
     }

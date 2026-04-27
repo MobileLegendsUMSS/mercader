@@ -1,8 +1,9 @@
 package com.example.mercader.ui.screens.games
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,16 +19,19 @@ fun CollectionScreen(
     val state by viewModel.state.collectAsState()
     var selectedGame by remember { mutableStateOf<Game?>(null) }
 
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(state.games) { game ->
             GameCard(
                 game = game,
-                onClick = { selectedGame = game }
+                onClick = { selectedGame = game },
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
