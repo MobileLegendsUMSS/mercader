@@ -34,9 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
+import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
-
 
 sealed class AppScreen {
     object AdminHome    : AppScreen()
@@ -60,6 +60,7 @@ class MainActivity : ComponentActivity() {
                     // ── Estado de navegación ──────────────────────────────
                     // isAdmin = true por defecto → arranca en AdminHome
                     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.AdminHome) }
+                    var gameToEdit: Game? by remember { mutableStateOf(null) }
 
                     // ── Router principal ──────────────────────────────────
                     when (currentScreen) {
@@ -80,9 +81,16 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.GameForm -> {
                             val viewModel: GameFormViewModel = hiltViewModel()
+
                             GameFormScreen(
                                 viewModel = viewModel,
+                                gameToEdit = gameToEdit,
                                 onEventSaved = {
+                                    gameToEdit = null
+                                    currentScreen = AppScreen.AdminHome
+                                },
+                                onClose = {
+                                    gameToEdit = null
                                     currentScreen = AppScreen.AdminHome
                                 }
                             )
@@ -91,10 +99,13 @@ class MainActivity : ComponentActivity() {
                         is AppScreen.Stock -> {
                             val viewModel: CollectionViewModel = hiltViewModel()
                             CollectionScreen(
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                onBack = { currentScreen = AppScreen.AdminHome },
+                                onEditGame = { game ->
+                                    gameToEdit = game
+                                    currentScreen = AppScreen.GameForm
+                                }
                             )
-                            // Si CollectionScreen necesita botón "volver":
-                            // agrega un parámetro onBack = { currentScreen = AppScreen.AdminHome }
                         }
                     }
                 }

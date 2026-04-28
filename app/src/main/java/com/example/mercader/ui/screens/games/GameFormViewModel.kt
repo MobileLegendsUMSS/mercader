@@ -26,14 +26,15 @@ class GameFormViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(GameFormState())
     val state: StateFlow<GameFormState> = _state.asStateFlow()
-    private val isEditMode: Boolean = savedStateHandle.get<Boolean>("edit") ?: false
-    @RequiresApi(Build.VERSION_CODES.O)
-    private val existingGame: Game? = savedStateHandle.get<Game>("game")
+    private var existingGame: Game? = null
+
+    private val isEditMode: Boolean
+        get() = _state.value.id.isNotEmpty()
+    
     init {
         loadInitialData()
     }
-
-    private fun loadInitialData() {
+    private fun loadInitialData(game: Game? = null) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 
@@ -58,25 +59,13 @@ class GameFormViewModel @Inject constructor(
                 } else {
                     emptyList()
                 }
-                if(isEditMode){
-                    _state.update { currentState ->
-                        currentState.copy(
-
-                            gameCategories = gameTypes,
-                            difficulties = difficulties,
-                            editorials = editorials,
-                            isLoading = false
-                        )
-                    }
-                }else {
-                    _state.update { currentState ->
-                        currentState.copy(
-                            gameCategories = gameTypes,
-                            difficulties = difficulties,
-                            editorials = editorials,
-                            isLoading = false
-                        )
-                    }
+                _state.update { currentState ->
+                    currentState.copy(
+                        gameCategories = gameTypes,
+                        difficulties = difficulties,
+                        editorials = editorials,
+                        isLoading = false
+                    )
                 }
             } catch (e: Exception) {
                 _state.update {
@@ -86,6 +75,27 @@ class GameFormViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun setGameToEdit(game: Game) {
+        existingGame = game
+        _state.update { currentState ->
+            currentState.copy(
+                id = game.id,
+                title = game.title,
+                description = game.description,
+                tutorial = game.tutorial ?: "",
+                category = game.category,
+                nMinPerson = game.nMinPerson,
+                nMaxPerson = game.nMaxPerson,
+                minMinutes = game.minMinutes,
+                maxMinutes = game.maxMinutes,
+                difficulty = game.difficulty,
+                editorial = game.editorial,
+                stock = game.stock,
+                price = game.price
+            )
         }
     }
 
@@ -140,11 +150,15 @@ class GameFormViewModel @Inject constructor(
     fun saveGame() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
-
             try {
                 val currentState = _state.value
+                val gameId = if (currentState.id.isNotEmpty()) {
+                    currentState.id
+                } else {
+                    System.currentTimeMillis().toString()
+                }
                 val game = Game(
-                    id = System.currentTimeMillis().toString(),
+                    id = gameId,
                     title = currentState.title,
                     description = currentState.description,
                     tutorial = currentState.tutorial,
@@ -159,7 +173,11 @@ class GameFormViewModel @Inject constructor(
                     price = currentState.price,
                 )
 
-                val result = gameRepository.saveGame(game)
+                val result = if (isEditMode) {
+                    gameRepository.updateGame(game)
+                } else {
+                    gameRepository.saveGame(game)
+                }
 
                 if (result.isSuccess) {
                     _state.update {
