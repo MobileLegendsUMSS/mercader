@@ -3,16 +3,20 @@ package com.example.mercader.ui.screens.games
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mercader.common.components.*
 import com.example.mercader.common.constants.SliderType
+import com.example.mercader.domain.models.Game
 
 @Composable
 fun GameFormScreen(
     viewModel: GameFormViewModel = viewModel(),
     onEventSaved: () -> Unit = {},
+    gameToEdit: Game? = null,
+    onClose: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -22,6 +26,9 @@ fun GameFormScreen(
             viewModel.resetSuccess()
         }
     }
+    LaunchedEffect(gameToEdit) {
+        gameToEdit?.let { viewModel.setGameToEdit(it) }
+    }
 
     state.errorMessage?.let { error ->
         LaunchedEffect(error) {
@@ -29,6 +36,15 @@ fun GameFormScreen(
     }
 
     FormContainer(title = "Formulario de Juego") {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            IconButton(onClick = onClose) {
+                Text("✕")
+            }
+        }
 
         SectionTitle("Información del juego")
 

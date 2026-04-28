@@ -10,4 +10,5 @@ interface GameRepository {
 
     suspend fun getGames(): Result<List<Game>>
     suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit>
+    suspend fun updateGame(game: Game): Result<Unit>
 }

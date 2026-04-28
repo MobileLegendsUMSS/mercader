@@ -32,6 +32,7 @@ fun GameDetailDialog(
     onTutorial: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
+    onEditGame: ((Game) -> Unit)? = null
 ) {
     var showModal by remember { mutableStateOf(false) }
     Dialog(
@@ -254,7 +255,9 @@ fun GameDetailDialog(
 
                         SecondaryButton(
                             text = "Editar Juego",
-                            onClick = onReserve,
+                            onClick = {
+                                onEditGame?.invoke(game)
+                            },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -266,7 +269,7 @@ fun GameDetailDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))  // Reducido de 8dp a 6dp
+                Spacer(modifier = Modifier.height(6.dp))
             }
         }
     }
