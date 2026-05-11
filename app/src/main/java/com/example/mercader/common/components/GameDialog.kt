@@ -168,14 +168,12 @@ fun GameDetailDialog(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {/*
-                            game.category.forEach { category ->
-                                TagChip(label = category)
-                            }*/
+                        ) {
+                            TagChip(label=game.category.descripcion)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Descripción
                     Text(

@@ -13,7 +13,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.ui.screens.games.CollectionScreen
 import com.example.mercader.ui.screens.games.CollectionViewModel
 import com.example.mercader.ui.screens.games.GameFormViewModel
-import com.example.mercader.ui.screens.games.TestScreen
 import com.example.mercader.ui.theme.MercaderTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.animation.AnimatedVisibility
@@ -74,8 +73,10 @@ class MainActivity : ComponentActivity() {
                         }
 
                         is AppScreen.UserHome -> {
+                            val viewModel: CollectionViewModel = hiltViewModel()
                             UserHome(
-                                onSwitchToAdmin = { currentScreen = AppScreen.AdminHome }
+                                onSwitchToAdmin = { currentScreen = AppScreen.AdminHome } ,
+                                        collectionViewModel = viewModel
                             )
                         }
 
