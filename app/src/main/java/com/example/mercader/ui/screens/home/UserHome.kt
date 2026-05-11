@@ -14,13 +14,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
-import androidx.compose.foundation.clickable
+import com.example.mercader.common.components.SearchBarWithButton
+import com.example.mercader.common.components.UserBottomNav
+import com.example.mercader.ui.screens.games.CollectionViewModel
+import com.example.mercader.ui.screens.games.CollectionScreen
 
 @Composable
 fun UserHome(
     onSwitchToAdmin: () -> Unit,
+    collectionViewModel: CollectionViewModel
 ) {
     var showInProgressModal by remember { mutableStateOf(false) }
+    var showCollectionScreen by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    if (showCollectionScreen) {
+        CollectionScreen(
+            viewModel = collectionViewModel,
+            initialSearchQuery = searchQuery,
+            onBack = {
+                showCollectionScreen = false
+                searchQuery = ""
+            }
+        )
+        return
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -34,6 +51,18 @@ fun UserHome(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Barra de búsqueda con botón
+            SearchBarWithButton(
+                onSearch = { query ->  
+                    searchQuery = query
+                    showCollectionScreen = true
+                },
+                placeholder = "Buscar ...",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             CarouselSection(title = "Condiciones")
             Divider()
             CarouselSection(title = "Mis Preferencias")
@@ -45,7 +74,11 @@ fun UserHome(
 
         UserBottomNav(
             onInProgress = { showInProgressModal = true },
-            onSwitchToAdmin = onSwitchToAdmin
+            onSwitchToAdmin = onSwitchToAdmin,
+            onSearch = {
+                searchQuery = ""
+                showCollectionScreen = true
+            }
         )
     }
 
@@ -79,7 +112,6 @@ private fun UserHeader() {
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black
             )
-            // Con SVG: Image(painter = painterResource(id = R.drawable.logo), contentDescription = "Logo")
         }
 
         Text(
@@ -89,11 +121,9 @@ private fun UserHeader() {
             fontWeight = FontWeight.Bold
         )
 
-        // Burger — aquí puedes agregar el burger igual que en Admin si lo necesitas
         Spacer(modifier = Modifier.width(44.dp))
     }
 }
-
 
 @Composable
 private fun CarouselSection(title: String) {
@@ -120,88 +150,5 @@ private fun CarouselSection(title: String) {
                 style = MaterialTheme.typography.bodySmall
             )
         }
-    }
-}
-
-@Composable
-private fun UserBottomNav(
-    onInProgress: () -> Unit,
-    onSwitchToAdmin: () -> Unit,
-) {
-    Surface(
-        tonalElevation = 8.dp,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavIconButton(
-                icon = "🏠",  // reemplaza: painterResource(R.drawable.ic_home)
-                label = "Inicio",
-                onClick = onInProgress
-            )
-            NavIconButton(
-                icon = "🧭",  // reemplaza: painterResource(R.drawable.ic_brujula)
-                label = "Explorar",
-                onClick = onInProgress
-            )
-            NavIconButton(
-                icon = "🛒",  // reemplaza: painterResource(R.drawable.ic_carrito)
-                label = "Carrito",
-                onClick = onInProgress
-            )
-            NavIconButton(
-                icon = "👤",  // reemplaza: painterResource(R.drawable.ic_user)
-                label = "Perfil",
-                onClick = onInProgress
-            )
-
-            // cambiar a Admin
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable { onSwitchToAdmin() }
-                    .padding(horizontal = 6.dp, vertical = 6.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(text = "⚙️", fontSize = 20.sp)
-                Text(
-                    text = "Admin",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun NavIconButton(
-    icon: String,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = icon, fontSize = 20.sp)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
