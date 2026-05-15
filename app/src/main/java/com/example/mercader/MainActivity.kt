@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.domain.models.Game
+import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
 
@@ -74,9 +75,11 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.UserHome -> {
                             val viewModel: CollectionViewModel = hiltViewModel()
+                            val filterViewModel: FilterViewModel = hiltViewModel()
                             UserHome(
                                 onSwitchToAdmin = { currentScreen = AppScreen.AdminHome } ,
-                                        collectionViewModel = viewModel
+                                collectionViewModel = viewModel,
+                                filterViewModel=filterViewModel
                             )
                         }
 
