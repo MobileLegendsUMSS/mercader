@@ -34,16 +34,19 @@ import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.domain.models.Game
+import com.example.mercader.ui.screens.cart.CartScreen  // ← Importar CartScreen
 import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
 
 sealed class AppScreen {
     object AdminHome    : AppScreen()
-    object UserHome    : AppScreen()
+    object UserHome     : AppScreen()
     object GameForm     : AppScreen()
     object Stock        : AppScreen()
+    object Cart         : AppScreen()  // ← Añadir Cart
 }
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -58,7 +61,6 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     // ── Estado de navegación ──────────────────────────────
-                    // isAdmin = true por defecto → arranca en AdminHome
                     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.AdminHome) }
                     var gameToEdit: Game? by remember { mutableStateOf(null) }
 
@@ -77,9 +79,10 @@ class MainActivity : ComponentActivity() {
                             val viewModel: CollectionViewModel = hiltViewModel()
                             val filterViewModel: FilterViewModel = hiltViewModel()
                             UserHome(
-                                onSwitchToAdmin = { currentScreen = AppScreen.AdminHome } ,
+                                onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
+                                onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
                                 collectionViewModel = viewModel,
-                                filterViewModel=filterViewModel
+                                filterViewModel = filterViewModel
                             )
                         }
 
@@ -109,6 +112,13 @@ class MainActivity : ComponentActivity() {
                                     gameToEdit = game
                                     currentScreen = AppScreen.GameForm
                                 }
+                            )
+                        }
+
+                        // ← Añadir nueva pantalla Cart
+                        is AppScreen.Cart -> {
+                            CartScreen(
+                                onBack = { currentScreen = AppScreen.UserHome }
                             )
                         }
                     }
