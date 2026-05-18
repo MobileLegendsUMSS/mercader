@@ -29,6 +29,7 @@ fun UserBottomNav(
     onInProgress: () -> Unit,
     onSwitchToAdmin: () -> Unit,
     onSearch: (String) -> Unit,
+    onCartClick: () -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     Surface(
@@ -54,9 +55,9 @@ fun UserBottomNav(
                 onClick = {onSearch(query)}
             )
             NavIconButton(
-                icon = "🛒",  // reemplaza: painterResource(R.drawable.ic_carrito)
+                icon = "🛒",
                 label = "Carrito",
-                onClick = onInProgress
+                onClick = onCartClick
             )
             NavIconButton(
                 icon = "👤",  // reemplaza: painterResource(R.drawable.ic_user)
