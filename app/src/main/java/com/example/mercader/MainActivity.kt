@@ -34,16 +34,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
+import com.example.mercader.ui.screens.auth.LoginScreen
+import com.example.mercader.ui.screens.auth.SignupScreen
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
 
 
 sealed class AppScreen {
-    object AdminHome    : AppScreen()
-    object UserHome    : AppScreen()
-    object GameForm     : AppScreen()
-    object Stock        : AppScreen()
+    object Login      : AppScreen()
+    object SignUp     : AppScreen()
+    object AdminHome  : AppScreen()
+    object UserHome   : AppScreen()
+    object GameForm   : AppScreen()
+    object Stock      : AppScreen()
 }
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -57,18 +62,32 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // ── Estado de navegación ──────────────────────────────
-                    // isAdmin = true por defecto → arranca en AdminHome
-                    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.AdminHome) }
+                    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Login) }
 
-                    // ── Router principal ──────────────────────────────────
                     when (currentScreen) {
+                        is AppScreen.Login -> {
+                            LoginScreen(
+                                onLoginSuccess = { isAdmin ->
+                                    currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
+                                },
+                                onNavigateToSignup = { currentScreen = AppScreen.SignUp }
+                            )
+                        }
+
+                        is AppScreen.SignUp -> {
+                            SignupScreen(
+                                onSignupSuccess = { isAdmin ->
+                                    currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
+                                },
+                                onNavigateToLogin = { currentScreen = AppScreen.Login }
+                            )
+                        }
 
                         is AppScreen.AdminHome -> {
                             AdminHome(
                                 onNavigateToGameForm = { currentScreen = AppScreen.GameForm },
-                                onNavigateToStock    = { currentScreen = AppScreen.Stock },
-                                onSwitchToUser       = { currentScreen = AppScreen.UserHome }
+                                onNavigateToStock = { currentScreen = AppScreen.Stock },
+                                onSwitchToUser = { currentScreen = AppScreen.UserHome }
                             )
                         }
 
@@ -93,8 +112,6 @@ class MainActivity : ComponentActivity() {
                             CollectionScreen(
                                 viewModel = viewModel
                             )
-                            // Si CollectionScreen necesita botón "volver":
-                            // agrega un parámetro onBack = { currentScreen = AppScreen.AdminHome }
                         }
                     }
                 }
