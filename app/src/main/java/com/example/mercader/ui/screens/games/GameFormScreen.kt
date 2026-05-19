@@ -18,6 +18,7 @@ fun GameFormScreen(
     gameToEdit: Game? = null,
     onClose: () -> Unit = {}
 ) {
+    val buttonText = if (gameToEdit != null) "Actualizar Juego" else "Guardar Juego"
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(state.saveSuccess) {
@@ -134,7 +135,7 @@ fun GameFormScreen(
 
         // ===== BOTONES =====
         PrimaryButton(
-            text = "Guardar Juego",
+            text = buttonText,
             onClick = { viewModel.saveGame() },
             isLoading = state.isSaving,
             enabled = state.title.isNotBlank()
