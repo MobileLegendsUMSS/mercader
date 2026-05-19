@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private const val ADMIN_SUFFIX = "#a-d-m-i-n#"
+private const val ADMIN_SUFFIX = "#adm"
 
 @Composable
 fun LoginScreen(

@@ -1,18 +1,16 @@
 package com.example.mercader.common.components
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -21,6 +19,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.CollectionViewModel.DeleteViewModel
+import com.example.mercader.common.utils.CartManager
 
 @Composable
 fun GameDetailDialog(
@@ -32,8 +31,16 @@ fun GameDetailDialog(
     onTutorial: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
+    onEditGame: ((Game) -> Unit)? = null,
+    onCartUpdate: (() -> Unit)? = null,  // Callback para actualizar UI cuando cambia el carrito
+    onNavigateToCart: (() -> Unit)? = null,  // ← Nuevo parámetro
 ) {
     var showModal by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val cartManager = remember { CartManager.getInstance(context) }
+    var isInCart by remember { mutableStateOf(cartManager.isInCart(game.id)) }
+    var cartQuantity by remember { mutableStateOf(cartManager.getQuantity(game.id)) }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -167,14 +174,12 @@ fun GameDetailDialog(
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {/*
-                            game.category.forEach { category ->
-                                TagChip(label = category)
-                            }*/
+                        ) {
+                            TagChip(label=game.category.descripcion)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Descripción
                     Text(
@@ -254,19 +259,57 @@ fun GameDetailDialog(
 
                         SecondaryButton(
                             text = "Editar Juego",
-                            onClick = onReserve,
+                            onClick = {
+                                onEditGame?.invoke(game)
+                            },
                             modifier = Modifier.weight(1f)
                         )
                     }
 
-                    PrimaryButton(
-                        text = "Comprar",
-                        onClick = onBuy,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    // Botón dinámico del carrito
+                    Button(
+                        onClick = {
+                            if (isInCart) {
+                                // Navegar al carrito
+                                onNavigateToCart?.invoke()
+                                onDismiss()
+                            } else {
+                                // Agregar al carrito
+                                val added = cartManager.addToCart(game)
+                                if (added) {
+                                    isInCart = true
+                                    cartQuantity = cartManager.getQuantity(game.id)
+                                    Toast.makeText(
+                                        context,
+                                        "✓ ${game.title} se ha añadido al carrito",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    onCartUpdate?.invoke()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Error al añadir ${game.title} al carrito",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isInCart)
+                                MaterialTheme.colorScheme.tertiary
+                            else
+                                MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(
+                            text = if (isInCart) "🛒 Ver Carrito ($cartQuantity)" else "🛒 Añadir al Carrito",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))  // Reducido de 8dp a 6dp
+                Spacer(modifier = Modifier.height(6.dp))
             }
         }
     }

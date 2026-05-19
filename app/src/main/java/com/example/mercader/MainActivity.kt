@@ -13,7 +13,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.ui.screens.games.CollectionScreen
 import com.example.mercader.ui.screens.games.CollectionViewModel
 import com.example.mercader.ui.screens.games.GameFormViewModel
-import com.example.mercader.ui.screens.games.TestScreen
 import com.example.mercader.ui.theme.MercaderTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.animation.AnimatedVisibility
@@ -36,6 +35,9 @@ import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.ui.screens.auth.LoginScreen
 import com.example.mercader.ui.screens.auth.SignupScreen
+import com.example.mercader.domain.models.Game
+import com.example.mercader.ui.screens.cart.CartScreen  // ← Importar CartScreen
+import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
 
@@ -47,6 +49,7 @@ sealed class AppScreen {
     object UserHome   : AppScreen()
     object GameForm   : AppScreen()
     object Stock      : AppScreen()
+    object Cart       : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -62,8 +65,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    // ── Estado de navegación ──────────────────────────────
+                    var gameToEdit: Game? by remember { mutableStateOf(null) }
                     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Login) }
 
+                    // ── Router principal ──────────────────────────────────
                     when (currentScreen) {
                         is AppScreen.Login -> {
                             LoginScreen(
@@ -92,16 +98,28 @@ class MainActivity : ComponentActivity() {
                         }
 
                         is AppScreen.UserHome -> {
+                            val viewModel: CollectionViewModel = hiltViewModel()
+                            val filterViewModel: FilterViewModel = hiltViewModel()
                             UserHome(
-                                onSwitchToAdmin = { currentScreen = AppScreen.AdminHome }
+                                onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
+                                onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
+                                collectionViewModel = viewModel,
+                                filterViewModel = filterViewModel
                             )
                         }
 
                         is AppScreen.GameForm -> {
                             val viewModel: GameFormViewModel = hiltViewModel()
+
                             GameFormScreen(
                                 viewModel = viewModel,
+                                gameToEdit = gameToEdit,
                                 onEventSaved = {
+                                    gameToEdit = null
+                                    currentScreen = AppScreen.AdminHome
+                                },
+                                onClose = {
+                                    gameToEdit = null
                                     currentScreen = AppScreen.AdminHome
                                 }
                             )
@@ -110,7 +128,19 @@ class MainActivity : ComponentActivity() {
                         is AppScreen.Stock -> {
                             val viewModel: CollectionViewModel = hiltViewModel()
                             CollectionScreen(
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                onBack = { currentScreen = AppScreen.AdminHome },
+                                onEditGame = { game ->
+                                    gameToEdit = game
+                                    currentScreen = AppScreen.GameForm
+                                }
+                            )
+                        }
+
+                        // ← Añadir nueva pantalla Cart
+                        is AppScreen.Cart -> {
+                            CartScreen(
+                                onBack = { currentScreen = AppScreen.UserHome }
                             )
                         }
                     }

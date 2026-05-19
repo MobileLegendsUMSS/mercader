@@ -158,6 +158,15 @@ class GameRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateGame(game: Game): Result<Unit> {
+        return try {
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit> {
         Log.d("GameRepository", "========== REPOSITORY DELETE ==========")
         Log.d("GameRepository", "ID: $id")

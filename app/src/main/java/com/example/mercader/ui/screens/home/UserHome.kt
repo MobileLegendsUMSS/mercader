@@ -5,26 +5,96 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.common.components.InProgressModal
-import androidx.compose.foundation.clickable
+import com.example.mercader.common.components.SearchBarWithButton
+import com.example.mercader.common.components.UserBottomNav
+import com.example.mercader.common.utils.CartManager
+import com.example.mercader.common.utils.GameFilters
+import com.example.mercader.ui.screens.games.*
 
 @Composable
 fun UserHome(
     onSwitchToAdmin: () -> Unit,
+    onNavigateToCart: () -> Unit = {},  // ← Nuevo callback
+    collectionViewModel: CollectionViewModel = hiltViewModel(),
+    filterViewModel: FilterViewModel = hiltViewModel()
 ) {
     var showInProgressModal by remember { mutableStateOf(false) }
+    var showCollectionScreen by remember { mutableStateOf(false) }
+    var showFilterScreen by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var appliedFilters by remember { mutableStateOf<GameFilters?>(null) }
+
+    // ← Para refrescar el contador del carrito
+    val context = LocalContext.current
+    val cartManager = remember { CartManager.getInstance(context) }
+    var cartItemCount by remember { mutableStateOf(cartManager.getTotalItemCount()) }
+
+    // Función para refrescar el carrito cuando cambia
+    val refreshCart = {
+        cartItemCount = cartManager.getTotalItemCount()
+    }
+
+    if (showCollectionScreen) {
+        CollectionScreen(
+            viewModel = collectionViewModel,
+            initialSearchQuery = searchQuery,
+            initialFilters = appliedFilters,
+            onBack = {
+                showCollectionScreen = false
+                appliedFilters = null
+                searchQuery = ""
+                filterViewModel.clearAllFilters()
+                refreshCart()  // ← Refrescar carrito al volver
+            },
+            onNavigateToCart = onNavigateToCart,
+            onCartUpdate = { refreshCart() }  // ← Callback cuando se actualiza carrito
+        )
+        return
+    }
+
+    if (showFilterScreen) {
+        FilterScreen(
+            viewModel = filterViewModel,
+            onApplyFilters = {
+                appliedFilters = filterViewModel.getActiveFilters()
+                showFilterScreen = false
+                showCollectionScreen = true
+            },
+            onClearFilters = {
+                filterViewModel.clearAllFilters()
+                appliedFilters = null
+                showFilterScreen = false
+                showCollectionScreen = true
+            },
+            onClose = {
+                showFilterScreen = false
+            }
+        )
+        return
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        UserHeader()
+        UserHeader(
+            onFilterClick = { showFilterScreen = true },
+            cartItemCount = cartItemCount,  // ← Pasar contador
+            onCartClick = onNavigateToCart  // ← Pasar callback del carrito
+        )
 
         Column(
             modifier = Modifier
@@ -34,18 +104,36 @@ fun UserHome(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            SearchBarWithButton(
+                onSearch = { query ->
+                    searchQuery = query
+                    appliedFilters = null
+                    showCollectionScreen = true
+                },
+                placeholder = "Buscar ...",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
             CarouselSection(title = "Condiciones")
-            Divider()
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
             CarouselSection(title = "Mis Preferencias")
-            Divider()
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
             CarouselSection(title = "Visitados")
-            Divider()
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
             Spacer(modifier = Modifier.height(8.dp))
         }
 
         UserBottomNav(
             onInProgress = { showInProgressModal = true },
-            onSwitchToAdmin = onSwitchToAdmin
+            onSwitchToAdmin = onSwitchToAdmin,
+            onSearch = {
+                searchQuery = ""
+                appliedFilters = null
+                showCollectionScreen = true
+            },
+            onCartClick = onNavigateToCart
         )
     }
 
@@ -55,7 +143,11 @@ fun UserHome(
 }
 
 @Composable
-private fun UserHeader() {
+private fun UserHeader(
+    onFilterClick: () -> Unit,
+    cartItemCount: Int,  // ← Nuevo parámetro
+    onCartClick: () -> Unit  // ← Nuevo parámetro
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -79,7 +171,6 @@ private fun UserHeader() {
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black
             )
-            // Con SVG: Image(painter = painterResource(id = R.drawable.logo), contentDescription = "Logo")
         }
 
         Text(
@@ -89,11 +180,64 @@ private fun UserHeader() {
             fontWeight = FontWeight.Bold
         )
 
-        // Burger — aquí puedes agregar el burger igual que en Admin si lo necesitas
-        Spacer(modifier = Modifier.width(44.dp))
+        // ← Botones del header (Filtro y Carrito)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Botón del carrito con badge
+            Box {
+                IconButton(
+                    onClick = onCartClick,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Ver Carrito",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+
+                // Badge con el número de items
+                if (cartItemCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-4).dp, y = 4.dp)
+                            .size(20.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.error),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (cartItemCount > 99) "99+" else cartItemCount.toString(),
+                            color = MaterialTheme.colorScheme.onError,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            // Botón de filtro
+            IconButton(
+                onClick = onFilterClick,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Filtrar",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
     }
 }
-
 
 @Composable
 private fun CarouselSection(title: String) {
@@ -120,88 +264,5 @@ private fun CarouselSection(title: String) {
                 style = MaterialTheme.typography.bodySmall
             )
         }
-    }
-}
-
-@Composable
-private fun UserBottomNav(
-    onInProgress: () -> Unit,
-    onSwitchToAdmin: () -> Unit,
-) {
-    Surface(
-        tonalElevation = 8.dp,
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            NavIconButton(
-                icon = "🏠",  // reemplaza: painterResource(R.drawable.ic_home)
-                label = "Inicio",
-                onClick = onInProgress
-            )
-            NavIconButton(
-                icon = "🧭",  // reemplaza: painterResource(R.drawable.ic_brujula)
-                label = "Explorar",
-                onClick = onInProgress
-            )
-            NavIconButton(
-                icon = "🛒",  // reemplaza: painterResource(R.drawable.ic_carrito)
-                label = "Carrito",
-                onClick = onInProgress
-            )
-            NavIconButton(
-                icon = "👤",  // reemplaza: painterResource(R.drawable.ic_user)
-                label = "Perfil",
-                onClick = onInProgress
-            )
-
-            // cambiar a Admin
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable { onSwitchToAdmin() }
-                    .padding(horizontal = 6.dp, vertical = 6.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(text = "⚙️", fontSize = 20.sp)
-                Text(
-                    text = "Admin",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun NavIconButton(
-    icon: String,
-    label: String,
-    onClick: () -> Unit,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(text = icon, fontSize = 20.sp)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface
-        )
     }
 }
