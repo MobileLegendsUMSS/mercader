@@ -8,6 +8,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HTTP
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -29,6 +30,12 @@ interface GameApiService {
 
     @GET("juegos/")
     suspend fun getGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
+
+    @PATCH("juegos/")
+    suspend fun editGame(
+        @Query("id_juego") id: String,
+        @Body gameEdit: GameEditDTO
+    ): Response<GameEditResponseDTO>
 
     @HTTP(method = "DELETE", path = "juegos/", hasBody = true)
     suspend fun deleteGame(

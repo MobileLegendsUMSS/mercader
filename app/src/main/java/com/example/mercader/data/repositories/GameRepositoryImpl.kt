@@ -143,7 +143,7 @@ class GameRepositoryImpl @Inject constructor(
                             Difficulty(it.id_dificultad._id,it.id_dificultad.descripcion),
                             Editorial(it.id_editorial._id,it.id_editorial.nombre),
                             it.cantidad,
-                            it.precio.toFloat()
+                            it.precio
                             )
                     }
                     Result.success(games)
@@ -158,13 +158,131 @@ class GameRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateGame(game: Game): Result<Unit> {
+    override suspend fun updateGamePartial(gameId: String, updatedFields: Map<String, Any>): Result<Unit> {
         return try {
+            if (!networkHandler.isNetworkAvailable()) {
+                return Result.failure(IOException("No hay conexión a internet"))
+            }
 
-            Result.success(Unit)
+            if (updatedFields.isEmpty()) {
+                Log.d("GameRepository", "No hay campos para actualizar")
+                return Result.success(Unit)
+            }
+
+            Log.d("GameRepository", "Actualizando juego $gameId con ${updatedFields.size} campos")
+
+            // Convertir los campos al formato esperado por el backend
+            val fieldUpdates = convertToFieldUpdates(updatedFields)
+
+            // Hacer una llamada por cada campo a actualizar
+            val errors = mutableListOf<String>()
+            var successCount = 0
+
+            for ((index, fieldUpdate) in fieldUpdates.withIndex()) {
+                try {
+                    Log.d("GameRepository", "Actualizando campo ${index + 1}/${fieldUpdates.size}: ${fieldUpdate.fieldName}")
+
+                    val response = apiService.editGame(gameId, fieldUpdate)
+
+                    if (response.isSuccessful) {
+                        successCount++
+                        Log.d("GameRepository", "✓ Campo ${fieldUpdate.fieldName} actualizado")
+                    } else {
+                        val errorMsg = "Error al actualizar ${fieldUpdate.fieldName}: ${response.code()}"
+                        Log.e("GameRepository", "✗ $errorMsg")
+                        errors.add(errorMsg)
+                    }
+
+                } catch (e: Exception) {
+                    val errorMsg = "Error al actualizar ${fieldUpdate.fieldName}: ${e.message}"
+                    Log.e("GameRepository", "✗ $errorMsg")
+                    errors.add(errorMsg)
+                }
+            }
+
+            return if (errors.isEmpty()) {
+                Log.d("GameRepository", "✅ Todos los $successCount campos actualizados correctamente")
+                Result.success(Unit)
+            } else {
+                val errorSummary = "Se actualizaron $successCount de ${fieldUpdates.size} campos. Errores: ${errors.joinToString("; ")}"
+                Log.e("GameRepository", "❌ $errorSummary")
+                Result.failure(Exception(errorSummary))
+            }
+
+        } catch (e: HttpException) {
+            Log.e("GameRepository", "HTTP Error: ${e.code()}")
+            Result.failure(Exception("Error del servidor: ${e.code()}"))
+        } catch (e: IOException) {
+            Log.e("GameRepository", "Network Error: ${e.message}")
+            Result.failure(Exception("Error de conexión: Verifica tu internet"))
         } catch (e: Exception) {
+            Log.e("GameRepository", "Error inesperado: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
+    }
+
+    private fun convertToFieldUpdates(updatedFields: Map<String, Any>): List<GameEditDTO> {
+        val fieldUpdates = mutableListOf<GameEditDTO>()
+
+        // Mapeo de nuestros nombres de campo a los nombres que espera el backend
+        updatedFields.forEach { (key, value) ->
+            when (key) {
+                "title" -> {
+                    fieldUpdates.add(GameEditDTO("titulo", value))
+                }
+                "description" -> {
+                    fieldUpdates.add(GameEditDTO("descripcion", value))
+                }
+                "tutorial" -> {
+                    fieldUpdates.add(GameEditDTO("tutorial", value))
+                }
+                "nMinPerson" -> {
+                    fieldUpdates.add(GameEditDTO("cant_min_pers", value))
+                }
+                "nMaxPerson" -> {
+                    fieldUpdates.add(GameEditDTO("cant_max_pers", value))
+                }
+                "minMinutes" -> {
+                    fieldUpdates.add(GameEditDTO("duracion_min", value))
+                }
+                "maxMinutes" -> {
+                    fieldUpdates.add(GameEditDTO("duracion_max", value))
+                }
+                "difficulty" -> {
+                    val difficultyMap = value as? Map<*, *>
+                    difficultyMap?.get("descripcion")?.let { descripcion ->
+                        fieldUpdates.add(GameEditDTO("dificultad", descripcion))
+                    }
+                }
+                "editorial" -> {
+                    val editorialMap = value as? Map<*, *>
+                    editorialMap?.get("nombre")?.let { nombre ->
+                        fieldUpdates.add(GameEditDTO("editorial", nombre))
+                    }
+                }
+                /*"difficulty" -> {
+                    val difficultyMap = value as? Map<*, *>
+                    difficultyMap?.get("id")?.let { id ->
+                        fieldUpdates.add(GameEditDTO("id_dificultad", id))
+                    }
+                }
+                "editorial" -> {
+                    val editorialMap = value as? Map<*, *>
+                    editorialMap?.get("id")?.let { id ->
+                        fieldUpdates.add(GameEditDTO("id_editorial", id))
+                    }
+                }*/
+                "stock" -> {
+                    fieldUpdates.add(GameEditDTO("cantidad", value))
+                }
+                "price" -> {
+                    fieldUpdates.add(GameEditDTO("precio", value))
+                }
+            }
+        }
+
+        return fieldUpdates
     }
 
     override suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit> {
