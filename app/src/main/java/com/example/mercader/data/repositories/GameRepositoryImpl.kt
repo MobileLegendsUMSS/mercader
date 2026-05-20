@@ -171,7 +171,6 @@ class GameRepositoryImpl @Inject constructor(
 
             Log.d("GameRepository", "Actualizando juego $gameId con ${updatedFields.size} campos")
 
-            // Convertir los campos al formato esperado por el backend
             val fieldUpdates = convertToFieldUpdates(updatedFields)
 
             // Hacer una llamada por cada campo a actualizar

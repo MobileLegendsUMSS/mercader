@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // ── Estado de navegación ──────────────────────────────
                     var gameToEdit: Game? by remember { mutableStateOf(null) }
+                    val collectionViewModel: CollectionViewModel = hiltViewModel()
                     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Login) }
 
                     // ── Router principal ──────────────────────────────────
@@ -98,12 +99,11 @@ class MainActivity : ComponentActivity() {
                         }
 
                         is AppScreen.UserHome -> {
-                            val viewModel: CollectionViewModel = hiltViewModel()
                             val filterViewModel: FilterViewModel = hiltViewModel()
                             UserHome(
                                 onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
                                 onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
-                                collectionViewModel = viewModel,
+                                collectionViewModel = collectionViewModel,
                                 filterViewModel = filterViewModel
                             )
                         }
@@ -117,6 +117,7 @@ class MainActivity : ComponentActivity() {
                                 onEventSaved = {
                                     gameToEdit = null
                                     currentScreen = AppScreen.AdminHome
+                                    collectionViewModel.refreshGames()
                                 },
                                 onClose = {
                                     gameToEdit = null
@@ -126,9 +127,8 @@ class MainActivity : ComponentActivity() {
                         }
 
                         is AppScreen.Stock -> {
-                            val viewModel: CollectionViewModel = hiltViewModel()
                             CollectionScreen(
-                                viewModel = viewModel,
+                                viewModel = collectionViewModel,
                                 onBack = { currentScreen = AppScreen.AdminHome },
                                 onEditGame = { game ->
                                     gameToEdit = game
@@ -136,8 +136,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-
-                        // ← Añadir nueva pantalla Cart
+                        
                         is AppScreen.Cart -> {
                             CartScreen(
                                 onBack = { currentScreen = AppScreen.UserHome }
