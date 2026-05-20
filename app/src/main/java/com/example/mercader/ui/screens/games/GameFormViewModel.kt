@@ -37,7 +37,7 @@ class GameFormViewModel @Inject constructor(
         loadInitialData()
     }
 
-    private fun loadInitialData(game: Game? = null) {
+    private fun loadInitialData() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
 

@@ -74,9 +74,6 @@ class CollectionViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Aplica los filtros actuales a la lista de juegos usando GameFilter
-     */
     private fun applyCurrentFilters() {
         val filteredGames = GameFilter.applyFilters(allGames, currentFilters)
         _state.update {
@@ -88,9 +85,6 @@ class CollectionViewModel @Inject constructor(
             )
         }
 
-        // Log para debugging
-        Log.d("CollectionViewModel", "Filtros aplicados: ${GameFilter.getFiltersSummary(currentFilters)}")
-        Log.d("CollectionViewModel", "Juegos filtrados: ${filteredGames.size} de ${allGames.size}")
     }
 
     /**
