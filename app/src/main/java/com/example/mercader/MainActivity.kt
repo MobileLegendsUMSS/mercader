@@ -33,18 +33,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
+import com.example.mercader.ui.screens.auth.LoginScreen
+import com.example.mercader.ui.screens.auth.SignupScreen
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.cart.CartScreen  // ← Importar CartScreen
 import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
 
+
 sealed class AppScreen {
-    object AdminHome    : AppScreen()
-    object UserHome     : AppScreen()
-    object GameForm     : AppScreen()
-    object Stock        : AppScreen()
-    object Cart         : AppScreen()  // ← Añadir Cart
+    object Login      : AppScreen()
+    object SignUp     : AppScreen()
+    object AdminHome  : AppScreen()
+    object UserHome   : AppScreen()
+    object GameForm   : AppScreen()
+    object Stock      : AppScreen()
+    object Cart       : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -61,18 +66,35 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     // ── Estado de navegación ──────────────────────────────
-                    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.AdminHome) }
                     var gameToEdit: Game? by remember { mutableStateOf(null) }
                     val collectionViewModel: CollectionViewModel = hiltViewModel()
+                    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Login) }
 
                     // ── Router principal ──────────────────────────────────
                     when (currentScreen) {
+                        is AppScreen.Login -> {
+                            LoginScreen(
+                                onLoginSuccess = { isAdmin ->
+                                    currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
+                                },
+                                onNavigateToSignup = { currentScreen = AppScreen.SignUp }
+                            )
+                        }
+
+                        is AppScreen.SignUp -> {
+                            SignupScreen(
+                                onSignupSuccess = { isAdmin ->
+                                    currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
+                                },
+                                onNavigateToLogin = { currentScreen = AppScreen.Login }
+                            )
+                        }
 
                         is AppScreen.AdminHome -> {
                             AdminHome(
                                 onNavigateToGameForm = { currentScreen = AppScreen.GameForm },
-                                onNavigateToStock    = { currentScreen = AppScreen.Stock },
-                                onSwitchToUser       = { currentScreen = AppScreen.UserHome }
+                                onNavigateToStock = { currentScreen = AppScreen.Stock },
+                                onSwitchToUser = { currentScreen = AppScreen.UserHome }
                             )
                         }
 
