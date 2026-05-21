@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.common.components.BackButton
 import com.example.mercader.common.components.ImagePlaceholder
 import com.example.mercader.common.utils.CartManager
@@ -21,15 +22,14 @@ import com.example.mercader.domain.models.CartItem
 
 @Composable
 fun CartScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: CartViewModel = hiltViewModel()
 ) {
+    val state by viewModel.state.collectAsState()
     val context = LocalContext.current
-    val cartManager = remember { CartManager.getInstance(context) }
-    var cartItems by remember { mutableStateOf(cartManager.getCart()) }
 
-    // Función para refrescar el carrito
-    fun refreshCart() {
-        cartItems = cartManager.getCart()
+    LaunchedEffect(Unit) {
+        viewModel.loadCart()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -47,18 +47,46 @@ fun CartScreen(
                 style = MaterialTheme.typography.headlineSmall
             )
             Spacer(modifier = Modifier.weight(1f))
-            // Mostrar cantidad total de items
-            if (cartItems.isNotEmpty()) {
+            if (state.cartItems.isNotEmpty() && !state.isLoading) {
                 Text(
-                    text = "${cartManager.getTotalItemCount()} items",
+                    text = "${state.totalItems} items",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // Lista de juegos
-        if (cartItems.isEmpty()) {
+        // Contenido
+        if (state.isLoading && state.cartItems.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (state.errorMessage != null && state.cartItems.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "❌",
+                        fontSize = 48.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = state.errorMessage!!,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.loadCart() }) {
+                        Text("Reintentar")
+                    }
+                }
+            }
+        } else if (state.cartItems.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -82,16 +110,13 @@ fun CartScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(cartItems) { cartItem ->
+                items(state.cartItems) { cartItem ->
                     CartItemCard(
                         cartItem = cartItem,
-                        onQuantityChange = {
-                            refreshCart()
-                        },
-                        onRemove = {
-                            cartManager.removeFromCart(cartItem.game.id)
-                            refreshCart()
-                        }
+                        isLoading = state.isLoading,
+                        onIncrement = { viewModel.incrementQuantity(cartItem.game.id) },
+                        onDecrement = { viewModel.decrementQuantity(cartItem.game.id) },
+                        onRemove = { viewModel.removeFromCart(cartItem.game.id) }
                     )
                 }
             }
@@ -115,7 +140,7 @@ fun CartScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "Bs${String.format("%.2f", cartManager.getTotalPrice())}",
+                            text = "Bs${String.format("%.2f", state.totalPrice)}",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -152,7 +177,7 @@ fun CartScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Bs${String.format("%.2f", cartManager.getTotalPrice())}",
+                            text = "Bs${String.format("%.2f", state.totalPrice)}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -162,10 +187,15 @@ fun CartScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = { /* Procesar compra */ },
-                        modifier = Modifier.fillMaxWidth()
+                        onClick = { /* Procesar compra - implementar después */ },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isLoading
                     ) {
-                        Text("Proceder al pago")
+                        if (state.isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("Proceder al pago")
+                        }
                     }
                 }
             }
@@ -176,13 +206,18 @@ fun CartScreen(
 @Composable
 fun CartItemCard(
     cartItem: CartItem,
-    onQuantityChange: () -> Unit,
+    isLoading: Boolean,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
     onRemove: () -> Unit
 ) {
-    val context = LocalContext.current
-    val cartManager = remember { CartManager.getInstance(context) }
     val game = cartItem.game
     var quantity by remember { mutableStateOf(cartItem.quantity) }
+
+    // Actualizar cantidad local cuando cambie externamente
+    LaunchedEffect(cartItem.quantity) {
+        quantity = cartItem.quantity
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -199,14 +234,12 @@ fun CartItemCard(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Placeholder de imagen
                 ImagePlaceholder(
                     emoji = "🎮",
                     contentDescription = game.title,
                     modifier = Modifier.size(60.dp)
                 )
 
-                // Detalles del juego
                 Column {
                     Text(
                         text = game.title,
@@ -239,16 +272,14 @@ fun CartItemCard(
                     IconButton(
                         onClick = {
                             if (quantity > 1) {
-                                quantity--
-                                cartManager.updateQuantity(game.id, quantity)
-                                onQuantityChange()
+                                onDecrement()
                             }
                         },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp),
+                        enabled = !isLoading
                     ) {
                         Text(
-                            text = "-",
-                            modifier = Modifier.size(20.dp)
+                            text = "-"
                         )
                     }
 
@@ -260,17 +291,12 @@ fun CartItemCard(
                     )
 
                     IconButton(
-                        onClick = {
-                            quantity++
-                            cartManager.updateQuantity(game.id, quantity)
-                            onQuantityChange()
-                        },
-                        modifier = Modifier.size(32.dp)
+                        onClick = onIncrement,
+                        modifier = Modifier.size(32.dp),
+                        enabled = !isLoading
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Aumentar",
-                            modifier = Modifier.size(20.dp)
+                        Text(
+                            text = "+"
                         )
                     }
                 }
@@ -285,8 +311,12 @@ fun CartItemCard(
 
                 // Botón eliminar
                 IconButton(
-                    onClick = onRemove,
-                    modifier = Modifier.size(32.dp)
+                    onClick = {
+                        println("🗑️ CartItemCard: Botón eliminar presionado para juego: ${game.title}")
+                        onRemove()
+                    },
+                    modifier = Modifier.size(32.dp),
+                    enabled = !isLoading
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,

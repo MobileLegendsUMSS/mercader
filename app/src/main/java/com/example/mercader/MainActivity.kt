@@ -15,40 +15,32 @@ import com.example.mercader.ui.screens.games.CollectionViewModel
 import com.example.mercader.ui.screens.games.GameFormViewModel
 import com.example.mercader.ui.theme.MercaderTheme
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
-import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.domain.models.Game
-import com.example.mercader.ui.screens.cart.CartScreen  // ← Importar CartScreen
+import com.example.mercader.ui.screens.cart.CartScreen
+import com.example.mercader.ui.screens.cart.CartViewModel
 import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
+import com.example.mercader.common.utils.CartManager
+import javax.inject.Inject
 
 sealed class AppScreen {
     object AdminHome    : AppScreen()
     object UserHome     : AppScreen()
     object GameForm     : AppScreen()
     object Stock        : AppScreen()
-    object Cart         : AppScreen()  // ← Añadir Cart
+    object Cart         : AppScreen()
 }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var cartManager: CartManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +72,8 @@ class MainActivity : ComponentActivity() {
                             val filterViewModel: FilterViewModel = hiltViewModel()
                             UserHome(
                                 onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
-                                onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
+                                onNavigateToCart = { currentScreen = AppScreen.Cart },
+                                cartManager = cartManager,  // ← PASAR cartManager
                                 collectionViewModel = viewModel,
                                 filterViewModel = filterViewModel
                             )
@@ -107,6 +100,7 @@ class MainActivity : ComponentActivity() {
                             val viewModel: CollectionViewModel = hiltViewModel()
                             CollectionScreen(
                                 viewModel = viewModel,
+                                cartManager = cartManager,  // ← PASAR cartManager a Stock
                                 onBack = { currentScreen = AppScreen.AdminHome },
                                 onEditGame = { game ->
                                     gameToEdit = game
@@ -115,10 +109,11 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // ← Añadir nueva pantalla Cart
                         is AppScreen.Cart -> {
+                            val cartViewModel: CartViewModel = hiltViewModel()
                             CartScreen(
-                                onBack = { currentScreen = AppScreen.UserHome }
+                                onBack = { currentScreen = AppScreen.UserHome },
+                                viewModel = cartViewModel
                             )
                         }
                     }

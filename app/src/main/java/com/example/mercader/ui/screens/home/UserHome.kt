@@ -25,11 +25,13 @@ import com.example.mercader.common.components.UserBottomNav
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.GameFilters
 import com.example.mercader.ui.screens.games.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun UserHome(
     onSwitchToAdmin: () -> Unit,
-    onNavigateToCart: () -> Unit = {},  // ← Nuevo callback
+    onNavigateToCart: () -> Unit = {},
+    cartManager: CartManager,
     collectionViewModel: CollectionViewModel = hiltViewModel(),
     filterViewModel: FilterViewModel = hiltViewModel()
 ) {
@@ -39,19 +41,26 @@ fun UserHome(
     var searchQuery by remember { mutableStateOf("") }
     var appliedFilters by remember { mutableStateOf<GameFilters?>(null) }
 
-    // ← Para refrescar el contador del carrito
-    val context = LocalContext.current
-    val cartManager = remember { CartManager.getInstance(context) }
-    var cartItemCount by remember { mutableStateOf(cartManager.getTotalItemCount()) }
+    // Estado para el contador del carrito
+    var cartItemCount by remember { mutableStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
 
-    // Función para refrescar el carrito cuando cambia
-    val refreshCart = {
-        cartItemCount = cartManager.getTotalItemCount()
+    // Función para refrescar el carrito
+    fun refreshCart() {
+        coroutineScope.launch {
+            cartItemCount = cartManager.getTotalItemCount()
+        }
+    }
+
+    // Cargar contador inicial
+    LaunchedEffect(Unit) {
+        refreshCart()
     }
 
     if (showCollectionScreen) {
         CollectionScreen(
             viewModel = collectionViewModel,
+            cartManager = cartManager,
             initialSearchQuery = searchQuery,
             initialFilters = appliedFilters,
             onBack = {
@@ -59,10 +68,10 @@ fun UserHome(
                 appliedFilters = null
                 searchQuery = ""
                 filterViewModel.clearAllFilters()
-                refreshCart()  // ← Refrescar carrito al volver
+                refreshCart()
             },
             onNavigateToCart = onNavigateToCart,
-            onCartUpdate = { refreshCart() }  // ← Callback cuando se actualiza carrito
+            onCartUpdate = { refreshCart() }
         )
         return
     }
@@ -92,8 +101,8 @@ fun UserHome(
 
         UserHeader(
             onFilterClick = { showFilterScreen = true },
-            cartItemCount = cartItemCount,  // ← Pasar contador
-            onCartClick = onNavigateToCart  // ← Pasar callback del carrito
+            cartItemCount = cartItemCount,
+            onCartClick = onNavigateToCart
         )
 
         Column(
@@ -145,8 +154,8 @@ fun UserHome(
 @Composable
 private fun UserHeader(
     onFilterClick: () -> Unit,
-    cartItemCount: Int,  // ← Nuevo parámetro
-    onCartClick: () -> Unit  // ← Nuevo parámetro
+    cartItemCount: Int,
+    onCartClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -174,13 +183,12 @@ private fun UserHeader(
         }
 
         Text(
-            text = "Adm. Mercader",
+            text = "Mercader Games",
             color = MaterialTheme.colorScheme.onPrimary,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
 
-        // ← Botones del header (Filtro y Carrito)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
