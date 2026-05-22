@@ -8,11 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import com.example.mercader.ui.screens.games.GameFormScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.ui.screens.games.CollectionScreen
 import com.example.mercader.ui.screens.games.CollectionViewModel
-import com.example.mercader.domain.usecases.CreateReservationUseCase
-import com.example.mercader.domain.usecases.CreateRentalUseCase
 import com.example.mercader.ui.screens.games.GameFormViewModel
 import com.example.mercader.ui.theme.MercaderTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,7 +24,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import com.example.mercader.ui.screens.games.GameFormScreen
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.ui.screens.auth.LoginScreen
@@ -52,9 +50,8 @@ sealed class AppScreen {
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject lateinit var createReservationUseCase: CreateReservationUseCase
-    @Inject lateinit var createRentalUseCase: CreateRentalUseCase
-    @Inject lateinit var cartManager: CartManager
+    @Inject
+    lateinit var cartManager: CartManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,9 +103,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
                                 collectionViewModel = collectionViewModel,
                                 cartManager = cartManager,
-                                filterViewModel = filterViewModel,
-                                createReservationUseCase = createReservationUseCase,
-                                createRentalUseCase = createRentalUseCase
+                                filterViewModel = filterViewModel
                             )
                         }
 
@@ -134,8 +129,6 @@ class MainActivity : ComponentActivity() {
                             CollectionScreen(
                                 viewModel = collectionViewModel,
                                 cartManager = cartManager,
-                                createReservationUseCase = createReservationUseCase,
-                                createRentalUseCase = createRentalUseCase,
                                 onBack = { currentScreen = AppScreen.AdminHome },
                                 onEditGame = { game ->
                                     gameToEdit = game

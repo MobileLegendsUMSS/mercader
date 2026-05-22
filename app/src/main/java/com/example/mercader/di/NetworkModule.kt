@@ -3,7 +3,6 @@ package com.example.mercader.di
 import com.example.mercader.common.constants.AppConstants
 import com.example.mercader.data.remote.apiservice.CartApiService
 import com.example.mercader.data.remote.apiservice.GameApiService
-import com.example.mercader.data.remote.apiservice.ReservationRentalApiService
 import com.example.mercader.data.repositories.CartRepository
 import com.example.mercader.data.repository.CartRepositoryImpl
 import dagger.Module
@@ -49,12 +48,6 @@ object NetworkModule {
     @Singleton
     fun provideGameApiService(retrofit: Retrofit): GameApiService {
         return retrofit.create(GameApiService::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideReservationRentalApiService(retrofit: Retrofit): ReservationRentalApiService {
-        return retrofit.create(ReservationRentalApiService::class.java)
     }
 
     @Provides
