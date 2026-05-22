@@ -1,5 +1,8 @@
 package com.example.mercader.ui.screens.games
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mercader.data.remote.models.Category
@@ -14,14 +17,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
 @HiltViewModel
 class GameFormViewModel @Inject constructor(
-    private val gameRepository: GameRepository
+    private val gameRepository: GameRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GameFormState())
     val state: StateFlow<GameFormState> = _state.asStateFlow()
+    private var existingGame: Game? = null
+
+    // Guardar el estado original para comparar cambios
+    private var originalState: GameFormState? = null
+
+    private val isEditMode: Boolean
+        get() = _state.value.id.isNotEmpty()
 
     init {
         loadInitialData()
@@ -38,10 +48,9 @@ class GameFormViewModel @Inject constructor(
                 } else {
                     emptyList()
                 }
-                val difficultiesResult = gameRepository.getDifficulties()
 
+                val difficultiesResult = gameRepository.getDifficulties()
                 val difficulties = if (difficultiesResult.isSuccess) {
-                    println("Paso Penultimo${difficultiesResult.getOrNull()}")
                     difficultiesResult.getOrNull() ?: emptyList()
                 } else {
                     emptyList()
@@ -71,6 +80,32 @@ class GameFormViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun setGameToEdit(game: Game) {
+        existingGame = game
+        val newState = GameFormState(
+            id = game.id,
+            title = game.title,
+            description = game.description,
+            tutorial = game.tutorial ?: "",
+            category = game.category,
+            nMinPerson = game.nMinPerson,
+            nMaxPerson = game.nMaxPerson,
+            minMinutes = game.minMinutes,
+            maxMinutes = game.maxMinutes,
+            difficulty = game.difficulty,
+            editorial = game.editorial,
+            stock = game.stock,
+            price = game.price,
+            gameCategories = _state.value.gameCategories,
+            difficulties = _state.value.difficulties,
+            editorials = _state.value.editorials
+        )
+
+        // Guardar el estado original para comparar cambios
+        originalState = newState.copy()
+        _state.update { newState }
     }
 
     fun updateGameTitle(title: String) {
@@ -124,44 +159,40 @@ class GameFormViewModel @Inject constructor(
     fun saveGame() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
-
             try {
                 val currentState = _state.value
-                val game = Game(
-                    id = System.currentTimeMillis().toString(),
-                    title = currentState.title,
-                    description = currentState.description,
-                    tutorial = currentState.tutorial,
-                    category = currentState.category,
-                    nMinPerson = currentState.nMinPerson,
-                    nMaxPerson = currentState.nMaxPerson,
-                    minMinutes = currentState.minMinutes,
-                    maxMinutes = currentState.maxMinutes,
-                    difficulty = currentState.difficulty,
-                    editorial = currentState.editorial,
-                    stock = currentState.stock,
-                    price = currentState.price,
-                )
 
-                val result = gameRepository.saveGame(game)
-
-                if (result.isSuccess) {
-                    _state.update {
-                        it.copy(
-                            isSaving = false,
-                            saveSuccess = true,
-                            errorMessage = null
-                        )
+                val result = if (isEditMode) {
+                    val updatedFields = getUpdatedFields()
+                    if (updatedFields.isNotEmpty()) {
+                        gameRepository.updateGamePartial(currentState.id, updatedFields)
+                    } else {
+                        Result.success(Unit)
                     }
                 } else {
-                    val error = result.exceptionOrNull()?.message ?: "Error desconocido"
-                    _state.update {
-                        it.copy(
-                            isSaving = false,
-                            errorMessage = "Error al guardar el juego: $error"
-                        )
-                    }
+                    val game = createFullGame(currentState)
+                    gameRepository.saveGame(game)
                 }
+
+                result.fold(
+                    onSuccess = {
+                        _state.update {
+                            it.copy(
+                                isSaving = false,
+                                saveSuccess = true,
+                                errorMessage = null
+                            )
+                        }
+                    },
+                    onFailure = { error ->
+                        _state.update {
+                            it.copy(
+                                isSaving = false,
+                                errorMessage = "Error al guardar: ${error.message}"
+                            )
+                        }
+                    }
+                )
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
@@ -171,6 +202,90 @@ class GameFormViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun getUpdatedFields(): Map<String, Any> {
+        val currentState = _state.value
+        val original = originalState ?: return emptyMap()
+
+        val updatedFields = mutableMapOf<String, Any>()
+
+        if (currentState.title != original.title) {
+            updatedFields["title"] = currentState.title
+        }
+
+        if (currentState.description != original.description) {
+            updatedFields["description"] = currentState.description
+        }
+
+        if (currentState.tutorial != original.tutorial) {
+            updatedFields["tutorial"] = currentState.tutorial
+        }
+
+        if (currentState.category != original.category) {
+            updatedFields["difficulty"] = mapOf(
+                "id" to currentState.category.id,
+                "descripcion" to currentState.category.descripcion
+            )
+        }
+
+        if (currentState.nMinPerson != original.nMinPerson) {
+            updatedFields["nMinPerson"] = currentState.nMinPerson
+        }
+
+        if (currentState.nMaxPerson != original.nMaxPerson) {
+            updatedFields["nMaxPerson"] = currentState.nMaxPerson
+        }
+
+        if (currentState.minMinutes != original.minMinutes) {
+            updatedFields["minMinutes"] = currentState.minMinutes
+        }
+
+        if (currentState.maxMinutes != original.maxMinutes) {
+            updatedFields["maxMinutes"] = currentState.maxMinutes
+        }
+
+        if (currentState.difficulty != original.difficulty) {
+            updatedFields["difficulty"] = mapOf(
+                "id" to currentState.difficulty.id,
+                "descripcion" to currentState.difficulty.descripcion
+            )
+        }
+
+        if (currentState.editorial != original.editorial) {
+            updatedFields["editorial"] = mapOf(
+                "id" to currentState.editorial.id,
+                "nombre" to currentState.editorial.nombre
+            )
+        }
+
+        if (currentState.stock != original.stock) {
+            updatedFields["stock"] = currentState.stock
+        }
+
+        if (currentState.price != original.price) {
+            updatedFields["price"] = currentState.price
+        }
+
+        return updatedFields
+    }
+
+    private fun createFullGame(state: GameFormState): Game {
+        return Game(
+            id = if (state.id.isNotEmpty()) state.id else System.currentTimeMillis().toString(),
+            title = state.title,
+            description = state.description,
+            tutorial = state.tutorial,
+            category = state.category,
+            nMinPerson = state.nMinPerson,
+            nMaxPerson = state.nMaxPerson,
+            minMinutes = state.minMinutes,
+            maxMinutes = state.maxMinutes,
+            difficulty = state.difficulty,
+            editorial = state.editorial,
+            stock = state.stock,
+            price = state.price,
+        )
     }
 
     fun resetSuccess() {

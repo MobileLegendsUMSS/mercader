@@ -8,8 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 //import coil.compose.AsyncImage
 import com.example.mercader.domain.models.Game
 
@@ -21,69 +23,33 @@ fun GameCard(
 ) {
     Card(
         modifier = modifier
-            .fillMaxWidth()
+            .aspectRatio(1f)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            /*// Imagen en miniatura
-            AsyncImage(
-                model = game.imageUrl,
-                contentDescription = game.name,
-                modifier = Modifier
-                    .size(width = 80.dp, height = 80.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )*/
-
-            // Información compacta
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = game.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "👥 ${game.nMinPerson}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "⏱️ ${game.minMinutes}m",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = game.category.descripcion,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            // Placeholder de imagen
             Text(
-                text = "›",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.outline
+                text = "🎮",
+                fontSize = 80.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Titulo centrado
+            Text(
+                text = game.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

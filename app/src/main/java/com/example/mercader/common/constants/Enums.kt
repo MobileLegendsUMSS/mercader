@@ -41,8 +41,8 @@ enum class SliderType(
     ),
     DURATION_HOURS(
         label = "Duracion (minutos)",
-        range = 30f..300f,
-        steps = 5,
+        range = 30f..180f,
+        steps = 10,
         formatValue = { value ->
             if (value ==30f) "30 minutos" else "$value minutos"
         }

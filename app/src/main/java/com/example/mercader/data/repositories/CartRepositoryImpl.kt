@@ -1,0 +1,158 @@
+package com.example.mercader.data.repository
+
+import com.example.mercader.data.remote.apiservice.CartApiService
+import com.example.mercader.data.remote.models.BuyRequest
+import com.example.mercader.data.remote.models.CartRequest
+import com.example.mercader.data.remote.models.DeleteFromCartRequest
+import com.example.mercader.data.repositories.CartRepository
+import retrofit2.HttpException
+import java.io.IOException
+import javax.inject.Inject
+
+class CartRepositoryImpl @Inject constructor(
+    private val apiService: CartApiService
+) : CartRepository {
+
+    override suspend fun addToCart(userId: String, gameId: String, quantity: Int): Result<Unit> {
+        return try {
+            val request = CartRequest(
+                idUsuario = userId,
+                idJuego = gameId,
+                cantidad = quantity
+            )
+            val response = apiService.addToCart(request)
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al agregar al carrito"
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: IOException) {
+            Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: HttpException) {
+            Result.failure(Exception("Error del servidor: ${e.message}"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
+    }
+
+    override suspend fun getCart(userId: String): Result<List<com.example.mercader.data.remote.models.CartItemResponse>> {
+        return try {
+            val response = apiService.getCart(userId)
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                val data = response.body()?.data ?: emptyList()
+                Result.success(data)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al obtener el carrito"
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: IOException) {
+            Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: HttpException) {
+            Result.failure(Exception("Error del servidor: ${e.message}"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
+    }
+
+    override suspend fun updateQuantity(userId: String, gameId: String, quantity: Int): Result<Unit> {
+        return try {
+            val request = CartRequest(
+                idUsuario = userId,
+                idJuego = gameId,
+                cantidad = quantity
+            )
+            val response = apiService.updateQuantity(request)
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al actualizar cantidad"
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: IOException) {
+            Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: HttpException) {
+            Result.failure(Exception("Error del servidor: ${e.message}"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
+    }
+
+    override suspend fun removeFromCart(userId: String, gameId: String): Result<Unit> {
+        return try {
+            println("📡 CartRepository: removeFromCart llamado")
+            println("📡 CartRepository: userId: $userId, gameId: $gameId")
+
+            val request = DeleteFromCartRequest(
+                idUsuario = userId,
+                idJuego = gameId
+            )
+            println("📡 CartRepository: Request body: ${request}")
+
+            val response = apiService.removeFromCart(request)
+
+            println("📡 CartRepository: Response code: ${response.code()}")
+            println("📡 CartRepository: Response successful: ${response.isSuccessful}")
+            println("📡 CartRepository: Response body: ${response.body()}")
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                println("✅ CartRepository: Eliminación exitosa")
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al eliminar del carrito"
+                println("❌ CartRepository: Error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: IOException) {
+            println("❌ CartRepository: Error de red: ${e.message}")
+            Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: HttpException) {
+            println("❌ CartRepository: Error HTTP: ${e.message}")
+            Result.failure(Exception("Error del servidor: ${e.message}"))
+        } catch (e: Exception) {
+            println("❌ CartRepository: Error inesperado: ${e.message}")
+            e.printStackTrace()
+            Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
+    }
+
+    override suspend fun checkout(userId: String, paymentMethod: String): Result<Unit> {
+        return try {
+            // println("💳 CartRepository: Iniciando compra para usuario: $userId")
+            // println("💳 CartRepository: Metodo de pago: $metodoPagoId")
+
+            val request = BuyRequest(
+                idUsuario = userId,
+                idMetodoPago = paymentMethod
+            )
+
+            val response = apiService.checkout(request)
+
+            println("💳 CartRepository: Response code: ${response.code()}")
+            println("💳 CartRepository: Response successful: ${response.isSuccessful}")
+            println("💳 CartRepository: Response body: ${response.body()}")
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                println("✅ CartRepository: Compra exitosa")
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al procesar la compra"
+                println("❌ CartRepository: Error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: IOException) {
+            println("❌ CartRepository: Error de red: ${e.message}")
+            Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: HttpException) {
+            println("❌ CartRepository: Error HTTP: ${e.message}")
+            Result.failure(Exception("Error del servidor: ${e.message}"))
+        } catch (e: Exception) {
+            println("❌ CartRepository: Error inesperado: ${e.message}")
+            e.printStackTrace()
+            Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
+    }
+}
