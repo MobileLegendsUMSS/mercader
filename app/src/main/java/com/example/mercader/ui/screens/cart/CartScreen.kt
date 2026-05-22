@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,7 +16,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.common.components.BackButton
 import com.example.mercader.common.components.ImagePlaceholder
-import com.example.mercader.common.utils.CartManager
 import com.example.mercader.domain.models.CartItem
 
 @Composable
@@ -27,11 +25,57 @@ fun CartScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    var showPaymentModal by remember { mutableStateOf(false) }
+    var paymentScreen by remember { mutableStateOf<PaymentFlow?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.loadCart()
     }
 
+    // Si estamos en una pantalla de pago, mostrarla sin el resto del carrito
+    if (paymentScreen == PaymentFlow.CARD) {
+        CardPaymentScreen(
+            totalPrice = state.totalPrice,
+            onBack = { paymentScreen = null },
+            onConfirmPayment = {
+                viewModel.processCheckout(
+                    onSuccess = {
+                        android.widget.Toast.makeText(
+                            context,
+                            "✅ Compra realizada con éxito!",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                        paymentScreen = null
+                        onBack()
+                    }
+                )
+            }
+        )
+        return
+    }
+
+    if (paymentScreen == PaymentFlow.QR) {
+        QrPaymentScreen(
+            totalPrice = state.totalPrice,
+            onBack = { paymentScreen = null },
+            onConfirmPayment = {
+                viewModel.processCheckout(
+                    onSuccess = {
+                        android.widget.Toast.makeText(
+                            context,
+                            "✅ Compra realizada con éxito!",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                        paymentScreen = null
+                        onBack()
+                    }
+                )
+            }
+        )
+        return
+    }
+
+    // Pantalla principal del carrito
     Column(modifier = Modifier.fillMaxSize()) {
         // Header
         Row(
@@ -187,9 +231,13 @@ fun CartScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = { /* Procesar compra - implementar después */ },
+                        onClick = {
+                            if (state.cartItems.isNotEmpty()) {
+                                showPaymentModal = true
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !state.isLoading
+                        enabled = !state.isLoading && state.cartItems.isNotEmpty()
                     ) {
                         if (state.isLoading) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp))
@@ -200,6 +248,22 @@ fun CartScreen(
                 }
             }
         }
+    }
+
+    // Modal de selección de método de pago (fuera del Column)
+    if (showPaymentModal) {
+        PaymentMethodModal(
+            totalPrice = state.totalPrice,
+            onDismiss = { showPaymentModal = false },
+            onSelectCardPayment = {
+                showPaymentModal = false
+                paymentScreen = PaymentFlow.CARD
+            },
+            onSelectQrPayment = {
+                showPaymentModal = false
+                paymentScreen = PaymentFlow.QR
+            }
+        )
     }
 }
 
@@ -278,9 +342,7 @@ fun CartItemCard(
                         modifier = Modifier.size(32.dp),
                         enabled = !isLoading
                     ) {
-                        Text(
-                            text = "-"
-                        )
+                        Text(text = "-")
                     }
 
                     Text(
@@ -295,9 +357,7 @@ fun CartItemCard(
                         modifier = Modifier.size(32.dp),
                         enabled = !isLoading
                     ) {
-                        Text(
-                            text = "+"
-                        )
+                        Text(text = "+")
                     }
                 }
 
@@ -328,4 +388,9 @@ fun CartItemCard(
             }
         }
     }
+}
+
+// ✅ Enum class definido FUERA de la función CartScreen
+enum class PaymentFlow {
+    CARD, QR
 }

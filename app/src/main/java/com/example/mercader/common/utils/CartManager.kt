@@ -212,4 +212,31 @@ class CartManager @Inject constructor(
         val type = object : TypeToken<List<CartItem>>() {}.type
         return gson.fromJson(json, type)
     }
+
+    suspend fun checkout(metodoPagoId: String): Boolean {
+        val userId = getCurrentUserId()
+        println("💳 CartManager: Procesando compra para usuario: $userId")
+
+        return try {
+            val result = cartRepository.checkout(userId, metodoPagoId)
+
+            if (result.isSuccess) {
+                println("✅ CartManager: Compra exitosa, limpiando cache local")
+                // Limpiar cache local después de compra exitosa
+                clearLocalCache()
+                true
+            } else {
+                val error = result.exceptionOrNull()?.message ?: "Error desconocido"
+                println("❌ CartManager: Error en compra: $error")
+                false
+            }
+        } catch (e: Exception) {
+            println("❌ CartManager: Excepción en checkout: ${e.message}")
+            false
+        }
+    }
+
+    private fun clearLocalCache() {
+        saveLocalCache(emptyList())
+    }
 }

@@ -27,6 +27,10 @@ class CartViewModel @Inject constructor(
         val totalPrice: Double = 0.0
     )
 
+    companion object {
+        private const val HARDCODED_PAYMENT_METHOD = "6a0be36f16b8981d137c9595"
+    }
+
     fun loadCart() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
@@ -123,6 +127,40 @@ class CartViewModel @Inject constructor(
                 _state.value = _state.value.copy(
                     isLoading = false,
                     errorMessage = e.message ?: "Error al eliminar del carrito"
+                )
+            }
+        }
+    }
+
+    fun processCheckout(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+
+            try {
+                println("💳 CartViewModel: Procesando checkout")
+                val success = cartManager.checkout(HARDCODED_PAYMENT_METHOD)
+
+                if (success) {
+                    println("✅ CartViewModel: Checkout exitoso")
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        cartItems = emptyList(),
+                        totalItems = 0,
+                        totalPrice = 0.0
+                    )
+                    onSuccess()
+                } else {
+                    println("❌ CartViewModel: Checkout fallido")
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        errorMessage = "No se pudo completar la compra. Verifica tu conexión o intenta más tarde."
+                    )
+                }
+            } catch (e: Exception) {
+                println("❌ CartViewModel: Excepción en checkout: ${e.message}")
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Error al procesar la compra"
                 )
             }
         }
