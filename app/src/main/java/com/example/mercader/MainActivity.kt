@@ -25,6 +25,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.example.mercader.ui.screens.games.GameFormScreen
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.ui.screens.auth.LoginScreen

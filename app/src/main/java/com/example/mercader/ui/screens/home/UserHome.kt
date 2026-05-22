@@ -24,6 +24,8 @@ import com.example.mercader.common.components.SearchBarWithButton
 import com.example.mercader.common.components.UserBottomNav
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.GameFilters
+import com.example.mercader.domain.usecases.CreateRentalUseCase
+import com.example.mercader.domain.usecases.CreateReservationUseCase
 import com.example.mercader.ui.screens.games.*
 import kotlinx.coroutines.launch
 
@@ -32,6 +34,8 @@ fun UserHome(
     onSwitchToAdmin: () -> Unit,
     onNavigateToCart: () -> Unit = {},
     cartManager: CartManager,
+    createReservationUseCase: CreateReservationUseCase? = null,
+    createRentalUseCase: CreateRentalUseCase? = null,
     collectionViewModel: CollectionViewModel = hiltViewModel(),
     filterViewModel: FilterViewModel = hiltViewModel()
 ) {
@@ -61,6 +65,8 @@ fun UserHome(
         CollectionScreen(
             viewModel = collectionViewModel,
             cartManager = cartManager,
+            createReservationUseCase = createReservationUseCase,
+            createRentalUseCase = createRentalUseCase,
             initialSearchQuery = searchQuery,
             initialFilters = appliedFilters,
             onBack = {
