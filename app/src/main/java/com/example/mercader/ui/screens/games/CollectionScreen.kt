@@ -20,10 +20,12 @@ import com.example.mercader.common.components.SearchBar
 import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.GameFilters
 import com.example.mercader.common.utils.GameFilter
+import com.example.mercader.common.utils.CartManager
 
 @Composable
 fun CollectionScreen(
     viewModel: CollectionViewModel,
+    cartManager: CartManager,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onEditGame: ((Game) -> Unit)? = null,
@@ -177,6 +179,7 @@ fun CollectionScreen(
     selectedGame?.let { game ->
         GameDetailDialog(
             game = game,
+            cartManager = cartManager,
             onDismiss = { selectedGame = null },
             onEditGame = { gameToEdit ->
                 selectedGame = null

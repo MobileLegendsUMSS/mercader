@@ -22,38 +22,36 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.ui.screens.auth.LoginScreen
 import com.example.mercader.ui.screens.auth.SignupScreen
 import com.example.mercader.domain.models.Game
-import com.example.mercader.ui.screens.cart.CartScreen  // ← Importar CartScreen
+import com.example.mercader.ui.screens.cart.CartScreen
+import com.example.mercader.ui.screens.cart.CartViewModel
 import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
-
+import com.example.mercader.common.utils.CartManager
+import javax.inject.Inject
 
 sealed class AppScreen {
     object Login      : AppScreen()
     object SignUp     : AppScreen()
-    object AdminHome  : AppScreen()
-    object UserHome   : AppScreen()
-    object GameForm   : AppScreen()
-    object Stock      : AppScreen()
-    object Cart       : AppScreen()
+    object AdminHome    : AppScreen()
+    object UserHome     : AppScreen()
+    object GameForm     : AppScreen()
+    object Stock        : AppScreen()
+    object Cart         : AppScreen()
 }
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var cartManager: CartManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,6 +102,7 @@ class MainActivity : ComponentActivity() {
                                 onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
                                 onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
                                 collectionViewModel = collectionViewModel,
+                                cartManager = cartManager,
                                 filterViewModel = filterViewModel
                             )
                         }
@@ -129,6 +128,7 @@ class MainActivity : ComponentActivity() {
                         is AppScreen.Stock -> {
                             CollectionScreen(
                                 viewModel = collectionViewModel,
+                                cartManager = cartManager,
                                 onBack = { currentScreen = AppScreen.AdminHome },
                                 onEditGame = { game ->
                                     gameToEdit = game
@@ -136,10 +136,12 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        
+
                         is AppScreen.Cart -> {
+                            val cartViewModel: CartViewModel = hiltViewModel()
                             CartScreen(
-                                onBack = { currentScreen = AppScreen.UserHome }
+                                onBack = { currentScreen = AppScreen.UserHome },
+                                viewModel = cartViewModel
                             )
                         }
                     }

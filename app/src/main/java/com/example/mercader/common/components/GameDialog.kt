@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.CollectionViewModel.DeleteViewModel
 import com.example.mercader.common.utils.CartManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun GameDetailDialog(
@@ -31,30 +32,52 @@ fun GameDetailDialog(
     onTutorial: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
+    cartManager: CartManager,  // ← INYECTAR CartManager como parámetro
     onEditGame: ((Game) -> Unit)? = null,
-    onCartUpdate: (() -> Unit)? = null,  // Callback para actualizar UI cuando cambia el carrito
-    onNavigateToCart: (() -> Unit)? = null,  // ← Nuevo parámetro
+    onCartUpdate: (() -> Unit)? = null,
+    onNavigateToCart: (() -> Unit)? = null,
 ) {
     var showModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val cartManager = remember { CartManager.getInstance(context) }
-    var isInCart by remember { mutableStateOf(cartManager.isInCart(game.id)) }
-    var cartQuantity by remember { mutableStateOf(cartManager.getQuantity(game.id)) }
+
+    // Estado del carrito - inicializado con valores por defecto
+    var isInCart by remember { mutableStateOf(false) }
+    var cartQuantity by remember { mutableStateOf(0) }
+    var isAddingToCart by remember { mutableStateOf(false) }
+    var isLoadingCartState by remember { mutableStateOf(true) }
+
+    // CoroutineScope para lanzar corrutinas
+    val coroutineScope = rememberCoroutineScope()
+
+    // Cargar estado inicial del carrito (asíncrono)
+    LaunchedEffect(game.id) {
+        isLoadingCartState = true
+        try {
+            isInCart = cartManager.isInCart(game.id)
+            if (isInCart) {
+                cartQuantity = cartManager.getQuantity(game.id)
+            }
+        } catch (e: Exception) {
+            Log.e("GameDetailDialog", "Error loading cart state: ${e.message}")
+        } finally {
+            isLoadingCartState = false
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
             dismissOnBackPress = true,
             dismissOnClickOutside = true,
-            usePlatformDefaultWidth = false  // Esto permite que el dialogo ocupe mas ancho
+            usePlatformDefaultWidth = false
         )
     ) {
         Card(
             modifier = modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.9f)  // Aumentado de 0.85f a 0.9f para más altura
-                .padding(horizontal = 20.dp),  // Muy poco padding horizontal (solo 8dp)
-            shape = RoundedCornerShape(24.dp),  // Bordes un poco más redondeados
+                .fillMaxHeight(0.9f)
+                .padding(horizontal = 20.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
@@ -65,13 +88,13 @@ fun GameDetailDialog(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)  // Reducido de 56dp a 48dp
+                        .height(48.dp)
                 ) {
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(4.dp)  // Reducido de 8dp a 4dp
+                            .padding(4.dp)
                     ) {
                         Text(
                             text = "✕",
@@ -87,7 +110,7 @@ fun GameDetailDialog(
                         .weight(1f)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 12.dp)  // Reducido de 16dp a 12dp
+                        .padding(horizontal = 12.dp)
                 ) {
                     // Titulo
                     Text(
@@ -99,7 +122,7 @@ fun GameDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Imagen
                     ImagePlaceholder(
@@ -107,15 +130,15 @@ fun GameDetailDialog(
                         contentDescription = game.title,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)  // Reducido de 250dp a 200dp para aprovechar espacio
+                            .height(200.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Tutorial y Precio
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),  // Reducido de 12dp a 10dp
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SecondaryButton(
@@ -123,7 +146,7 @@ fun GameDetailDialog(
                             onClick = onTutorial,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(44.dp)  // Reducido de 48dp a 44dp
+                                .height(44.dp)
                         )
 
                         PriceDisplay(
@@ -132,12 +155,12 @@ fun GameDetailDialog(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))  // Reducido de 12dp a 10dp
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Jugadores y Tiempo
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)  // Reducido de 12dp a 10dp
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         InfoChip(
                             value = "${game.nMinPerson} - ${game.nMaxPerson}",
@@ -152,7 +175,7 @@ fun GameDetailDialog(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Categorías
                     Text(
@@ -162,7 +185,7 @@ fun GameDetailDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    Spacer(modifier = Modifier.height(6.dp))  // Reducido de 8dp a 6dp
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     if (game.category.id == "") {
                         Text(
@@ -175,7 +198,7 @@ fun GameDetailDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            TagChip(label=game.category.descripcion)
+                            TagChip(label = game.category.descripcion)
                         }
                     }
 
@@ -195,12 +218,12 @@ fun GameDetailDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Dificultad y Editorial
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)  // Reducido de 16dp a 12dp
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         LabeledField(
                             label = "Dificultad",
@@ -215,28 +238,22 @@ fun GameDetailDialog(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))  // Reducido de 16dp a 12dp
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
 
                 // ── Botones ──────────────────────────────────────────────
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),  // Reducido padding
-                    verticalArrangement = Arrangement.spacedBy(6.dp)  // Reducido de 8dp a 6dp
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)  // Reducido de 8dp a 6dp
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        /*SecondaryButton(
-                            text = "Alquilar",
-                            onClick = onRent,
-                            modifier = Modifier.weight(1f)
-                        )*/
-
                         SecondaryButton(
-                            text="Retirar Juego",
+                            text = "Retirar Juego",
                             onClick = { showModal = true },
                             modifier = Modifier.weight(1f)
                         )
@@ -256,7 +273,6 @@ fun GameDetailDialog(
                             )
                         }
 
-
                         SecondaryButton(
                             text = "Editar Juego",
                             onClick = {
@@ -274,27 +290,42 @@ fun GameDetailDialog(
                                 onNavigateToCart?.invoke()
                                 onDismiss()
                             } else {
-                                // Agregar al carrito
-                                val added = cartManager.addToCart(game)
-                                if (added) {
-                                    isInCart = true
-                                    cartQuantity = cartManager.getQuantity(game.id)
-                                    Toast.makeText(
-                                        context,
-                                        "✓ ${game.title} se ha añadido al carrito",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    onCartUpdate?.invoke()
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Error al añadir ${game.title} al carrito",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                // Agregar al carrito con corrutina
+                                isAddingToCart = true
+                                coroutineScope.launch {
+                                    try {
+                                        val added = cartManager.addToCart(game)
+                                        if (added) {
+                                            // Actualizar estado local
+                                            isInCart = true
+                                            cartQuantity = cartManager.getQuantity(game.id)
+                                            Toast.makeText(
+                                                context,
+                                                "✓ ${game.title} se ha añadido al carrito",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            onCartUpdate?.invoke()
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Error al añadir ${game.title} al carrito",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    } catch (e: Exception) {
+                                        Toast.makeText(
+                                            context,
+                                            "Error de conexión: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } finally {
+                                        isAddingToCart = false
+                                    }
                                 }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = !isAddingToCart && !isLoadingCartState,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isInCart)
                                 MaterialTheme.colorScheme.tertiary
@@ -302,10 +333,17 @@ fun GameDetailDialog(
                                 MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Text(
-                            text = if (isInCart) "🛒 Ver Carrito ($cartQuantity)" else "🛒 Añadir al Carrito",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        if (isAddingToCart) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text(
+                                text = if (isInCart) "🛒 Ver Carrito ($cartQuantity)" else "🛒 Añadir al Carrito",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
                     }
                 }
 
