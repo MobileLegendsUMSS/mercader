@@ -24,6 +24,7 @@ import com.example.mercader.common.components.SearchBarWithButton
 import com.example.mercader.common.components.UserBottomNav
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.GameFilters
+import com.example.mercader.common.utils.ReserveManager
 import com.example.mercader.ui.screens.games.*
 import kotlinx.coroutines.launch
 
@@ -32,6 +33,7 @@ fun UserHome(
     onSwitchToAdmin: () -> Unit,
     onNavigateToCart: () -> Unit = {},
     cartManager: CartManager,
+    reserveManager: ReserveManager,
     collectionViewModel: CollectionViewModel = hiltViewModel(),
     filterViewModel: FilterViewModel = hiltViewModel()
 ) {
@@ -71,7 +73,8 @@ fun UserHome(
                 refreshCart()
             },
             onNavigateToCart = onNavigateToCart,
-            onCartUpdate = { refreshCart() }
+            onCartUpdate = { refreshCart() },
+            reserveManager = reserveManager
         )
         return
     }
