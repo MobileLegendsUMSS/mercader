@@ -26,10 +26,12 @@ fun ProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    // TODO: Descomentar cuando el backend esté listo
-    // LaunchedEffect(Unit) {
-    //     viewModel.loadProfile(userId)
-    // }
+    // TODO: Reemplazar con el ID real del usuario autenticado cuando se implemente login
+    val userId = "6a0bc0f116b8981d137c9585"
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProfile(userId)
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 

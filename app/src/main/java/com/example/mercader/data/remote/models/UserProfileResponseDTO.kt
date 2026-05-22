@@ -2,12 +2,17 @@ package com.example.mercader.data.remote.models
 
 import com.google.gson.annotations.SerializedName
 
-data class UserProfileResponseDTO(
-    @SerializedName("_id") val id: String = "",
-    @SerializedName("nombre_usuario") val username: String = "",
-    @SerializedName("nombre") val name: String = "",
-    @SerializedName("apellido") val lastName: String = "",
-    @SerializedName("telefono") val phone: String = "",
-    @SerializedName("correo") val email: String = "",
-    @SerializedName("merca_points") val mercaPoints: Int = 0
+data class UserProfileBaseResponse(
+    @SerializedName("result") val result: Boolean,
+    @SerializedName("message") val message: String,
+    @SerializedName("data") val data: UserProfileDataDTO?
+)
+
+data class UserProfileDataDTO(
+    @SerializedName("nombre") val username: String? = "",
+    @SerializedName("nombres") val name: String? = "",
+    @SerializedName("apellidos") val lastName: String? = "",
+    @SerializedName("telefono") val phone: String? = "",
+    @SerializedName("correo_contacto") val email: String? = "",
+    @SerializedName("mercapoints") val mercaPoints: Int? = 0
 )

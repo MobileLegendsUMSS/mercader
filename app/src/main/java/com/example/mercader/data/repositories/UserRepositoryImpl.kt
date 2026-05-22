@@ -13,21 +13,22 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             val response = userApiService.getUserProfile(userId)
             if (response.isSuccessful) {
-                val dto = response.body()
-                if (dto != null) {
+                val body = response.body()
+                if (body != null && body.result && body.data != null) {
+                    val dto = body.data
                     Result.success(
                         UserProfile(
-                            id = dto.id,
-                            username = dto.username,
-                            name = dto.name,
-                            lastName = dto.lastName,
-                            phone = dto.phone,
-                            email = dto.email,
-                            mercaPoints = dto.mercaPoints
+                            id = userId,
+                            username = dto.username ?: "",
+                            name = dto.name ?: "",
+                            lastName = dto.lastName ?: "",
+                            phone = dto.phone ?: "",
+                            email = dto.email ?: "",
+                            mercaPoints = dto.mercaPoints ?: 0
                         )
                     )
                 } else {
-                    Result.failure(Exception("Respuesta vacía del servidor"))
+                    Result.failure(Exception(body?.message ?: "Respuesta vacía del servidor"))
                 }
             } else {
                 Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
