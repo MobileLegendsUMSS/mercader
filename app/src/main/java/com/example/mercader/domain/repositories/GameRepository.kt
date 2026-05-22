@@ -8,7 +8,8 @@ interface GameRepository {
     suspend fun getDifficulties(): Result<List<Difficulty>>
     suspend fun getEditorials(): Result<List<Editorial>>
 
+    suspend fun updateGamePartial(gameId: String, updatedFields: Map<String, Any>): Result<Unit>
+
     suspend fun getGames(): Result<List<Game>>
     suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit>
-    suspend fun updateGame(game: Game): Result<Unit>
 }
