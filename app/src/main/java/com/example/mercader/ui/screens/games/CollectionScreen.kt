@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -21,11 +22,13 @@ import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.GameFilters
 import com.example.mercader.common.utils.GameFilter
 import com.example.mercader.common.utils.CartManager
+import com.example.mercader.common.utils.ReserveManager
 
 @Composable
 fun CollectionScreen(
     viewModel: CollectionViewModel,
     cartManager: CartManager,
+    reserveManager: ReserveManager,
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onEditGame: ((Game) -> Unit)? = null,
@@ -180,6 +183,7 @@ fun CollectionScreen(
         GameDetailDialog(
             game = game,
             cartManager = cartManager,
+            reserveManager = reserveManager,
             onDismiss = { selectedGame = null },
             onEditGame = { gameToEdit ->
                 selectedGame = null

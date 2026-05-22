@@ -35,6 +35,7 @@ import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
 import com.example.mercader.common.utils.CartManager
+import com.example.mercader.common.utils.ReserveManager
 import javax.inject.Inject
 
 sealed class AppScreen {
@@ -52,6 +53,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var cartManager: CartManager
+    @Inject
+    lateinit var reserveManager: ReserveManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,6 +106,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
                                 collectionViewModel = collectionViewModel,
                                 cartManager = cartManager,
+                                reserveManager = reserveManager,
                                 filterViewModel = filterViewModel
                             )
                         }
@@ -130,6 +134,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = collectionViewModel,
                                 cartManager = cartManager,
                                 onBack = { currentScreen = AppScreen.AdminHome },
+                                reserveManager = reserveManager,
                                 onEditGame = { game ->
                                     gameToEdit = game
                                     currentScreen = AppScreen.GameForm

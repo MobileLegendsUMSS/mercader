@@ -8,7 +8,7 @@ fun InProgressModal(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "En preoceso... ")
+            Text(text = "En proceso... ")
         },
         text = {
             Text(text = "Esta funcionalidad esta en desarrollo y estara disponible proximamente.")
