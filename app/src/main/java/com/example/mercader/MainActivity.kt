@@ -35,6 +35,8 @@ import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
 import com.example.mercader.common.utils.CartManager
+import com.example.mercader.ui.screens.profile.ProfileScreen
+import com.example.mercader.ui.screens.profile.ProfileViewModel
 import javax.inject.Inject
 
 sealed class AppScreen {
@@ -45,6 +47,7 @@ sealed class AppScreen {
     object GameForm     : AppScreen()
     object Stock        : AppScreen()
     object Cart         : AppScreen()
+    object Profile      : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -100,7 +103,8 @@ class MainActivity : ComponentActivity() {
                             val filterViewModel: FilterViewModel = hiltViewModel()
                             UserHome(
                                 onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
-                                onNavigateToCart = { currentScreen = AppScreen.Cart },  // ← Pasar callback
+                                onNavigateToCart = { currentScreen = AppScreen.Cart },
+                                onNavigateToProfile = { currentScreen = AppScreen.Profile },
                                 collectionViewModel = collectionViewModel,
                                 cartManager = cartManager,
                                 filterViewModel = filterViewModel
@@ -142,6 +146,14 @@ class MainActivity : ComponentActivity() {
                             CartScreen(
                                 onBack = { currentScreen = AppScreen.UserHome },
                                 viewModel = cartViewModel
+                            )
+                        }
+
+                        is AppScreen.Profile -> {
+                            val profileViewModel: ProfileViewModel = hiltViewModel()
+                            ProfileScreen(
+                                onBack = { currentScreen = AppScreen.UserHome },
+                                viewModel = profileViewModel
                             )
                         }
                     }
