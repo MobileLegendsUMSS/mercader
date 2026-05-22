@@ -1,5 +1,7 @@
 package com.example.mercader.data.remote.apiservice
 
+import com.example.mercader.data.remote.models.BuyRequest
+import com.example.mercader.data.remote.models.BuyResponse
 import com.example.mercader.data.remote.models.CartRequest
 import com.example.mercader.data.remote.models.CartResponse
 import com.example.mercader.data.remote.models.DeleteFromCartRequest
@@ -27,4 +29,9 @@ interface CartApiService {
     suspend fun removeFromCart(
         @Body request: DeleteFromCartRequest
     ): Response<CartResponse>
+
+    @POST("/api/servicios/usuarios/compra")
+    suspend fun checkout(
+        @Body request: BuyRequest
+    ): Response<BuyResponse>
 }

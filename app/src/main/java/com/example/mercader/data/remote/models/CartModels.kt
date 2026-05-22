@@ -36,3 +36,16 @@ data class CartItemResponse(
     @SerializedName("precio_juegos")
     val precioJuegos: Double
 )
+
+data class BuyRequest(
+    @SerializedName("id_usuario")
+    val idUsuario: String,
+    @SerializedName("id_metodo_pago")
+    val idMetodoPago: String
+)
+
+// Respuesta de compra
+data class BuyResponse(
+    val success: Boolean,
+    val message: String
+)

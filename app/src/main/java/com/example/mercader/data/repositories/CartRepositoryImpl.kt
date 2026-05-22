@@ -1,8 +1,8 @@
 package com.example.mercader.data.repository
 
 import com.example.mercader.data.remote.apiservice.CartApiService
+import com.example.mercader.data.remote.models.BuyRequest
 import com.example.mercader.data.remote.models.CartRequest
-import com.example.mercader.data.remote.models.CartResponse
 import com.example.mercader.data.remote.models.DeleteFromCartRequest
 import com.example.mercader.data.repositories.CartRepository
 import retrofit2.HttpException
@@ -103,6 +103,43 @@ class CartRepositoryImpl @Inject constructor(
                 Result.success(Unit)
             } else {
                 val errorMessage = response.body()?.message ?: "Error al eliminar del carrito"
+                println("❌ CartRepository: Error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: IOException) {
+            println("❌ CartRepository: Error de red: ${e.message}")
+            Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: HttpException) {
+            println("❌ CartRepository: Error HTTP: ${e.message}")
+            Result.failure(Exception("Error del servidor: ${e.message}"))
+        } catch (e: Exception) {
+            println("❌ CartRepository: Error inesperado: ${e.message}")
+            e.printStackTrace()
+            Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
+    }
+
+    override suspend fun checkout(userId: String, paymentMethod: String): Result<Unit> {
+        return try {
+            // println("💳 CartRepository: Iniciando compra para usuario: $userId")
+            // println("💳 CartRepository: Metodo de pago: $metodoPagoId")
+
+            val request = BuyRequest(
+                idUsuario = userId,
+                idMetodoPago = paymentMethod
+            )
+
+            val response = apiService.checkout(request)
+
+            println("💳 CartRepository: Response code: ${response.code()}")
+            println("💳 CartRepository: Response successful: ${response.isSuccessful}")
+            println("💳 CartRepository: Response body: ${response.body()}")
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                println("✅ CartRepository: Compra exitosa")
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al procesar la compra"
                 println("❌ CartRepository: Error: $errorMessage")
                 Result.failure(Exception(errorMessage))
             }
