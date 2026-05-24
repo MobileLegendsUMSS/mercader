@@ -26,6 +26,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.example.mercader.common.components.InProgressModal
 import com.example.mercader.common.components.SidebarMenu
+import com.example.mercader.common.components.SplashAuthenticationScreen
 import com.example.mercader.ui.screens.auth.LoginScreen
 import com.example.mercader.ui.screens.auth.SignupScreen
 import com.example.mercader.domain.models.Game
@@ -39,8 +40,9 @@ import com.example.mercader.common.utils.ReserveManager
 import javax.inject.Inject
 
 sealed class AppScreen {
-    object Login      : AppScreen()
-    object SignUp     : AppScreen()
+    object Splash       : AppScreen()
+    object Login        : AppScreen()
+    object SignUp       : AppScreen()
     object AdminHome    : AppScreen()
     object UserHome     : AppScreen()
     object GameForm     : AppScreen()
@@ -69,10 +71,21 @@ class MainActivity : ComponentActivity() {
                     // ── Estado de navegación ──────────────────────────────
                     var gameToEdit: Game? by remember { mutableStateOf(null) }
                     val collectionViewModel: CollectionViewModel = hiltViewModel()
-                    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Login) }
+                    var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Splash) }
 
                     // ── Router principal ──────────────────────────────────
                     when (currentScreen) {
+                        is AppScreen.Splash -> {
+                            SplashAuthenticationScreen(
+                                onNavigateToHome = { isAdmin ->
+                                    currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
+                                },
+                                onNavigateToLogin = {
+                                    currentScreen = AppScreen.Login
+                                }
+                            )
+                        }
+
                         is AppScreen.Login -> {
                             LoginScreen(
                                 onLoginSuccess = { isAdmin ->

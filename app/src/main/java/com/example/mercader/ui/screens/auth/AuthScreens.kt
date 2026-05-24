@@ -87,6 +87,22 @@ fun LoginScreen(
                     return@Button
                 }
                 errorMessage = null
+                
+                // TODO: IMPLEMENTAR LLAMADA API
+                // 1. Hacer petición POST a mercader-server: /api/login
+                // 2. Con body: { nombre, contrasenna }
+                // 3. Esperar respuesta con estructura:
+                //    {
+                //      mensaje: string,
+                //      token: string (JWT),  ← AQUI ESTA EL TOKEN
+                //      usuario: { id, nombre }
+                //    }
+                // 4. SI la respuesta es exitosa:
+                //    a) GUARDAR el token en CACHE del dispositivo usando TokenRepository
+                //    b) Guardar timestamp actual como lastAccessTime (para validar 15 días)
+                //    c) Luego llamar a onLoginSuccess(isAdmin)
+                // 5. SI falla: mostrar errorMessage
+                
                 val isAdmin = contrasenna.endsWith(ADMIN_SUFFIX)
                 onLoginSuccess(isAdmin)
             },
@@ -178,6 +194,25 @@ fun SignupScreen(
                     return@Button
                 }
                 errorMessage = null
+                
+                // TODO: IMPLEMENTAR LLAMADA API
+                // 1. Hacer petición POST a mercader-server: /api/signin
+                // 2. Con body: { nombre, contrasenna }
+                // 3. Esperar respuesta con estructura:
+                //    {
+                //      mensaje: string,
+                //      token: string (JWT),  ← AQUI ESTA EL TOKEN (debe devolver después de fix)
+                //      usuario: { id, nombre }
+                //    }
+                // 4. SI la respuesta es exitosa:
+                //    a) GUARDAR el token en CACHE del dispositivo usando TokenRepository
+                //    b) Guardar timestamp actual como lastAccessTime (para validar 15 días)
+                //    c) Luego llamar a onSignupSuccess(isAdmin)
+                // 5. SI falla: mostrar errorMessage con detalles (ej: "Usuario ya existe")
+                //
+                // NOTA: El backend actualmente NO devuelve token en signin.
+                // Debe agregarse generación y devolución del token en signin.service.ts
+                
                 val isAdmin = contrasenna.endsWith(ADMIN_SUFFIX)
                 onSignupSuccess(isAdmin)
             },
