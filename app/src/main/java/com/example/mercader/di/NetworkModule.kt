@@ -3,9 +3,12 @@ package com.example.mercader.di
 import com.example.mercader.common.constants.AppConstants
 import com.example.mercader.data.remote.apiservice.CartApiService
 import com.example.mercader.data.remote.apiservice.GameApiService
+import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.data.remote.apiservice.ReserveApiService
 import com.example.mercader.data.repositories.CartRepository
+import com.example.mercader.data.repositories.UserRepositoryImpl
 import com.example.mercader.data.repository.CartRepositoryImpl
+import com.example.mercader.domain.repositories.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,13 +25,14 @@ import javax.inject.Singleton
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
@@ -67,6 +71,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideUserApiService(retrofit: Retrofit): UserApiService {
+        return retrofit.create(UserApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(
+        apiService: UserApiService
+    ): UserRepository {
+        return UserRepositoryImpl(apiService)
     fun provideReserveService(retrofit: Retrofit): ReserveApiService {
         return retrofit.create(ReserveApiService::class.java)
     }

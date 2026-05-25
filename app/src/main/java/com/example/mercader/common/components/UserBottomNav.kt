@@ -29,7 +29,8 @@ fun UserBottomNav(
     onInProgress: () -> Unit,
     onSwitchToAdmin: () -> Unit,
     onSearch: (String) -> Unit,
-    onCartClick: () -> Unit = {}
+    onCartClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
     var query by remember { mutableStateOf("") }
     Surface(
@@ -62,7 +63,7 @@ fun UserBottomNav(
             NavIconButton(
                 icon = "👤",  // reemplaza: painterResource(R.drawable.ic_user)
                 label = "Perfil",
-                onClick = onInProgress
+                onClick = onProfileClick
             )
 
             // cambiar a Admin

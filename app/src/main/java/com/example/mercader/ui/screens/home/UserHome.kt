@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 fun UserHome(
     onSwitchToAdmin: () -> Unit,
     onNavigateToCart: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
     cartManager: CartManager,
     reserveManager: ReserveManager,
     collectionViewModel: CollectionViewModel = hiltViewModel(),
@@ -145,7 +146,8 @@ fun UserHome(
                 appliedFilters = null
                 showCollectionScreen = true
             },
-            onCartClick = onNavigateToCart
+            onCartClick = onNavigateToCart,
+            onProfileClick = onNavigateToProfile
         )
     }
 
