@@ -153,7 +153,8 @@ class MainActivity : ComponentActivity() {
                             val profileViewModel: ProfileViewModel = hiltViewModel()
                             ProfileScreen(
                                 onBack = { currentScreen = AppScreen.UserHome },
-                                viewModel = profileViewModel
+                                viewModel = profileViewModel,
+                                cartManager = cartManager
                             )
                         }
                     }

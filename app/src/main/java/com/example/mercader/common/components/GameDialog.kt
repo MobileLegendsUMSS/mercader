@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +22,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.CollectionViewModel.DeleteViewModel
+import com.example.mercader.ui.screens.games.FavoriteViewModel
 import com.example.mercader.common.utils.CartManager
 import kotlinx.coroutines.launch
 
@@ -32,6 +36,7 @@ fun GameDetailDialog(
     onTutorial: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
+    favoriteViewModel: FavoriteViewModel = hiltViewModel(),
     cartManager: CartManager,  // ← INYECTAR CartManager como parámetro
     onEditGame: ((Game) -> Unit)? = null,
     onCartUpdate: (() -> Unit)? = null,
@@ -46,12 +51,16 @@ fun GameDetailDialog(
     var isAddingToCart by remember { mutableStateOf(false) }
     var isLoadingCartState by remember { mutableStateOf(true) }
 
+    val isFavorite by favoriteViewModel.isFavorite.collectAsState()
+    val isFavoriteLoading by favoriteViewModel.isLoading.collectAsState()
+
     // CoroutineScope para lanzar corrutinas
     val coroutineScope = rememberCoroutineScope()
 
     // Cargar estado inicial del carrito (asíncrono)
     LaunchedEffect(game.id) {
         isLoadingCartState = true
+        favoriteViewModel.checkFavorite(game.id)
         try {
             isInCart = cartManager.isInCart(game.id)
             if (isInCart) {
@@ -84,12 +93,30 @@ fun GameDetailDialog(
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
-                // ── Box para el boton de cerrar ──────────────────────────────────────────
+                // ── Box para el boton de cerrar y favorito ──────────────────────────────────────────
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
                 ) {
+                    IconButton(
+                        onClick = {
+                            favoriteViewModel.toggleFavorite(game.id) { message ->
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(4.dp),
+                        enabled = !isFavoriteLoading
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = "Favorito",
+                            tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier
@@ -103,6 +130,7 @@ fun GameDetailDialog(
                         )
                     }
                 }
+
 
                 // ── Columna Principal ─────────────────────────────────
                 Column(

@@ -50,6 +50,37 @@ class ProfileViewModel @Inject constructor(
                     errorMessage = e.message ?: "Error al cargar el perfil"
                 )
             }
+            loadFavorites()
+        }
+    }
+
+    fun loadFavorites() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isFavoritesLoading = true, favoritesError = null)
+            try {
+                val result = userRepository.getFavorites()
+                result.fold(
+                    onSuccess = { favorites ->
+                        _state.value = _state.value.copy(
+                            favorites = favorites,
+                            isFavoritesLoading = false,
+                            favoritesError = null
+                        )
+                    },
+                    onFailure = { error ->
+                        _state.value = _state.value.copy(
+                            isFavoritesLoading = false,
+                            favoritesError = error.message ?: "Error al cargar favoritos"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isFavoritesLoading = false,
+                    favoritesError = e.message ?: "Error al cargar favoritos"
+                )
+            }
         }
     }
 }
+
