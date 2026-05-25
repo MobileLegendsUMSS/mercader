@@ -4,6 +4,7 @@ import com.example.mercader.common.constants.AppConstants
 import com.example.mercader.data.remote.apiservice.CartApiService
 import com.example.mercader.data.remote.apiservice.GameApiService
 import com.example.mercader.data.remote.apiservice.UserApiService
+import com.example.mercader.data.remote.apiservice.ReserveApiService
 import com.example.mercader.data.repositories.CartRepository
 import com.example.mercader.data.repositories.UserRepositoryImpl
 import com.example.mercader.data.repository.CartRepositoryImpl
@@ -80,5 +81,7 @@ object NetworkModule {
         apiService: UserApiService
     ): UserRepository {
         return UserRepositoryImpl(apiService)
+    fun provideReserveService(retrofit: Retrofit): ReserveApiService {
+        return retrofit.create(ReserveApiService::class.java)
     }
 }

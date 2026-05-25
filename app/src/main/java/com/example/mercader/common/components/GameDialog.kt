@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -24,6 +25,7 @@ import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.CollectionViewModel.DeleteViewModel
 import com.example.mercader.ui.screens.games.FavoriteViewModel
 import com.example.mercader.common.utils.CartManager
+import com.example.mercader.common.utils.ReserveManager
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,19 +39,21 @@ fun GameDetailDialog(
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
     favoriteViewModel: FavoriteViewModel = hiltViewModel(),
-    cartManager: CartManager,  // ← INYECTAR CartManager como parámetro
+    cartManager // ← INYECTAR CartManager como parámetro
+    cartManager: CartManager,
+    reserveManager: ReserveManager,
     onEditGame: ((Game) -> Unit)? = null,
     onCartUpdate: (() -> Unit)? = null,
     onNavigateToCart: (() -> Unit)? = null,
 ) {
     var showModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    // Estado del carrito - inicializado con valores por defecto
     var isInCart by remember { mutableStateOf(false) }
     var cartQuantity by remember { mutableStateOf(0) }
     var isAddingToCart by remember { mutableStateOf(false) }
     var isLoadingCartState by remember { mutableStateOf(true) }
+    var showReserveModal by remember { mutableStateOf(false) }
+    var isProcessingReserve by remember { mutableStateOf(false) }
 
     val isFavorite by favoriteViewModel.isFavorite.collectAsState()
     val isFavoriteLoading by favoriteViewModel.isLoading.collectAsState()
@@ -286,6 +290,36 @@ fun GameDetailDialog(
                             modifier = Modifier.weight(1f)
                         )
 
+                        if (showReserveModal) {
+                            ReserveModal(
+                                gameTitle = game.title,
+                                onDismiss = { showReserveModal = false },
+                                onConfirm = { tipoServicio ->
+                                    showReserveModal = false
+                                    isProcessingReserve = true
+                                    coroutineScope.launch {
+                                        try {
+                                            val result = reserveManager.bookReserve(game.id, tipoServicio)
+                                            if (result.isSuccess) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "✓ ${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            } else {
+                                                val error = result.exceptionOrNull()?.message ?: "Error desconocido"
+                                                Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                                            }
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        } finally {
+                                            isProcessingReserve = false
+                                        }
+                                    }
+                                }
+                            )
+                        }
+
                         if (showModal) {
                             DeleteGameModal(
                                 gameName = game.title,
@@ -306,6 +340,12 @@ fun GameDetailDialog(
                             onClick = {
                                 onEditGame?.invoke(game)
                             },
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        SecondaryButton(
+                            text = "Solicitar Prestamo",
+                            onClick = { showReserveModal = true },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -368,7 +408,7 @@ fun GameDetailDialog(
                             )
                         } else {
                             Text(
-                                text = if (isInCart) "🛒 Ver Carrito ($cartQuantity)" else "🛒 Añadir al Carrito",
+                                text = if (isInCart) "Ver Carrito ($cartQuantity)" else "Añadir al Carrito",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
