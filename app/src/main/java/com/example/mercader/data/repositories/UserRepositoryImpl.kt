@@ -90,19 +90,19 @@ class UserRepositoryImpl @Inject constructor(
                 if (body != null && body.success) {
                     val games = body.data?.map {
                         Game(
-                            id = it.id_juego,
-                            title = it.titulo,
-                            description = it.descripcion,
+                            id = it.id_juego ?: it.mongoId ?: it.titlo ?: "",
+                            title = it.titlo ?: "",
+                            description = it.descripcion ?: "",
                             tutorial = "",
                             category = com.example.mercader.data.remote.models.Category("", ""),
-                            nMinPerson = 0,
-                            nMaxPerson = 0,
-                            minMinutes = 0,
-                            maxMinutes = 0,
+                            nMinPerson = it.cantMinPers ?: 0,
+                            nMaxPerson = it.cantMaxPers ?: 0,
+                            minMinutes = it.duracionMin ?: 0,
+                            maxMinutes = it.duracionMax ?: 0,
                             difficulty = com.example.mercader.data.remote.models.Difficulty("", ""),
                             editorial = com.example.mercader.data.remote.models.Editorial("", ""),
-                            stock = 0,
-                            price = it.precio
+                            stock = if (it.disponible == true) 1 else 0,
+                            price = it.precio ?: 0f
                         )
                     } ?: emptyList()
                     Result.success(games)

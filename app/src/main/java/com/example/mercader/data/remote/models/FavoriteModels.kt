@@ -22,10 +22,16 @@ data class FavoriteCheckDataDTO(
 )
 
 data class FavoriteGameDTO(
-    @SerializedName("id_juego") val id_juego: String,
-    @SerializedName("titulo") val titulo: String,
-    @SerializedName("descripcion") val descripcion: String,
-    @SerializedName("precio") val precio: Float
+    @SerializedName("id_juego") val id_juego: String?,
+    @SerializedName("_id") val mongoId: String?,
+    @SerializedName("titlo") val titlo: String?,
+    @SerializedName("descripcion") val descripcion: String?,
+    @SerializedName("precio") val precio: Float?,
+    @SerializedName("cant_min_pers") val cantMinPers: Int?,
+    @SerializedName("cant_max_pers") val cantMaxPers: Int?,
+    @SerializedName("duracion_min") val duracionMin: Int?,
+    @SerializedName("duracion_max") val duracionMax: Int?,
+    @SerializedName("disponible") val disponible: Boolean?
 )
 
 data class FavoritesListResponseDTO(
