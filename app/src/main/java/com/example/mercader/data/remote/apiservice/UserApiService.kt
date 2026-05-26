@@ -3,11 +3,16 @@ package com.example.mercader.data.remote.apiservice
 import com.example.mercader.data.remote.models.UserProfileBaseResponse
 import com.example.mercader.data.remote.models.FavoriteActionResponseDTO
 import com.example.mercader.data.remote.models.FavoritesListResponseDTO
+import com.example.mercader.data.remote.models.PurchaseListResponseDTO
+import com.example.mercader.data.remote.models.UserLoansRequestDTO
+import com.example.mercader.data.remote.models.UserLoansListResponseDTO
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.HTTP
+import retrofit2.http.Body
 
 interface UserApiService {
 
@@ -26,5 +31,13 @@ interface UserApiService {
 
     @GET("perfil/usuarios/favoritos")
     suspend fun getFavorites(): Response<FavoritesListResponseDTO>
+
+    @GET("servicios/usuarios/compra")
+    suspend fun getUserPurchases(): Response<PurchaseListResponseDTO>
+
+    @HTTP(method = "GET", path = "servicios/usuarios/prestamos", hasBody = true)
+    suspend fun getUserLoans(
+        @Body request: UserLoansRequestDTO
+    ): Response<UserLoansListResponseDTO>
 }
 

@@ -51,6 +51,8 @@ class ProfileViewModel @Inject constructor(
                 )
             }
             loadFavorites()
+            loadPurchases()
+            loadLoans()
         }
     }
 
@@ -78,6 +80,64 @@ class ProfileViewModel @Inject constructor(
                 _state.value = _state.value.copy(
                     isFavoritesLoading = false,
                     favoritesError = e.message ?: "Error al cargar favoritos"
+                )
+            }
+        }
+    }
+
+    fun loadPurchases() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isPurchasesLoading = true, purchasesError = null)
+            try {
+                val result = userRepository.getUserPurchases()
+                result.fold(
+                    onSuccess = { purchases ->
+                        _state.value = _state.value.copy(
+                            purchases = purchases,
+                            isPurchasesLoading = false,
+                            purchasesError = null
+                        )
+                    },
+                    onFailure = { error ->
+                        _state.value = _state.value.copy(
+                            isPurchasesLoading = false,
+                            purchasesError = error.message ?: "Error al cargar compras"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isPurchasesLoading = false,
+                    purchasesError = e.message ?: "Error al cargar compras"
+                )
+            }
+        }
+    }
+
+    fun loadLoans() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoansLoading = true, loansError = null)
+            try {
+                val result = userRepository.getUserLoans()
+                result.fold(
+                    onSuccess = { loans ->
+                        _state.value = _state.value.copy(
+                            loans = loans,
+                            isLoansLoading = false,
+                            loansError = null
+                        )
+                    },
+                    onFailure = { error ->
+                        _state.value = _state.value.copy(
+                            isLoansLoading = false,
+                            loansError = error.message ?: "Error al cargar préstamos"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoansLoading = false,
+                    loansError = e.message ?: "Error al cargar préstamos"
                 )
             }
         }
