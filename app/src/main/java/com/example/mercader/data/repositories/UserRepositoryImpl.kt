@@ -5,6 +5,9 @@ import android.util.Log
 import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
+import com.example.mercader.domain.models.UserPurchase
+import com.example.mercader.domain.models.UserPurchaseDetail
+import com.example.mercader.domain.models.UserLoan
 import com.example.mercader.domain.repositories.UserRepository
 import javax.inject.Inject
 
@@ -96,24 +99,92 @@ class UserRepositoryImpl @Inject constructor(
                 if (body != null && body.success) {
                     val games = body.data?.map {
                         Game(
-                            id = it.id_juego,
-                            title = it.titulo,
-                            description = it.descripcion,
+                            id = it.id_juego ?: it.mongoId ?: it.titlo ?: "",
+                            title = it.titlo ?: "",
+                            description = it.descripcion ?: "",
                             tutorial = "",
                             category = com.example.mercader.data.remote.models.Category("", ""),
-                            nMinPerson = 0,
-                            nMaxPerson = 0,
-                            minMinutes = 0,
-                            maxMinutes = 0,
+                            nMinPerson = it.cantMinPers ?: 0,
+                            nMaxPerson = it.cantMaxPers ?: 0,
+                            minMinutes = it.duracionMin ?: 0,
+                            maxMinutes = it.duracionMax ?: 0,
                             difficulty = com.example.mercader.data.remote.models.Difficulty("", ""),
                             editorial = com.example.mercader.data.remote.models.Editorial("", ""),
-                            stock = 0,
-                            price = it.precio
+                            stock = if (it.disponible == true) 1 else 0,
+                            price = it.precio ?: 0f
                         )
                     } ?: emptyList()
                     Result.success(games)
                 } else {
                     Result.failure(Exception(body?.message ?: "Error al obtener favoritos"))
+                }
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserPurchases(): Result<List<UserPurchase>> {
+        return try {
+            val response = userApiService.getUserPurchases()
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    val purchases = body.data?.map { item ->
+                        UserPurchase(
+                            total = item.total,
+                            paymentMethod = item.paymentMethod,
+                            details = item.details.map { detail ->
+                                UserPurchaseDetail(
+                                    gameId = detail.gameId,
+                                    title = detail.title,
+                                    quantity = detail.quantity,
+                                    priceSubtotal = detail.priceSubtotal
+                                )
+                            }
+                        )
+                    } ?: emptyList()
+                    Result.success(purchases)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al obtener compras"))
+                }
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getUserLoans(): Result<List<UserLoan>> {
+        return try {
+            val response = userApiService.getUserLoans(
+                request = com.example.mercader.data.remote.models.UserLoansRequestDTO(
+                    vigent = true,
+                    collected = false,
+                    returned = false
+                )
+            )
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    val loans = body.data?.map { item ->
+                        UserLoan(
+                            loanId = item.loanId,
+                            title = item.title,
+                            description = item.description ?: "",
+                            service = item.service,
+                            requestDate = item.requestDate,
+                            limitDate = item.limitDate,
+                            startDate = item.startDate,
+                            endDate = item.endDate
+                        )
+                    } ?: emptyList()
+                    Result.success(loans)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al obtener préstamos"))
                 }
             } else {
                 Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
