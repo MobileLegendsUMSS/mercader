@@ -1,13 +1,22 @@
 package com.example.mercader.data.remote
 
+import retrofit2.Response
 import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
 import retrofit2.http.POST
 
 data class LoginRequest(
     val nombre: String,
     val contrasenna: String
+)
+
+// 🆕 Se quedan opcionales con valor nulo por defecto
+data class SigninRequest(
+    val nombre: String,
+    val contrasenna: String,
+    val nombres: String? = null,
+    val apellidos: String? = null,
+    val telefono: String? = null,
+    val correo_contacto: String? = null
 )
 
 data class AuthResponse(
@@ -22,9 +31,14 @@ data class UsuarioResponse(
 )
 
 interface AuthApi {
-    @POST("/api/login")
-    suspend fun login(@Body request: LoginRequest): AuthResponse
 
-    @POST("/api/signin")
-    suspend fun signin(@Body request: LoginRequest): AuthResponse
+    @POST("auth/login")
+    suspend fun login(
+        @Body request: LoginRequest
+    ): Response<AuthResponse>
+
+    @POST("auth/signin")
+    suspend fun signin(
+        @Body request: SigninRequest
+    ): Response<AuthResponse>
 }
