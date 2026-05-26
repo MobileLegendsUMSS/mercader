@@ -172,7 +172,8 @@ class MainActivity : ComponentActivity() {
                             ProfileScreen(
                                 onBack = { currentScreen = AppScreen.UserHome },
                                 viewModel = profileViewModel,
-                                cartManager = cartManager
+                                cartManager = cartManager,
+                                reserveManager = reserveManager
                             )
                         }
                     }
