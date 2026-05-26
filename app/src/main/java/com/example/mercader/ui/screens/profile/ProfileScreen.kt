@@ -28,15 +28,12 @@ import com.example.mercader.domain.models.Game
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
-    onLogout: () -> Unit, // Callback para salir al Login en la MainActivity
+    onLogout: () -> Unit,
     cartManager: CartManager,
     reserveManager: ReserveManager,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-
-    // TODO: En el backend idealmente extraerás el ID directamente del JWT decodificado.
-    // Por ahora, dejamos listo el flujo dinámico.
     val userId = "6a0bc0f116b8981d137c9585"
 
     LaunchedEffect(Unit) {
@@ -44,11 +41,8 @@ fun ProfileScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-
-        // Pasamos el evento de logout al Header
         ProfileHeader(onBack = onBack, onLogoutClick = onLogout)
 
-        // Contenido scrollable
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -58,10 +52,8 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Avatar
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -80,7 +72,6 @@ fun ProfileScreen(
                 )
             }
 
-            // Merca Points Badge
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -103,7 +94,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Campos de solo lectura vinculados al Estado
             ReadOnlyField(
                 label = "Nombre de Usuario",
                 value = state.username,
@@ -134,8 +124,6 @@ fun ProfileScreen(
                 placeholder = "correo@ejemplo.com"
             )
 
-            // Sección de Favoritos
-            Spacer(modifier = Modifier.height(8.dp))
             FavoritesSection(
                 state = state,
                 viewModel = viewModel,
@@ -143,14 +131,12 @@ fun ProfileScreen(
                 reserveManager = reserveManager
             )
 
-            // Loading
             if (state.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
 
-            // Error
             state.errorMessage?.let { error ->
                 Text(
                     text = error,
@@ -309,7 +295,6 @@ private fun FavoritesSection(
                         onClick = { if (currentPage > 0) currentPage-- },
                         enabled = currentPage > 0
                     ) {
-                        // 🟢 Corregido: MaterialTheme.colorScheme.outline
                         Text("◀", color = if (currentPage > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                     }
 
@@ -335,7 +320,6 @@ private fun FavoritesSection(
                         onClick = { if (currentPage < totalPages - 1) currentPage++ },
                         enabled = currentPage < totalPages - 1
                     ) {
-                        // 🟢 Corregido: MaterialTheme.colorScheme.outline
                         Text("▶", color = if (currentPage < totalPages - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                     }
                 }
@@ -389,7 +373,6 @@ private fun ReadOnlyField(
                 else
                     MaterialTheme.colorScheme.onSurface,
                 disabledContainerColor = MaterialTheme.colorScheme.surface,
-                // 🟢 Corregido: MaterialTheme.colorScheme.outline
                 disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             )
         )

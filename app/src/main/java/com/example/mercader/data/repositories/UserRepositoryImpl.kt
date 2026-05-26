@@ -1,7 +1,6 @@
 package com.example.mercader.data.repositories
 
 import com.example.mercader.data.remote.apiservice.UserApiService
-import com.example.mercader.data.remote.models.FavoriteRequestDTO
 import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.repositories.UserRepository
@@ -13,7 +12,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun getUserProfile(userId: String): Result<UserProfile> {
         return try {
-            val response = userApiService.getUserProfile(userId)
+            val response = userApiService.getUserProfile()
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.result && body.data != null) {
@@ -42,16 +41,12 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun checkFavorite(gameId: String): Result<Boolean> {
         return try {
-            val response = userApiService.checkFavorite(gameId)
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body != null && body.success && body.data != null) {
-                    Result.success(body.data.isFavorite)
-                } else {
-                    Result.success(false)
-                }
+            val result = getFavorites()
+            if (result.isSuccess) {
+                val favorites = result.getOrNull() ?: emptyList()
+                Result.success(favorites.any { it.id == gameId })
             } else {
-                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+                Result.failure(result.exceptionOrNull() ?: Exception("Error al obtener favoritos"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -60,7 +55,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun addFavorite(gameId: String): Result<Unit> {
         return try {
-            val response = userApiService.addFavorite(FavoriteRequestDTO(gameId))
+            val response = userApiService.addFavorite(gameId)
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(Unit)
             } else {
@@ -73,7 +68,7 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun removeFavorite(gameId: String): Result<Unit> {
         return try {
-            val response = userApiService.removeFavorite(FavoriteRequestDTO(gameId))
+            val response = userApiService.removeFavorite(gameId)
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(Unit)
             } else {
