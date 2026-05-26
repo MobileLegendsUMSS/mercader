@@ -137,11 +137,11 @@ class CartViewModel @Inject constructor(
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
             try {
-                println("💳 CartViewModel: Procesando checkout")
+                println("CartViewModel: Procesando checkout")
                 val success = cartManager.checkout(HARDCODED_PAYMENT_METHOD)
 
                 if (success) {
-                    println("✅ CartViewModel: Checkout exitoso")
+                    println("CartViewModel: Checkout exitoso")
                     _state.value = _state.value.copy(
                         isLoading = false,
                         cartItems = emptyList(),
@@ -157,7 +157,7 @@ class CartViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                println("❌ CartViewModel: Excepción en checkout: ${e.message}")
+                println("CartViewModel: Excepción en checkout: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     errorMessage = e.message ?: "Error al procesar la compra"

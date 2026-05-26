@@ -20,6 +20,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
+import com.example.mercader.data.remote.apiservice.AuthApiService
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
@@ -86,6 +88,11 @@ object NetworkModule {
     @Singleton
     fun provideReserveService(retrofit: Retrofit): ReserveApiService {
         return retrofit.create(ReserveApiService::class.java)
+    }
+    @Provides
+    @Singleton
+    fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
+        return retrofit.create(AuthApiService::class.java)
     }
 }
 

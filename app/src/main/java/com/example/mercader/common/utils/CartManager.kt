@@ -21,21 +21,13 @@ class CartManager @Inject constructor(
     companion object {
         private const val CART_KEY = "shopping_cart"
 
-        // ID de usuario hardcodeado temporalmente
-        private const val HARDCODED_USER_ID = "6a0bc0f116b8981d137c9585"
-    }
-
-    // Obtener el ID del usuario actual (hardcodeado por ahora)
-    fun getCurrentUserId(): String {
-        return HARDCODED_USER_ID
+        private const val HARDCODED_METODO_PAGO_ID = "64f1a2b3c4d5e6f7a8b9c0d4"
     }
 
     // Añadir juego al carrito (backend + cache)
     suspend fun addToCart(game: Game): Boolean {
-        val userId = getCurrentUserId()
-
         return try {
-            val result = cartRepository.addToCart(userId, game.id, 1)
+            val result = cartRepository.addToCart(game.id, 1)
             if (result.isSuccess) {
                 // Actualizar cache local
                 updateLocalCacheFromBackend()
@@ -50,10 +42,8 @@ class CartManager @Inject constructor(
 
     // Obtener todos los items del carrito (desde backend)
     suspend fun getCart(): List<CartItem> {
-        val userId = getCurrentUserId()
-
         return try {
-            val result = cartRepository.getCart(userId)
+            val result = cartRepository.getCart()
             if (result.isSuccess && result.getOrNull() != null) {
                 val cartItems = result.getOrNull() ?: emptyList()
                 // Convertir a CartItem local y guardar en cache
@@ -91,10 +81,8 @@ class CartManager @Inject constructor(
 
     // Actualizar cantidad (backend + cache)
     suspend fun updateQuantity(gameId: String, newQuantity: Int): Boolean {
-        val userId = getCurrentUserId()
-
         return try {
-            val result = cartRepository.updateQuantity(userId, gameId, newQuantity)
+            val result = cartRepository.updateQuantity(gameId, newQuantity)
             if (result.isSuccess) {
                 updateLocalCacheFromBackend()
                 true
@@ -130,12 +118,10 @@ class CartManager @Inject constructor(
     // Remover juego del carrito
     suspend fun removeFromCart(gameId: String): Boolean {
         println("🗑️ CartManager: removeFromCart iniciado para gameId: $gameId")
-        val userId = getCurrentUserId()
-        println("🗑️ CartManager: userId: $userId")
 
         return try {
             println("🗑️ CartManager: Llamando a cartRepository.removeFromCart")
-            val result = cartRepository.removeFromCart(userId, gameId)
+            val result = cartRepository.removeFromCart(gameId)
             println("🗑️ CartManager: Result.isSuccess: ${result.isSuccess}")
 
             if (result.isSuccess) {
@@ -214,11 +200,8 @@ class CartManager @Inject constructor(
     }
 
     suspend fun checkout(metodoPagoId: String): Boolean {
-        val userId = getCurrentUserId()
-        println("💳 CartManager: Procesando compra para usuario: $userId")
-
         return try {
-            val result = cartRepository.checkout(userId, metodoPagoId)
+            val result = cartRepository.checkout(metodoPagoId)
 
             if (result.isSuccess) {
                 println("✅ CartManager: Compra exitosa, limpiando cache local")

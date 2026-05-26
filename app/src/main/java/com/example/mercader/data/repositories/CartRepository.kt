@@ -4,10 +4,9 @@ import com.example.mercader.data.remote.models.CartItemResponse
 import com.example.mercader.domain.models.CartItem
 
 interface CartRepository {
-    suspend fun addToCart(userId: String, gameId: String, quantity: Int): Result<Unit>
-    suspend fun getCart(userId: String): Result<List<CartItemResponse>>
-    suspend fun updateQuantity(userId: String, gameId: String, quantity: Int): Result<Unit>
-    suspend fun removeFromCart(userId: String, gameId: String): Result<Unit>
-
-    suspend fun checkout(userId: String, paymentMethod: String): Result<Unit>
+    suspend fun addToCart(gameId: String, quantity: Int): Result<Unit>
+    suspend fun getCart(): Result<List<CartItemResponse>>
+    suspend fun updateQuantity(gameId: String, quantity: Int): Result<Unit>
+    suspend fun removeFromCart(gameId: String): Result<Unit>
+    suspend fun checkout(metodoPagoId: String): Result<Unit>
 }

@@ -15,20 +15,13 @@ import com.example.mercader.ui.screens.games.CollectionViewModel
 import com.example.mercader.ui.screens.games.GameFormViewModel
 import com.example.mercader.ui.theme.MercaderTheme
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import com.example.mercader.common.components.InProgressModal
-import com.example.mercader.common.components.SidebarMenu
 import com.example.mercader.common.components.SplashAuthenticationScreen
 import com.example.mercader.ui.screens.auth.LoginScreen
 import com.example.mercader.ui.screens.auth.SignupScreen
+import com.example.mercader.ui.screens.auth.AuthViewModel // 🟢 Importamos el AuthViewModel
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.cart.CartScreen
 import com.example.mercader.ui.screens.cart.CartViewModel
@@ -71,14 +64,27 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // ── Estado de navegación ──────────────────────────────
+                    // 🟢 Inicialización de Estados y ViewModels Centralizados
                     var gameToEdit: Game? by remember { mutableStateOf(null) }
                     val collectionViewModel: CollectionViewModel = hiltViewModel()
+                    val authViewModel: AuthViewModel = hiltViewModel() // 🟢 Instanciado correctamente con Hilt
                     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Splash) }
 
-                    // ── Router principal ──────────────────────────────────
+                    // 🗺️ Router principal
                     when (currentScreen) {
                         is AppScreen.Splash -> {
+                            // 🟢 Validar de entrada usando el ViewModel si hay sesión activa en el backend
+                            LaunchedEffect(Unit) {
+                                authViewModel.checkAuthentication(
+                                    onAuthenticated = { isAdmin ->
+                                        currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
+                                    },
+                                    onNotAuthenticated = {
+                                        currentScreen = AppScreen.Login
+                                    }
+                                )
+                            }
+
                             SplashAuthenticationScreen(
                                 onNavigateToHome = { isAdmin ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
@@ -91,6 +97,7 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.Login -> {
                             LoginScreen(
+                                viewModel = authViewModel, // 🟢 Pasamos el ViewModel de Hilt
                                 onLoginSuccess = { isAdmin ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                 },
@@ -100,6 +107,7 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.SignUp -> {
                             SignupScreen(
+                                viewModel = authViewModel, // 🟢 Pasamos el ViewModel de Hilt
                                 onSignupSuccess = { isAdmin ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                 },
@@ -171,6 +179,10 @@ class MainActivity : ComponentActivity() {
                             val profileViewModel: ProfileViewModel = hiltViewModel()
                             ProfileScreen(
                                 onBack = { currentScreen = AppScreen.UserHome },
+                                onLogout = {
+                                    authViewModel.resetState() // 🟢 Reseteamos estado de auth
+                                    currentScreen = AppScreen.Login // 🟢 Lo mandamos directo al login
+                                },
                                 viewModel = profileViewModel,
                                 cartManager = cartManager,
                                 reserveManager = reserveManager

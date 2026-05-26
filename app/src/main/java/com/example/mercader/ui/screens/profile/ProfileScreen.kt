@@ -8,7 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,13 +28,15 @@ import com.example.mercader.domain.models.Game
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
+    onLogout: () -> Unit, // Callback para salir al Login en la MainActivity
     cartManager: CartManager,
     reserveManager: ReserveManager,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
-    // TODO: Reemplazar con el ID real del usuario autenticado cuando se implemente login
+    // TODO: En el backend idealmente extraerás el ID directamente del JWT decodificado.
+    // Por ahora, dejamos listo el flujo dinámico.
     val userId = "6a0bc0f116b8981d137c9585"
 
     LaunchedEffect(Unit) {
@@ -43,10 +45,10 @@ fun ProfileScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // ── Header ──────────────────────────────────────────────
-        ProfileHeader(onBack = onBack)
+        // Pasamos el evento de logout al Header
+        ProfileHeader(onBack = onBack, onLogoutClick = onLogout)
 
-        // ── Contenido scrollable ────────────────────────────────
+        // Contenido scrollable
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -59,7 +61,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Avatar ──────────────────────────────────────────
+            // Avatar
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -78,7 +80,7 @@ fun ProfileScreen(
                 )
             }
 
-            // ── Merca Points Badge ──────────────────────────────
+            // Merca Points Badge
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -89,7 +91,7 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(text = "⭐", fontSize = 14.sp)
+                    Text(text = "🪙", fontSize = 14.sp)
                     Text(
                         text = "${state.mercaPoints} Merca Points",
                         style = MaterialTheme.typography.labelLarge,
@@ -101,7 +103,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Campos de solo lectura ──────────────────────────
+            // Campos de solo lectura vinculados al Estado
             ReadOnlyField(
                 label = "Nombre de Usuario",
                 value = state.username,
@@ -132,7 +134,7 @@ fun ProfileScreen(
                 placeholder = "correo@ejemplo.com"
             )
 
-            // ── Sección de Favoritos ─────────────────────────────
+            // Sección de Favoritos
             Spacer(modifier = Modifier.height(8.dp))
             FavoritesSection(
                 state = state,
@@ -141,14 +143,14 @@ fun ProfileScreen(
                 reserveManager = reserveManager
             )
 
-            // ── Loading ─────────────────────────────────────────
+            // Loading
             if (state.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
 
-            // ── Error ───────────────────────────────────────────
+            // Error
             state.errorMessage?.let { error ->
                 Text(
                     text = error,
@@ -159,6 +161,53 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun ProfileHeader(onBack: () -> Unit, onLogoutClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp)
+            .background(MaterialTheme.colorScheme.primary)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TextButton(onClick = onBack) {
+                Text(
+                    text = "◀ Volver",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Text(
+                text = "Mi Perfil",
+                color = MaterialTheme.colorScheme.onPrimary,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        IconButton(
+            onClick = onLogoutClick,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f))
+        ) {
+            Icon(
+                imageVector = Icons.Default.ExitToApp,
+                contentDescription = "Cerrar sesión",
+                tint = MaterialTheme.colorScheme.onErrorContainer
+            )
         }
     }
 }
@@ -260,6 +309,7 @@ private fun FavoritesSection(
                         onClick = { if (currentPage > 0) currentPage-- },
                         enabled = currentPage > 0
                     ) {
+                        // 🟢 Corregido: MaterialTheme.colorScheme.outline
                         Text("◀", color = if (currentPage > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                     }
 
@@ -285,6 +335,7 @@ private fun FavoritesSection(
                         onClick = { if (currentPage < totalPages - 1) currentPage++ },
                         enabled = currentPage < totalPages - 1
                     ) {
+                        // 🟢 Corregido: MaterialTheme.colorScheme.outline
                         Text("▶", color = if (currentPage < totalPages - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
                     }
                 }
@@ -302,62 +353,6 @@ private fun FavoritesSection(
                 viewModel.loadFavorites()
             }
         )
-    }
-}
-
-
-@Composable
-private fun ProfileHeader(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(72.dp)
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Logo placeholder
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "M",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black
-                )
-            }
-
-            Text(
-                text = "Mi Perfil",
-                color = MaterialTheme.colorScheme.onPrimary,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f))
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "Opciones",
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
-        }
     }
 }
 
@@ -394,6 +389,7 @@ private fun ReadOnlyField(
                 else
                     MaterialTheme.colorScheme.onSurface,
                 disabledContainerColor = MaterialTheme.colorScheme.surface,
+                // 🟢 Corregido: MaterialTheme.colorScheme.outline
                 disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             )
         )

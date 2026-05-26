@@ -4,8 +4,6 @@ import com.google.gson.annotations.SerializedName
 
 // Request para agregar o actualizar cantidad
 data class CartRequest(
-    @SerializedName("id_usuario")
-    val idUsuario: String,
     @SerializedName("id_juego")
     val idJuego: String,
     val cantidad: Int
@@ -13,8 +11,6 @@ data class CartRequest(
 
 // Request para eliminar del carrito
 data class DeleteFromCartRequest(
-    @SerializedName("id_usuario")
-    val idUsuario: String,
     @SerializedName("id_juego")
     val idJuego: String
 )
@@ -38,8 +34,6 @@ data class CartItemResponse(
 )
 
 data class BuyRequest(
-    @SerializedName("id_usuario")
-    val idUsuario: String,
     @SerializedName("id_metodo_pago")
     val idMetodoPago: String
 )
