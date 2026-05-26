@@ -13,10 +13,9 @@ class CartRepositoryImpl @Inject constructor(
     private val apiService: CartApiService
 ) : CartRepository {
 
-    override suspend fun addToCart(userId: String, gameId: String, quantity: Int): Result<Unit> {
+    override suspend fun addToCart(gameId: String, quantity: Int): Result<Unit> {
         return try {
             val request = CartRequest(
-                idUsuario = userId,
                 idJuego = gameId,
                 cantidad = quantity
             )
@@ -37,9 +36,9 @@ class CartRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCart(userId: String): Result<List<com.example.mercader.data.remote.models.CartItemResponse>> {
+    override suspend fun getCart(): Result<List<com.example.mercader.data.remote.models.CartItemResponse>> {
         return try {
-            val response = apiService.getCart(userId)
+            val response = apiService.getCart()
 
             if (response.isSuccessful && response.body()?.success == true) {
                 val data = response.body()?.data ?: emptyList()
@@ -57,10 +56,9 @@ class CartRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateQuantity(userId: String, gameId: String, quantity: Int): Result<Unit> {
+    override suspend fun updateQuantity(gameId: String, quantity: Int): Result<Unit> {
         return try {
             val request = CartRequest(
-                idUsuario = userId,
                 idJuego = gameId,
                 cantidad = quantity
             )
@@ -81,13 +79,11 @@ class CartRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun removeFromCart(userId: String, gameId: String): Result<Unit> {
+    override suspend fun removeFromCart(gameId: String): Result<Unit> {
         return try {
             println("📡 CartRepository: removeFromCart llamado")
-            println("📡 CartRepository: userId: $userId, gameId: $gameId")
 
             val request = DeleteFromCartRequest(
-                idUsuario = userId,
                 idJuego = gameId
             )
             println("📡 CartRepository: Request body: ${request}")
@@ -119,13 +115,12 @@ class CartRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun checkout(userId: String, paymentMethod: String): Result<Unit> {
+    override suspend fun checkout(paymentMethod: String): Result<Unit> {
         return try {
             // println("💳 CartRepository: Iniciando compra para usuario: $userId")
             // println("💳 CartRepository: Metodo de pago: $metodoPagoId")
 
             val request = BuyRequest(
-                idUsuario = userId,
                 idMetodoPago = paymentMethod
             )
 

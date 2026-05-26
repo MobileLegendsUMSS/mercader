@@ -16,9 +16,7 @@ interface CartApiService {
     ): Response<CartResponse>
 
     @GET("/api/servicios/usuarios/carrito")
-    suspend fun getCart(
-        @Query("id_usuario") userId: String
-    ): Response<CartResponse>
+    suspend fun getCart(): Response<CartResponse>
 
     @PATCH("/api/servicios/usuarios/carrito")
     suspend fun updateQuantity(

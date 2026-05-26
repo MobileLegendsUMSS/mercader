@@ -58,6 +58,7 @@ fun UserHome(
     // Cargar contador inicial
     LaunchedEffect(Unit) {
         refreshCart()
+        collectionViewModel.loadGames()
     }
 
     if (showCollectionScreen) {

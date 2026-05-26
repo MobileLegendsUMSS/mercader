@@ -32,11 +32,48 @@ class CollectionViewModel @Inject constructor(
 
     // Almacenar los filtros actuales
     private var currentFilters: GameFilters? = null
-
+    /**
     init {
         loadInitialData()
     }
+    */
 
+    fun loadGames() {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+
+            try {
+                val gamesResult = gameRepository.getGames()
+                val games = if (gamesResult.isSuccess) {
+                    gamesResult.getOrNull() ?: emptyList()
+                } else {
+                    emptyList()
+                }
+
+                // Guardar todos los juegos
+                allGames = games
+
+                // Aplicar filtros si existen
+                applyCurrentFilters()
+
+                _state.update { currentState ->
+                    currentState.copy(
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error al cargar datos: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    // Funcion deprecada (No usar)
     private fun loadInitialData() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
