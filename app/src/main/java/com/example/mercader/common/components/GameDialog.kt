@@ -39,7 +39,6 @@ fun GameDetailDialog(
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
     favoriteViewModel: FavoriteViewModel = hiltViewModel(),
-    cartManager // ← INYECTAR CartManager como parámetro
     cartManager: CartManager,
     reserveManager: ReserveManager,
     onEditGame: ((Game) -> Unit)? = null,

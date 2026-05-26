@@ -81,7 +81,11 @@ object NetworkModule {
         apiService: UserApiService
     ): UserRepository {
         return UserRepositoryImpl(apiService)
+    }
+    @Provides
+    @Singleton
     fun provideReserveService(retrofit: Retrofit): ReserveApiService {
         return retrofit.create(ReserveApiService::class.java)
     }
 }
+

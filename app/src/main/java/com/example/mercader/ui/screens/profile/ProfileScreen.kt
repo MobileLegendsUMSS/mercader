@@ -22,12 +22,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.common.components.GameCard
 import com.example.mercader.common.components.GameDetailDialog
 import com.example.mercader.common.utils.CartManager
+import com.example.mercader.common.utils.ReserveManager
 import com.example.mercader.domain.models.Game
 
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
     cartManager: CartManager,
+    reserveManager: ReserveManager,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -135,7 +137,8 @@ fun ProfileScreen(
             FavoritesSection(
                 state = state,
                 viewModel = viewModel,
-                cartManager = cartManager
+                cartManager = cartManager,
+                reserveManager = reserveManager
             )
 
             // ── Loading ─────────────────────────────────────────
@@ -164,7 +167,8 @@ fun ProfileScreen(
 private fun FavoritesSection(
     state: ProfileState,
     viewModel: ProfileViewModel,
-    cartManager: CartManager
+    cartManager: CartManager,
+    reserveManager: ReserveManager,
 ) {
     var currentPage by remember { mutableStateOf(0) }
     var selectedGame by remember { mutableStateOf<Game?>(null) }
@@ -292,6 +296,7 @@ private fun FavoritesSection(
         GameDetailDialog(
             game = game,
             cartManager = cartManager,
+            reserveManager = reserveManager,
             onDismiss = {
                 selectedGame = null
                 viewModel.loadFavorites()
