@@ -9,11 +9,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,7 +47,11 @@ fun ProfileScreen(
         viewModel.loadProfile(userId)
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         ProfileHeader(onBack = onBack, onLogoutClick = onLogout)
 
         Column(
@@ -48,81 +59,120 @@ fun ProfileScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Box(
                 modifier = Modifier
-                    .size(100.dp)
+                    .size(108.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.secondary,
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.secondary
+                            )
+                        )
+                    )
+                    .padding(3.dp)
             ) {
-                Text(
-                    text = "👤",
-                    fontSize = 40.sp
-                )
-            }
-
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                tonalElevation = 2.dp
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "🪙", fontSize = 14.sp)
-                    Text(
-                        text = "${state.mercaPoints} Merca Points",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "${state.mercaPoints} Merca Points",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
 
-            ReadOnlyField(
-                label = "Nombre de Usuario",
-                value = state.username,
-                placeholder = "@usuario_merca"
-            )
-
-            ReadOnlyField(
-                label = "Nombre",
-                value = state.name,
-                placeholder = "Tu Nombre"
-            )
-
-            ReadOnlyField(
-                label = "Apellido",
-                value = state.lastName,
-                placeholder = "Tu Apellido"
-            )
-
-            ReadOnlyField(
-                label = "Teléfono",
-                value = state.phone,
-                placeholder = "+591 70000000"
-            )
-
-            ReadOnlyField(
-                label = "Correo Electrónico",
-                value = state.email,
-                placeholder = "correo@ejemplo.com"
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                ) {
+                    InfoItem(
+                        icon = Icons.Default.Person,
+                        label = "Nombre de Usuario",
+                        value = state.username,
+                        placeholder = "@usuario_merca"
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                    InfoItem(
+                        icon = Icons.Default.Person,
+                        label = "Nombre",
+                        value = state.name,
+                        placeholder = "Tu Nombre"
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                    InfoItem(
+                        icon = Icons.Default.Person,
+                        label = "Apellido",
+                        value = state.lastName,
+                        placeholder = "Tu Apellido"
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                    InfoItem(
+                        icon = Icons.Default.Phone,
+                        label = "Teléfono",
+                        value = state.phone,
+                        placeholder = "+591 70000000"
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                    InfoItem(
+                        icon = Icons.Default.Email,
+                        label = "Correo Electrónico",
+                        value = state.email,
+                        placeholder = "correo@ejemplo.com"
+                    )
+                }
+            }
 
             FavoritesSection(
                 state = state,
@@ -133,7 +183,7 @@ fun ProfileScreen(
 
             if (state.isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 8.dp)
                 )
             }
 
@@ -157,7 +207,7 @@ private fun ProfileHeader(onBack: () -> Unit, onLogoutClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(72.dp)
-            .background(MaterialTheme.colorScheme.primary)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -169,14 +219,15 @@ private fun ProfileHeader(onBack: () -> Unit, onLogoutClick: () -> Unit) {
             TextButton(onClick = onBack) {
                 Text(
                     text = "◀ Volver",
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.titleMedium
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             Text(
                 text = "Mi Perfil",
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -186,13 +237,59 @@ private fun ProfileHeader(onBack: () -> Unit, onLogoutClick: () -> Unit) {
             onClick = onLogoutClick,
             modifier = Modifier
                 .size(44.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f))
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f))
         ) {
             Icon(
                 imageVector = Icons.Default.ExitToApp,
                 contentDescription = "Cerrar sesión",
-                tint = MaterialTheme.colorScheme.onErrorContainer
+                tint = MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
+private fun InfoItem(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    placeholder: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value.ifEmpty { placeholder },
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (value.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
@@ -212,13 +309,23 @@ private fun FavoritesSection(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Mis Favoritos ❤️",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.align(Alignment.Start)
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Favorite,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = "Mis Favoritos",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
 
         if (state.isFavoritesLoading && state.favorites.isEmpty()) {
             Box(
@@ -234,9 +341,13 @@ private fun FavoritesSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
                 )
             ) {
                 Box(
@@ -336,45 +447,6 @@ private fun FavoritesSection(
                 selectedGame = null
                 viewModel.loadFavorites()
             }
-        )
-    }
-}
-
-@Composable
-private fun ReadOnlyField(
-    label: String,
-    value: String,
-    placeholder: String
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        OutlinedTextField(
-            value = value.ifEmpty { placeholder },
-            onValueChange = {},
-            readOnly = true,
-            enabled = false,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium,
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = if (value.isEmpty())
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                else
-                    MaterialTheme.colorScheme.onSurface,
-                disabledContainerColor = MaterialTheme.colorScheme.surface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-            )
         )
     }
 }
