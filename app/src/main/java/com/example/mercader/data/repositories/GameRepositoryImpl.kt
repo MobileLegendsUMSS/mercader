@@ -24,6 +24,11 @@ class GameRepositoryImpl @Inject constructor(
             }
 
             val requestDTO = GameRequestDTO(
+                services = listOf(
+                    if (game.isPurchaseAvailable) "compra" else null,
+                    if (game.isRentAvailable) "alquiler" else null,
+                    if (game.isLoanAvailable) "prestamo" else null
+                ).filterNotNull(),
                 titulo = game.title,
                 descripcion =game.description,
                 tutorial = game.tutorial,
@@ -31,10 +36,12 @@ class GameRepositoryImpl @Inject constructor(
                 cant_max_pers = game.nMaxPerson,
                 duracion_min = game.minMinutes,
                 duracion_max = game.maxMinutes,
+                precio = game.price,
+                disponible = true,
+                activo= true,
+                cantidad = game.stock,
                 id_dificultad = game.difficulty.id,
                 id_editorial = game.editorial.id,
-                cantidad = game.stock,
-                precio = game.price
             )
 
             val response = apiService.saveGame(requestDTO,game.category.id)

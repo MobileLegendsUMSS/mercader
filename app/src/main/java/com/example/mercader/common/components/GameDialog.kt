@@ -60,7 +60,6 @@ fun GameDetailDialog(
     // CoroutineScope para lanzar corrutinas
     val coroutineScope = rememberCoroutineScope()
 
-    // Cargar estado inicial del carrito (asíncrono)
     LaunchedEffect(game.id) {
         isLoadingCartState = true
         favoriteViewModel.checkFavorite(game.id)

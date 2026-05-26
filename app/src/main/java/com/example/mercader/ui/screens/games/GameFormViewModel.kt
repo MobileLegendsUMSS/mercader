@@ -1,7 +1,6 @@
 package com.example.mercader.ui.screens.games
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 @HiltViewModel
 class GameFormViewModel @Inject constructor(
     private val gameRepository: GameRepository,
@@ -32,6 +32,15 @@ class GameFormViewModel @Inject constructor(
 
     private val isEditMode: Boolean
         get() = _state.value.id.isNotEmpty()
+
+    private val _isPurchaseAvailable = mutableStateOf(false)
+    val isPurchaseAvailable: Boolean get() = _isPurchaseAvailable.value
+
+    private val _isRentAvailable = mutableStateOf(false)
+    val isRentAvailable: Boolean get() = _isRentAvailable.value
+
+    private val _isLoanAvailable = mutableStateOf(false)
+    val isLoanAvailable: Boolean get() = _isLoanAvailable.value
 
     init {
         loadInitialData()
@@ -156,6 +165,17 @@ class GameFormViewModel @Inject constructor(
         _state.update { it.copy(price = price.toFloatOrNull() ?: 0f) }
     }
 
+    fun updatePurchaseAvailable(checked: Boolean) {
+        _state.update { it.copy(isPurchaseAvailable = checked) }
+    }
+
+    fun updateRentAvailable(checked: Boolean) {
+        _state.update { it.copy(isRentAvailable = checked) }
+    }
+
+    fun updateLoanAvailable(checked: Boolean) {
+        _state.update { it.copy(isLoanAvailable = checked) }
+    }
     fun saveGame() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
@@ -285,6 +305,9 @@ class GameFormViewModel @Inject constructor(
             editorial = state.editorial,
             stock = state.stock,
             price = state.price,
+            isPurchaseAvailable = state.isPurchaseAvailable,
+            isRentAvailable = state.isRentAvailable,
+            isLoanAvailable = state.isLoanAvailable
         )
     }
 
