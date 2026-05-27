@@ -23,6 +23,7 @@ import com.example.mercader.common.utils.GameFilters
 import com.example.mercader.common.utils.GameFilter
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun CollectionScreen(
@@ -40,11 +41,14 @@ fun CollectionScreen(
     val state by viewModel.state.collectAsState()
     var selectedGame by remember { mutableStateOf<Game?>(null) }
     var searchQuery by remember { mutableStateOf(initialSearchQuery) }
-
+    val favoriteViewModel: FavoriteViewModel = hiltViewModel()
     LaunchedEffect(initialFilters) {
         if (initialFilters != null && GameFilter.hasActiveFilters(initialFilters)) {
             viewModel.updateFilters(initialFilters)
         }
+    }
+    LaunchedEffect(Unit) {
+        favoriteViewModel.loadFavorites()
     }
 
     val filteredGames = remember(state.games, searchQuery) {
@@ -184,7 +188,10 @@ fun CollectionScreen(
             game = game,
             cartManager = cartManager,
             reserveManager = reserveManager,
-            onDismiss = { selectedGame = null },
+            onDismiss = {
+                selectedGame = null
+                favoriteViewModel.loadFavorites()
+            },
             onEditGame = { gameToEdit ->
                 selectedGame = null
                 onEditGame?.invoke(gameToEdit)

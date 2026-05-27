@@ -20,6 +20,10 @@ data class GameFormState(
     val difficulties: List<Difficulty> = emptyList(),
     val editorials: List<Editorial> = emptyList(),
 
+    val isPurchaseAvailable: Boolean = false,
+    val isRentAvailable: Boolean = false,
+    val isLoanAvailable: Boolean = false,
+
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val errorMessage: String? = null,

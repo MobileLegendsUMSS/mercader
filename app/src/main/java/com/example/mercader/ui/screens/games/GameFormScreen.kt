@@ -131,6 +131,61 @@ fun GameFormScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Tipos de disponibilidad",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = state.isPurchaseAvailable,
+                                onCheckedChange = { viewModel.updatePurchaseAvailable(it) }
+                            )
+                            Text(
+                                text = "Compra",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = state.isRentAvailable,
+                                onCheckedChange = { viewModel.updateRentAvailable(it) }
+                            )
+                            Text(
+                                text = "Alquiler",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(
+                                checked = state.isLoanAvailable,
+                                onCheckedChange = { viewModel.updateLoanAvailable(it) }
+                            )
+                            Text(
+                                text = "Préstamo",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 // ===== BOTONES =====
                 PrimaryButton(
                     text = buttonText,

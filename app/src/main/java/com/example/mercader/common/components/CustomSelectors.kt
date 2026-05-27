@@ -28,29 +28,34 @@ fun <T> CustomSelector(
     var showDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
-        OutlinedTextField(
-            value = value?.let { itemToString(it) } ?: "",
-            onValueChange = {},
-            label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-            placeholder = { Text(placeholder) },
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(62.dp)
-                .clickable(enabled = enabled) { showDialog = true },
-            readOnly = true,
-            enabled = enabled,
-            isError = isError,
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Desplegar opciones"
+                .clickable(enabled = enabled) { showDialog = true }
+        ) {
+            OutlinedTextField(
+                value = value?.let { itemToString(it) } ?: "",
+                onValueChange = {},
+                label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                placeholder = { Text(placeholder) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(62.dp),
+                readOnly = true,
+                enabled = false,
+                isError = isError,
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = "Desplegar opciones"
+                    )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                 )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
             )
-        )
+        }
 
         if (isError && errorMessage.isNotBlank()) {
             Text(
@@ -107,7 +112,6 @@ fun <T> CustomSelector(
         )
     }
 }
-
 // StringSelector mejorado - trabaja con objetos por debajo
 @Composable
 fun StringSelector(

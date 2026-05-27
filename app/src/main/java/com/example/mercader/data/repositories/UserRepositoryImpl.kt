@@ -1,5 +1,7 @@
 package com.example.mercader.data.repositories
 
+import android.content.ContentValues.TAG
+import android.util.Log
 import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
@@ -47,7 +49,14 @@ class UserRepositoryImpl @Inject constructor(
             val result = getFavorites()
             if (result.isSuccess) {
                 val favorites = result.getOrNull() ?: emptyList()
-                Result.success(favorites.any { it.id == gameId })
+                Log.d(TAG, "checkFavorite: Favorites count: ${favorites.size}")  // LOG 4: Número de favoritos
+                Log.d(TAG, "checkFavorite: Favorite IDs: ${favorites.map { it.id }}")  // LOG 5: IDs de favoritos
+                Log.d(TAG, "checkFavorite: Looking for gameId: $gameId")  // LOG 6: ID buscado
+
+                val isFavorite = favorites.any { it.id == gameId }
+                Log.d(TAG, "checkFavorite: Result - isFavorite: $isFavorite")  // LOG 7: Resultado final
+
+                Result.success(isFavorite)
             } else {
                 Result.failure(result.exceptionOrNull() ?: Exception("Error al obtener favoritos"))
             }
