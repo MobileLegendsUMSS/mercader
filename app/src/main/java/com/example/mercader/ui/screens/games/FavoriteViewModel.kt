@@ -15,34 +15,50 @@ class FavoriteViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _isFavorite = MutableStateFlow(false)
-    val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
+    private val _favoriteIds = MutableStateFlow<Set<String>>(emptySet())
+    val favoriteIds: StateFlow<Set<String>> = _favoriteIds.asStateFlow()
+
+    fun isFavorite(gameId: String): Boolean = _favoriteIds.value.contains(gameId)
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun checkFavorite(gameId: String) {
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    fun loadFavorites() {
         viewModelScope.launch {
             _isLoading.value = true
-            userRepository.checkFavorite(gameId).fold(
-                onSuccess = { fav ->
-                    _isFavorite.value = fav
-                    _isLoading.value = false
-                },
-                onFailure = {
-                    _isLoading.value = false
-                }
-            )
+            _error.value = null
+            try {
+                val result = userRepository.getFavorites()
+                result.fold(
+                    onSuccess = { games ->
+                        _favoriteIds.value = games.map { it.id }.toSet()
+                        _isLoading.value = false
+                        _error.value = null
+                    },
+                    onFailure = { error ->
+                        _isLoading.value = false
+                        _error.value = error.message ?: "Error al cargar favoritos"
+                    }
+                )
+            } catch (e: Exception) {  // ← el try/catch que le faltaba
+                _isLoading.value = false
+                _error.value = e.message ?: "Error al cargar favoritos"
+            }
         }
     }
 
     fun toggleFavorite(gameId: String, onShowMessage: (String) -> Unit = {}) {
         viewModelScope.launch {
             _isLoading.value = true
-            if (_isFavorite.value) {
+            val isCurrentlyFavorite = _favoriteIds.value.contains(gameId)
+
+            if (isCurrentlyFavorite) {
                 userRepository.removeFavorite(gameId).fold(
                     onSuccess = {
-                        _isFavorite.value = false
+                        _favoriteIds.value = _favoriteIds.value - gameId
                         _isLoading.value = false
                         onShowMessage("Juego eliminado de favoritos")
                     },
@@ -54,7 +70,7 @@ class FavoriteViewModel @Inject constructor(
             } else {
                 userRepository.addFavorite(gameId).fold(
                     onSuccess = {
-                        _isFavorite.value = true
+                        _favoriteIds.value = _favoriteIds.value + gameId
                         _isLoading.value = false
                         onShowMessage("Juego agregado a favoritos")
                     },

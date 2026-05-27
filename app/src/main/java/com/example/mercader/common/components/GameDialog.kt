@@ -54,7 +54,8 @@ fun GameDetailDialog(
     var showReserveModal by remember { mutableStateOf(false) }
     var isProcessingReserve by remember { mutableStateOf(false) }
 
-    val isFavorite by favoriteViewModel.isFavorite.collectAsState()
+    val favoriteIds by favoriteViewModel.favoriteIds.collectAsState()
+    val isFavorite = favoriteIds.contains(game.id)
     val isFavoriteLoading by favoriteViewModel.isLoading.collectAsState()
 
     // CoroutineScope para lanzar corrutinas
@@ -62,7 +63,7 @@ fun GameDetailDialog(
 
     LaunchedEffect(game.id) {
         isLoadingCartState = true
-        favoriteViewModel.checkFavorite(game.id)
+        favoriteViewModel.loadFavorites()
         try {
             isInCart = cartManager.isInCart(game.id)
             if (isInCart) {
