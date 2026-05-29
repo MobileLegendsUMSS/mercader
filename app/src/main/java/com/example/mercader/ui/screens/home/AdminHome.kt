@@ -74,16 +74,7 @@ fun AdminHome(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // camviar vista
-                    Button(
-                        onClick = { onSwitchToUser() },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text("Cambiar Vista")
-                    }
+
                     OutlinedButton(
                         onClick = { showInProgressModal = true },
                         modifier = Modifier.fillMaxWidth()
