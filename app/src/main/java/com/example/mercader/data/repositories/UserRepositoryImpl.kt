@@ -94,12 +94,14 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getFavorites(): Result<List<Game>> {
         return try {
             val response = userApiService.getFavorites()
+
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success) {
                     val games = body.data?.map {
+                        Log.d("FAVORITE_DEBUG", "RAW: id_juego=${it.id_juego}, mongoId=${it.mongoId}, titlo=${it.titlo}")
                         Game(
-                            id = it.id_juego ?: it.mongoId ?: it.titlo ?: "",
+                            id = it.id_juego ?: "",
                             title = it.titlo ?: "",
                             description = it.descripcion ?: "",
                             tutorial = "",
@@ -112,9 +114,12 @@ class UserRepositoryImpl @Inject constructor(
                             editorial = com.example.mercader.data.remote.models.Editorial("", ""),
                             stock = if (it.disponible == true) 1 else 0,
                             price = it.precio ?: 0f
+
                         )
                     } ?: emptyList()
+
                     Result.success(games)
+
                 } else {
                     Result.failure(Exception(body?.message ?: "Error al obtener favoritos"))
                 }
