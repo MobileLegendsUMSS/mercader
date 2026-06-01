@@ -1,6 +1,7 @@
 package com.example.mercader.data.repositories
 
 import com.example.mercader.data.remote.apiservice.UserApiService
+import com.example.mercader.data.remote.models.EditProfileRequestDTO
 import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.models.UserPurchase
@@ -236,6 +237,31 @@ class UserRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 Result.failure(e)
             }
+        }
+    }
+    override suspend fun editProfile(updatedFields: Map<String, Any>): Result<Unit> {
+        return try {
+            val request = EditProfileRequestDTO(
+                nombres = updatedFields["nombres"] as? String,
+                apellidos = updatedFields["apellidos"] as? String,
+                telefono = updatedFields["telefono"] as? String,
+                correoContacto = updatedFields["correo_contacto"] as? String
+            )
+
+            val response = userApiService.editPersonalInfo(request)
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al actualizar el perfil"))
+                }
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

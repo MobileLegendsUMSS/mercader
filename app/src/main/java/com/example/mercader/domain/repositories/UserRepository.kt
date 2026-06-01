@@ -13,5 +13,7 @@ interface UserRepository {
     suspend fun getFavorites(): Result<List<Game>>
     suspend fun getUserPurchases(): Result<List<UserPurchase>>
     suspend fun getUserLoans(): Result<List<UserLoan>>
+
+    suspend fun editProfile(updatedFields: Map<String, Any>): Result<Unit>
 }
 
