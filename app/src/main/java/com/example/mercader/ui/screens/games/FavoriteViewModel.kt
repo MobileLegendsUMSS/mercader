@@ -1,5 +1,6 @@
 package com.example.mercader.ui.screens.games
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mercader.domain.repositories.UserRepository
@@ -34,6 +35,7 @@ class FavoriteViewModel @Inject constructor(
                 val result = userRepository.getFavorites()
                 result.fold(
                     onSuccess = { games ->
+                        games.forEach { Log.d("FAVORITE_DEBUG", "Favorite ID: '${it.id}'") }
                         _favoriteIds.value = games.map { it.id }.toSet()
                         _isLoading.value = false
                         _error.value = null

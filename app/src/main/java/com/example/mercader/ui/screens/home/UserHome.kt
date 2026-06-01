@@ -155,7 +155,6 @@ fun UserHome(
 
         UserBottomNav(
             onInProgress = { showInProgressModal = true },
-            onSwitchToAdmin = onSwitchToAdmin,
             onSearch = {
                 searchQuery = ""
                 appliedFilters = null

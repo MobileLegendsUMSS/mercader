@@ -142,7 +142,7 @@ class GameRepositoryImpl @Inject constructor(
                             it.titulo,
                             it.descripcion,
                             it.tutorial,
-                            Category(it.id_editorial._id,it.id_editorial.nombre),
+                            Category("", ""),
                             it.cant_min_pers,
                             it.cant_max_pers,
                             it.duracion_min,

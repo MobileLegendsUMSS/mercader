@@ -66,6 +66,7 @@ fun GameDetailDialog(
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(game.id) {
+        Log.d("FAVORITE_DEBUG", "Game ID en Dialog: '${game.id}'")
         isLoadingCartState = true
         favoriteViewModel.loadFavorites()
         try {
