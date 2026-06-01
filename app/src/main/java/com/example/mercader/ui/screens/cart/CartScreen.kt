@@ -42,7 +42,7 @@ fun CartScreen(
                     onSuccess = {
                         android.widget.Toast.makeText(
                             context,
-                            "✅ Compra realizada con éxito!",
+                            "Compra realizada con éxito!",
                             android.widget.Toast.LENGTH_LONG
                         ).show()
                         paymentScreen = null
@@ -63,7 +63,7 @@ fun CartScreen(
                     onSuccess = {
                         android.widget.Toast.makeText(
                             context,
-                            "✅ Compra realizada con éxito!",
+                            "Compra realizada con éxito!",
                             android.widget.Toast.LENGTH_LONG
                         ).show()
                         paymentScreen = null

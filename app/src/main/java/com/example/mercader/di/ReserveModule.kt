@@ -27,8 +27,8 @@ object ReserveModule {
     @Provides
     @Singleton
     fun provideReserveManager(
-        ReserveRepository: ReserveRepository
+        reserveRepository: ReserveRepository
     ): ReserveManager {
-        return ReserveManager(ReserveRepository)
+        return ReserveManager(reserveRepository)
     }
 }
