@@ -24,9 +24,9 @@ class ReviewManager @Inject constructor(
         }
     }
 
-    suspend fun createReview(gameId: String, content: String): Boolean {
+    suspend fun createReview(gameId: String, rating: Int, content: String): Boolean {
         return try {
-            val result = reviewRepository.createReview(gameId, content)
+            val result = reviewRepository.createReview(gameId, rating, content)
             if (result.isSuccess) {
                 println("✅ ReviewManager: Reseña creada exitosamente")
                 true

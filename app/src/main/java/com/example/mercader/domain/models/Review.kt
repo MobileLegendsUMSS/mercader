@@ -4,6 +4,7 @@ data class Review(
     val id: String,
     val userId: String,
     val userName: String,
+    val rating: Int,
     val content: String,
     val timestamp: Long  // Unix timestamp
 )

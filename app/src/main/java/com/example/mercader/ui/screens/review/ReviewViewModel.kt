@@ -67,14 +67,13 @@ class ReviewViewModel @Inject constructor(
         )
     }
 
-    fun createReview(gameId: String, content: String, onSuccess: () -> Unit) {
+    fun createReview(gameId: String, rating: Int, content: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isCreating = true, errorMessage = null)
 
             try {
-                val success = reviewManager.createReview(gameId, content)
+                val success = reviewManager.createReview(gameId, rating, content)
                 if (success) {
-                    // Recargar reseñas después de crear una nueva
                     loadReviews(gameId)
                     onSuccess()
                 } else {

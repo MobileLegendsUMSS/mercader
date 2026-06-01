@@ -6,6 +6,7 @@ import com.google.gson.annotations.SerializedName
 data class CreateReviewRequest(
     @SerializedName("id_juego")
     val idJuego: String,
+    val rating: Int,
     val content: String
 )
 
@@ -20,6 +21,7 @@ data class CreateReviewResponse(
 data class ReviewData(
     @SerializedName("id_resena")
     val idResena: String,
+    val rating: Int,
     val content: String,
     val timestamp: Long,
     val usuario: UsuarioReviewData
@@ -42,6 +44,7 @@ data class GetReviewsResponse(
 data class ReviewItemResponse(
     @SerializedName("id_resena")
     val idResena: String,
+    val rating: Int,
     val content: String,
     val timestamp: Long,
     val usuario: UsuarioReviewData

@@ -25,6 +25,7 @@ class ReviewRepositoryImpl @Inject constructor(
                         userId = item.usuario.id,
                         userName = item.usuario.nombre,
                         content = item.content,
+                        rating = item.rating,
                         timestamp = item.timestamp
                     )
                 } ?: emptyList()
@@ -48,13 +49,15 @@ class ReviewRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createReview(gameId: String, content: String): Result<Review> {
+    override suspend fun createReview(gameId: String, rating: Int, content: String): Result<Review> {
         return try {
             println("📝 ReviewRepository: Creando reseña para juego: $gameId")
+            println("📝 Rating: $rating estrellas")
             println("📝 Contenido: ${content.take(50)}...")
 
             val request = CreateReviewRequest(
                 idJuego = gameId,
+                rating = rating,
                 content = content
             )
 
@@ -67,6 +70,7 @@ class ReviewRepositoryImpl @Inject constructor(
                         id = data.idResena,
                         userId = data.usuario.id,
                         userName = data.usuario.nombre,
+                        rating = data.rating,  // ← NUEVO
                         content = data.content,
                         timestamp = data.timestamp
                     )
@@ -80,15 +84,9 @@ class ReviewRepositoryImpl @Inject constructor(
                 println("❌ Error: $errorMessage")
                 Result.failure(Exception(errorMessage))
             }
-        } catch (e: IOException) {
-            println("❌ Error de red: ${e.message}")
-            Result.failure(Exception("Error de red: ${e.message}"))
-        } catch (e: HttpException) {
-            println("❌ Error HTTP: ${e.message}")
-            Result.failure(Exception("Error del servidor: ${e.message}"))
         } catch (e: Exception) {
-            println("❌ Error inesperado: ${e.message}")
-            Result.failure(Exception("Error inesperado: ${e.message}"))
+            println("❌ Error: ${e.message}")
+            Result.failure(e)
         }
     }
 }

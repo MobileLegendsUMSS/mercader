@@ -8,7 +8,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-//import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -210,9 +211,9 @@ fun ReviewScreen(
         AddReviewModal(
             gameTitle = game.title,
             onDismiss = { showAddReviewModal = false },
-            onConfirm = { content ->
+            onConfirm = { rating, content ->
                 showAddReviewModal = false
-                viewModel.createReview(game.id, content) {
+                viewModel.createReview(game.id, rating, content) {
                     Toast.makeText(
                         context,
                         "✅ Reseña publicada con éxito",
@@ -264,11 +265,28 @@ fun ReviewCard(review: Review) {
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = formatTimestamp(review.timestamp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    // ← NUEVO: Mostrar estrellas
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        for (i in 1..5) {
+                            Icon(
+                                imageVector = if (i <= review.rating) Icons.Filled.Star else Icons.Outlined.Star,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (i <= review.rating)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            )
+                        }
+                        Text(
+                            text = " • ${formatTimestamp(review.timestamp)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
