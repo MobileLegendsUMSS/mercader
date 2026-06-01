@@ -13,7 +13,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
-private const val ADMIN_SUFFIX = "#adm"
+
 
 @Composable
 fun LoginScreen(
@@ -33,7 +33,7 @@ fun LoginScreen(
         when (authState) {
             is AuthState.Success -> {
                 onLoginSuccess((authState as AuthState.Success).isAdmin)
-                viewModel.resetState() // Limpiar estado al salir
+                viewModel.resetState()
             }
             else -> {}
         }
@@ -77,7 +77,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Usa el sufijo $ADMIN_SUFFIX para acceder como admin",
+            text = "Bienvenido a tu Ludoteca",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth()
@@ -256,7 +256,7 @@ fun SignupScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Si la contraseña termina con $ADMIN_SUFFIX verás la vista de admin",
+            text = "Registrare para iniciar sesion en tu Ludoteca",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth()

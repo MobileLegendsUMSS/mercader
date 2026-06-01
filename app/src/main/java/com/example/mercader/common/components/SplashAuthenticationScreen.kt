@@ -30,20 +30,17 @@ import com.example.mercader.ui.screens.auth.AuthViewModel
  */
 @Composable
 fun SplashAuthenticationScreen(
-    onNavigateToHome: (isAdmin: Boolean) -> Unit,
+    onNavigateToHome: (isAdmin: Boolean, rol: String) -> Unit,
     onNavigateToLogin: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    var isLoading by remember { mutableStateOf(true) }
-
     LaunchedEffect(Unit) {
         viewModel.checkAuthentication(
-            onAuthenticated = { isAdmin -> onNavigateToHome(isAdmin) },
+            onAuthenticated = { isAdmin, rol -> onNavigateToHome(isAdmin, rol) },
             onNotAuthenticated = { onNavigateToLogin() }
         )
     }
 
-    // Mostrar loading mientras verifica
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

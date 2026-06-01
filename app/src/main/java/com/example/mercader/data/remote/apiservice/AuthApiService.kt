@@ -22,7 +22,8 @@ data class SigninRequest(
 data class AuthResponse(
     val mensaje: String,
     val token: String,
-    val usuario: UsuarioResponse
+    val usuario: UsuarioResponse,
+    val rol: String
 )
 
 data class UsuarioResponse(
@@ -31,14 +32,12 @@ data class UsuarioResponse(
 )
 
 interface AuthApiService {
-
-    // Iniciar sesión (Se concatena automáticamente: BASE_URL + auth/login)
+//corregir en caso de local o deploy quitar el api en el
     @POST("auth/login")
     suspend fun login(
         @Body request: LoginRequest
     ): Response<AuthResponse>
 
-    // Registro de usuarios
     @POST("auth/signin")
     suspend fun signin(
         @Body request: SigninRequest
