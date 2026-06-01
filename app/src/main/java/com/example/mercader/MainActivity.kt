@@ -1,38 +1,46 @@
 package com.example.mercader
 
 import android.os.Bundle
+
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import com.example.mercader.ui.screens.games.GameFormScreen
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.mercader.ui.screens.games.CollectionScreen
-import com.example.mercader.ui.screens.games.CollectionViewModel
-import com.example.mercader.ui.screens.games.GameFormViewModel
-import com.example.mercader.ui.theme.MercaderTheme
-import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+
+import androidx.hilt.navigation.compose.hiltViewModel
+
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+import com.example.mercader.ui.screens.games.CollectionScreen
+import com.example.mercader.ui.screens.games.CollectionViewModel
+import com.example.mercader.ui.theme.MercaderTheme
+
 import com.example.mercader.common.components.SplashAuthenticationScreen
+
+import com.example.mercader.ui.screens.auth.AuthViewModel
 import com.example.mercader.ui.screens.auth.LoginScreen
 import com.example.mercader.ui.screens.auth.SignupScreen
-import com.example.mercader.ui.screens.auth.AuthViewModel // 🟢 Importamos el AuthViewModel
-import com.example.mercader.domain.models.Game
-import com.example.mercader.ui.screens.cart.CartScreen
-import com.example.mercader.ui.screens.cart.CartViewModel
-import com.example.mercader.ui.screens.games.FilterViewModel
 import com.example.mercader.ui.screens.home.AdminHome
 import com.example.mercader.ui.screens.home.UserHome
-import com.example.mercader.common.utils.CartManager
-import com.example.mercader.ui.screens.profile.ProfileScreen
+import com.example.mercader.ui.screens.games.GameFormScreen
+import com.example.mercader.ui.screens.games.GameFormViewModel
+import com.example.mercader.ui.screens.games.FilterViewModel
+import com.example.mercader.ui.screens.cart.CartScreen
+import com.example.mercader.ui.screens.cart.CartViewModel
 import com.example.mercader.ui.screens.profile.ProfileViewModel
+import com.example.mercader.ui.screens.profile.ProfileScreen
+
+import com.example.mercader.domain.models.Game
+import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
-import javax.inject.Inject
 
 sealed class AppScreen {
     object Splash       : AppScreen()
@@ -76,7 +84,7 @@ class MainActivity : ComponentActivity() {
                             // 🟢 Validar de entrada usando el ViewModel si hay sesión activa en el backend
                             LaunchedEffect(Unit) {
                                 authViewModel.checkAuthentication(
-                                    onAuthenticated = { isAdmin ->
+                                    onAuthenticated = { isAdmin, rol ->
                                         currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                     },
                                     onNotAuthenticated = {
@@ -86,7 +94,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             SplashAuthenticationScreen(
-                                onNavigateToHome = { isAdmin ->
+                                onNavigateToHome = { isAdmin, rol ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                 },
                                 onNavigateToLogin = {
@@ -180,8 +188,8 @@ class MainActivity : ComponentActivity() {
                             ProfileScreen(
                                 onBack = { currentScreen = AppScreen.UserHome },
                                 onLogout = {
-                                    authViewModel.resetState() // 🟢 Reseteamos estado de auth
-                                    currentScreen = AppScreen.Login // 🟢 Lo mandamos directo al login
+                                    authViewModel.resetState()
+                                    currentScreen = AppScreen.Login
                                 },
                                 viewModel = profileViewModel,
                                 cartManager = cartManager,

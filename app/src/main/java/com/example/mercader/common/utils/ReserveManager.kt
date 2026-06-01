@@ -15,7 +15,7 @@ class ReserveManager @Inject constructor(
 ) {
 
     companion object {
-        private const val HARDCODED_USER_ID = "6a0bc0f116b8981d137c9585"
+        private const val HARDCODED_USER_ID = "6a15c078ac1f41003b7c14ae"
 
         // Fecha
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {

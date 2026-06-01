@@ -5,5 +5,6 @@ import com.google.gson.annotations.SerializedName
 data class AuthResponseDto(
     val mensaje: String,
     val token: String,
-    val usuario: UsuarioDto
+    val usuario: UsuarioDto,
+    val rol: String  // Añadir campo rol
 )

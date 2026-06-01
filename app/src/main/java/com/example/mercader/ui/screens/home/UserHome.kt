@@ -25,7 +25,9 @@ import com.example.mercader.common.components.UserBottomNav
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.GameFilters
 import com.example.mercader.common.utils.ReserveManager
+import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.*
+import com.example.mercader.ui.screens.review.ReviewScreen
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,6 +45,7 @@ fun UserHome(
     var showFilterScreen by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var appliedFilters by remember { mutableStateOf<GameFilters?>(null) }
+    var selectedGameForReviews by remember { mutableStateOf<Game?>(null) }
 
     // Estado para el contador del carrito
     var cartItemCount by remember { mutableStateOf(0) }
@@ -61,6 +64,14 @@ fun UserHome(
         collectionViewModel.loadGames()
     }
 
+    selectedGameForReviews?.let { game ->
+        ReviewScreen(
+            game = game,
+            onBack = { selectedGameForReviews = null }
+        )
+        return
+    }
+
     if (showCollectionScreen) {
         CollectionScreen(
             viewModel = collectionViewModel,
@@ -76,7 +87,10 @@ fun UserHome(
             },
             onNavigateToCart = onNavigateToCart,
             onCartUpdate = { refreshCart() },
-            reserveManager = reserveManager
+            reserveManager = reserveManager,
+            onNavigateToReviews = { game ->
+                selectedGameForReviews = game
+            }
         )
         return
     }
