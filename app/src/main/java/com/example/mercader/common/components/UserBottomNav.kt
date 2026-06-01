@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun UserBottomNav(
     onInProgress: () -> Unit,
-    onSwitchToAdmin: () -> Unit,
     onSearch: (String) -> Unit,
     onCartClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
@@ -46,12 +45,12 @@ fun UserBottomNav(
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavIconButton(
-                icon = "🏠",  // reemplaza: painterResource(R.drawable.ic_home)
+                icon = "🏠",
                 label = "Inicio",
                 onClick = onInProgress
             )
             NavIconButton(
-                icon = "🧭",  // reemplaza: painterResource(R.drawable.ic_brujula)
+                icon = "🧭",
                 label = "Explorar",
                 onClick = {onSearch(query)}
             )
@@ -61,29 +60,10 @@ fun UserBottomNav(
                 onClick = onCartClick
             )
             NavIconButton(
-                icon = "👤",  // reemplaza: painterResource(R.drawable.ic_user)
+                icon = "👤",
                 label = "Perfil",
                 onClick = onProfileClick
             )
-
-            // cambiar a Admin
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable { onSwitchToAdmin() }
-                    .padding(horizontal = 6.dp, vertical = 6.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(text = "⚙️", fontSize = 20.sp)
-                Text(
-                    text = "Admin",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    fontWeight = FontWeight.Bold
-                )
-            }
         }
     }
 }

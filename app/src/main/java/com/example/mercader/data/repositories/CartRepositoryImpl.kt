@@ -81,72 +81,46 @@ class CartRepositoryImpl @Inject constructor(
 
     override suspend fun removeFromCart(gameId: String): Result<Unit> {
         return try {
-            println("📡 CartRepository: removeFromCart llamado")
-
             val request = DeleteFromCartRequest(
                 idJuego = gameId
             )
-            println("📡 CartRepository: Request body: ${request}")
 
             val response = apiService.removeFromCart(request)
 
-            println("📡 CartRepository: Response code: ${response.code()}")
-            println("📡 CartRepository: Response successful: ${response.isSuccessful}")
-            println("📡 CartRepository: Response body: ${response.body()}")
-
             if (response.isSuccessful && response.body()?.success == true) {
-                println("✅ CartRepository: Eliminación exitosa")
                 Result.success(Unit)
             } else {
                 val errorMessage = response.body()?.message ?: "Error al eliminar del carrito"
-                println("❌ CartRepository: Error: $errorMessage")
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: IOException) {
-            println("❌ CartRepository: Error de red: ${e.message}")
             Result.failure(Exception("Error de red: ${e.message}"))
         } catch (e: HttpException) {
-            println("❌ CartRepository: Error HTTP: ${e.message}")
             Result.failure(Exception("Error del servidor: ${e.message}"))
         } catch (e: Exception) {
-            println("❌ CartRepository: Error inesperado: ${e.message}")
-            e.printStackTrace()
             Result.failure(Exception("Error inesperado: ${e.message}"))
         }
     }
 
     override suspend fun checkout(paymentMethod: String): Result<Unit> {
         return try {
-            // println("💳 CartRepository: Iniciando compra para usuario: $userId")
-            // println("💳 CartRepository: Metodo de pago: $metodoPagoId")
-
             val request = BuyRequest(
                 idMetodoPago = paymentMethod
             )
 
             val response = apiService.checkout(request)
 
-            println("💳 CartRepository: Response code: ${response.code()}")
-            println("💳 CartRepository: Response successful: ${response.isSuccessful}")
-            println("💳 CartRepository: Response body: ${response.body()}")
-
             if (response.isSuccessful && response.body()?.success == true) {
-                println("✅ CartRepository: Compra exitosa")
                 Result.success(Unit)
             } else {
                 val errorMessage = response.body()?.message ?: "Error al procesar la compra"
-                println("❌ CartRepository: Error: $errorMessage")
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: IOException) {
-            println("❌ CartRepository: Error de red: ${e.message}")
             Result.failure(Exception("Error de red: ${e.message}"))
         } catch (e: HttpException) {
-            println("❌ CartRepository: Error HTTP: ${e.message}")
             Result.failure(Exception("Error del servidor: ${e.message}"))
         } catch (e: Exception) {
-            println("❌ CartRepository: Error inesperado: ${e.message}")
-            e.printStackTrace()
             Result.failure(Exception("Error inesperado: ${e.message}"))
         }
     }

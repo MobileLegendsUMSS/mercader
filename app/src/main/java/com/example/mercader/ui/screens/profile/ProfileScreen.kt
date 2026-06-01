@@ -525,6 +525,9 @@ private fun LoansSection(state: ProfileState) {
                 } else {
                     loan.limitDate
                 }
+                
+                val statusText = if (loan.startDate == null) "Pendiente de recojo" else "Devuelve antes de: $limitDateString"
+                val badgeText = if (loan.startDate == null) "Pendiente" else "Activo"
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -552,7 +555,7 @@ private fun LoansSection(state: ProfileState) {
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Tipo: ${loan.service} • Devuelve antes de: $limitDateString",
+                                    text = "Tipo: ${loan.service} • $statusText",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -562,7 +565,7 @@ private fun LoansSection(state: ProfileState) {
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                             ) {
                                 Text(
-                                    text = "Activo",
+                                    text = badgeText,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
