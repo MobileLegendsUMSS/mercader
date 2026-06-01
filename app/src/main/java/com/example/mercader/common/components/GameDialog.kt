@@ -3,6 +3,7 @@ package com.example.mercader.common.components
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -14,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.example.mercader.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,6 +47,7 @@ fun GameDetailDialog(
     onEditGame: ((Game) -> Unit)? = null,
     onCartUpdate: (() -> Unit)? = null,
     onNavigateToCart: (() -> Unit)? = null,
+    onNavigateToReviews: ((Game) -> Unit)? = null
 ) {
     var showModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -97,34 +101,54 @@ fun GameDetailDialog(
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // ── Box para el boton de cerrar y favorito ──────────────────────────────────────────
-                Box(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = {
-                            favoriteViewModel.toggleFavorite(game.id) { message ->
-                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(4.dp),
-                        enabled = !isFavoriteLoading
+                    // Grupo izquierdo (corazón + comentario)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)  // Espacio entre los dos iconos
                     ) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Favorito",
-                            tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        // Boton favorito (corazón)
+                        IconButton(
+                            onClick = {
+                                favoriteViewModel.toggleFavorite(game.id) { message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.size(40.dp),
+                            enabled = !isFavoriteLoading
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Favorito",
+                                tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Boton reseña
+                        IconButton(
+                            onClick = {
+                                onNavigateToReviews?.invoke(game)
+                                //Toast.makeText(context, "Reseñas", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.comment_icon),
+                                contentDescription = "Reseñas",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
+                    // Boton cerrar (derecha)
                     IconButton(
                         onClick = onDismiss,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
+                        modifier = Modifier.size(40.dp)
                     ) {
                         Text(
                             text = "✕",
