@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import com.example.mercader.common.components.profile.InfoItem
 
 @Composable
@@ -43,7 +44,6 @@ fun AdminProfileSimpleScreen(
     ) {
         AdminProfileHeader(
             onBack = onBack,
-            onLogout = onLogout,
             onEditClick = { viewModel.toggleEditMode() },
             isEditMode = isEditMode
         )
@@ -243,7 +243,7 @@ fun AdminProfileSimpleScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ExitToApp,
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error
                         )
@@ -275,7 +275,6 @@ fun AdminProfileSimpleScreen(
 @Composable
 private fun AdminProfileHeader(
     onBack: () -> Unit,
-    onLogout: () -> Unit,
     onEditClick: () -> Unit,
     isEditMode: Boolean
 ) {
