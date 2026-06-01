@@ -35,6 +35,7 @@ fun CollectionScreen(
     onEditGame: ((Game) -> Unit)? = null,
     onNavigateToCart: (() -> Unit)? = null,
     onCartUpdate: (() -> Unit)? = null,
+    onNavigateToReviews: ((Game) -> Unit)? = null,
     initialSearchQuery: String = "",
     initialFilters: GameFilters? = null
 ) {
@@ -197,7 +198,11 @@ fun CollectionScreen(
                 onEditGame?.invoke(gameToEdit)
             },
             onNavigateToCart = onNavigateToCart,
-            onCartUpdate = onCartUpdate
+            onCartUpdate = onCartUpdate,
+            onNavigateToReviews = { gameForReviews ->
+                selectedGame = null
+                onNavigateToReviews?.invoke(gameForReviews)
+            }
         )
     }
 }

@@ -89,7 +89,6 @@ fun QrPaymentScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                // TODO: Colocar tu imagen QR en res/drawable/qr_placeholder.png
                 Image(
                     painter = painterResource(id = R.drawable.qr_placeholder),
                     contentDescription = "Código QR para pago",

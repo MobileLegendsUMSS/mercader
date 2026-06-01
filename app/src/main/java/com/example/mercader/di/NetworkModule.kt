@@ -3,11 +3,15 @@ package com.example.mercader.di
 import com.example.mercader.common.constants.AppConstants
 import com.example.mercader.data.remote.apiservice.CartApiService
 import com.example.mercader.data.remote.apiservice.GameApiService
-import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.data.remote.apiservice.ReserveApiService
+import com.example.mercader.data.remote.apiservice.UserApiService
+import com.example.mercader.data.remote.apiservice.ReviewApiService
+import com.example.mercader.data.remote.apiservice.AuthApiService
 import com.example.mercader.data.repositories.CartRepository
-import com.example.mercader.data.repositories.UserRepositoryImpl
 import com.example.mercader.data.repository.CartRepositoryImpl
+import com.example.mercader.data.repository.ReviewRepositoryImpl
+import com.example.mercader.data.repositories.UserRepositoryImpl
+import com.example.mercader.domain.repositories.ReviewRepository
 import com.example.mercader.domain.repositories.UserRepository
 import dagger.Module
 import dagger.Provides
@@ -20,14 +24,15 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
-import com.example.mercader.data.remote.apiservice.AuthApiService
-
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient {
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
@@ -85,15 +90,30 @@ object NetworkModule {
     ): UserRepository {
         return UserRepositoryImpl(apiService, tokenRepository)
     }
+
     @Provides
     @Singleton
     fun provideReserveService(retrofit: Retrofit): ReserveApiService {
         return retrofit.create(ReserveApiService::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideReviewApiService(retrofit: Retrofit): ReviewApiService {
+        return retrofit.create(ReviewApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReviewRepository(
+        apiService: ReviewApiService
+    ): ReviewRepository {
+        return ReviewRepositoryImpl(apiService)
+    }
+
     @Provides
     @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
         return retrofit.create(AuthApiService::class.java)
     }
 }
-
