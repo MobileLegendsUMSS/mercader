@@ -1,7 +1,5 @@
 package com.example.mercader.data.repositories
 
-import android.content.ContentValues.TAG
-import android.util.Log
 import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
@@ -11,8 +9,18 @@ import com.example.mercader.domain.models.UserLoan
 import com.example.mercader.domain.repositories.UserRepository
 import javax.inject.Inject
 
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import javax.net.ssl.SSLSocketFactory
+
 class UserRepositoryImpl @Inject constructor(
-    private val userApiService: UserApiService
+    private val userApiService: UserApiService,
+    private val tokenRepository: com.example.mercader.data.local.ITokenRepository
 ) : UserRepository {
 
     override suspend fun getUserProfile(userId: String): Result<UserProfile> {
@@ -49,12 +57,7 @@ class UserRepositoryImpl @Inject constructor(
             val result = getFavorites()
             if (result.isSuccess) {
                 val favorites = result.getOrNull() ?: emptyList()
-                Log.d(TAG, "checkFavorite: Favorites count: ${favorites.size}")  // LOG 4: Número de favoritos
-                Log.d(TAG, "checkFavorite: Favorite IDs: ${favorites.map { it.id }}")  // LOG 5: IDs de favoritos
-                Log.d(TAG, "checkFavorite: Looking for gameId: $gameId")  // LOG 6: ID buscado
-
                 val isFavorite = favorites.any { it.id == gameId }
-                Log.d(TAG, "checkFavorite: Result - isFavorite: $isFavorite")  // LOG 7: Resultado final
 
                 Result.success(isFavorite)
             } else {
@@ -99,7 +102,6 @@ class UserRepositoryImpl @Inject constructor(
                 val body = response.body()
                 if (body != null && body.success) {
                     val games = body.data?.map {
-                        Log.d("FAVORITE_DEBUG", "RAW: id_juego=${it.id_juego}, mongoId=${it.mongoId}, titlo=${it.titlo}")
                         Game(
                             id = it.id_juego ?: "",
                             title = it.titlo ?: "",
@@ -164,38 +166,76 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getUserLoans(): Result<List<UserLoan>> {
-        return try {
-            val response = userApiService.getUserLoans(
-                request = com.example.mercader.data.remote.models.UserLoansRequestDTO(
-                    vigent = true,
-                    collected = false,
-                    returned = false
-                )
-            )
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body != null && body.success) {
-                    val loans = body.data?.map { item ->
-                        UserLoan(
-                            loanId = item.loanId,
-                            title = item.title,
-                            description = item.description ?: "",
-                            service = item.service,
-                            requestDate = item.requestDate,
-                            limitDate = item.limitDate,
-                            startDate = item.startDate,
-                            endDate = item.endDate
-                        )
-                    } ?: emptyList()
-                    Result.success(loans)
-                } else {
-                    Result.failure(Exception(body?.message ?: "Error al obtener préstamos"))
+        return withContext(Dispatchers.IO) {
+            try {
+                val token = tokenRepository.getToken() ?: ""
+                val host = "mercader-server.onrender.com"
+                val path = "/api/servicios/usuarios/prestamos"
+                val jsonBody = """{"vigent":true,"collected":false,"returned":false}"""
+
+                val factory = SSLSocketFactory.getDefault()
+                val socket = factory.createSocket(host, 443)
+
+                val writer = PrintWriter(OutputStreamWriter(socket.getOutputStream(), "UTF-8"))
+                writer.print("GET $path HTTP/1.0\r\n")
+                writer.print("Host: $host\r\n")
+                writer.print("Authorization: Bearer $token\r\n")
+                writer.print("Content-Type: application/json\r\n")
+                writer.print("Content-Length: ${jsonBody.length}\r\n")
+                writer.print("\r\n")
+                writer.print(jsonBody)
+                writer.flush()
+
+                val reader = BufferedReader(InputStreamReader(socket.getInputStream(), "UTF-8"))
+                var line = reader.readLine()
+
+                var statusCode = 500
+                if (line != null && line.startsWith("HTTP/1.")) {
+                    val parts = line.split(" ")
+                    if (parts.size >= 2) {
+                        statusCode = parts[1].toIntOrNull() ?: 500
+                    }
                 }
-            } else {
-                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+
+                while (line != null && line.isNotEmpty()) {
+                    line = reader.readLine()
+                }
+
+                val bodyBuilder = StringBuilder()
+                while (true) {
+                    line = reader.readLine()
+                    if (line == null) break
+                    bodyBuilder.append(line)
+                }
+                
+                socket.close()
+                val responseBody = bodyBuilder.toString()
+
+                if (statusCode in 200..299) {
+                    val parsed = Gson().fromJson(responseBody, com.example.mercader.data.remote.models.UserLoansListResponseDTO::class.java)
+                    if (parsed.success) {
+                        val loans = parsed.data?.map { item ->
+                            UserLoan(
+                                loanId = item.loanId,
+                                title = item.title,
+                                description = item.description ?: "",
+                                service = item.service,
+                                requestDate = item.requestDate,
+                                limitDate = item.limitDate,
+                                startDate = item.startDate,
+                                endDate = item.endDate
+                            )
+                        }?.filter { it.endDate == null } ?: emptyList()
+                        Result.success(loans)
+                    } else {
+                        Result.success(emptyList())
+                    }
+                } else {
+                    Result.failure(Exception("Error $statusCode: $responseBody"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 }
