@@ -267,18 +267,6 @@ class GameRepositoryImpl @Inject constructor(
                         fieldUpdates.add(GameEditDTO("editorial", nombre))
                     }
                 }
-                /*"difficulty" -> {
-                    val difficultyMap = value as? Map<*, *>
-                    difficultyMap?.get("id")?.let { id ->
-                        fieldUpdates.add(GameEditDTO("id_dificultad", id))
-                    }
-                }
-                "editorial" -> {
-                    val editorialMap = value as? Map<*, *>
-                    editorialMap?.get("id")?.let { id ->
-                        fieldUpdates.add(GameEditDTO("id_editorial", id))
-                    }
-                }*/
                 "stock" -> {
                     fieldUpdates.add(GameEditDTO("cantidad", value))
                 }
