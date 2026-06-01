@@ -20,7 +20,7 @@ data class SigninRequest(
 )
 
 data class AuthResponse(
-    val mensaje: String,
+    val message: String,
     val token: String,
     val usuario: UsuarioResponse
 )
