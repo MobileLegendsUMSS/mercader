@@ -11,10 +11,19 @@ import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import javax.net.ssl.SSLSocketFactory
+import com.google.gson.Gson
 
 class GameRepositoryImpl @Inject constructor(
     private val apiService: GameApiService,
-    private val networkHandler: NetworkHandler
+    private val networkHandler: NetworkHandler,
+    private val tokenRepository: com.example.mercader.data.local.ITokenRepository
 ) : GameRepository {
 
     override suspend fun saveGame(game: Game): Result<Unit> {
@@ -126,6 +135,27 @@ class GameRepositoryImpl @Inject constructor(
         }
     }
 
+    private fun mapResponseToGames(data: List<com.example.mercader.data.remote.models.GameResponseDTO>?): List<Game> {
+        if (data == null) return emptyList()
+        return data.map {
+            Game(
+                it._id ?: "",
+                it.titulo ?: "Sin título",
+                it.descripcion ?: "Sin descripción",
+                it.tutorial ?: "",
+                Category("", ""),
+                it.cant_min_pers ?: 1,
+                it.cant_max_pers ?: 4,
+                it.duracion_min ?: 30,
+                it.duracion_max ?: 60,
+                if (it.id_dificultad != null) Difficulty(it.id_dificultad._id, it.id_dificultad.descripcion) else Difficulty("", ""),
+                if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre) else Editorial("", ""),
+                it.cantidad ?: 0,
+                it.precio ?: 0.0f
+            )
+        }
+    }
+
     override suspend fun getGames(): Result<List<Game>> {
         return try {
             if (!networkHandler.isNetworkAvailable()) {
@@ -136,24 +166,7 @@ class GameRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 val gamesResponse = response.body()
                 if (gamesResponse != null && gamesResponse.success) {
-                    val games  = gamesResponse.data.map {
-                        Game(
-                            it._id,
-                            it.titulo,
-                            it.descripcion,
-                            it.tutorial,
-                            Category("", ""),
-                            it.cant_min_pers,
-                            it.cant_max_pers,
-                            it.duracion_min,
-                            it.duracion_max,
-                            Difficulty(it.id_dificultad._id,it.id_dificultad.descripcion),
-                            Editorial(it.id_editorial._id,it.id_editorial.nombre),
-                            it.cantidad,
-                            it.precio
-                            )
-                    }
-                    Result.success(games)
+                    Result.success(mapResponseToGames(gamesResponse.data))
                 } else {
                     Result.failure(Exception("Error en la respuesta del servidor"))
                 }
@@ -163,6 +176,94 @@ class GameRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun getRecentGames(): Result<List<Game>> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getRecentGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(mapResponseToGames(response.body()!!.data))
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    private suspend fun fetchCarouselWithSocket(path: String): Result<List<Game>> {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (!networkHandler.isNetworkAvailable()) return@withContext Result.failure(IOException("No hay conexión"))
+
+                val token = tokenRepository.getToken() ?: ""
+                val host = "mercader-server.onrender.com"
+                val jsonBody = """{"allGames":false,"order":"descendente","amount":10}"""
+
+                val factory = SSLSocketFactory.getDefault()
+                val socket = factory.createSocket(host, 443)
+
+                val writer = PrintWriter(OutputStreamWriter(socket.getOutputStream(), "UTF-8"))
+                writer.print("GET $path HTTP/1.0\r\n")
+                writer.print("Host: $host\r\n")
+                writer.print("Authorization: Bearer $token\r\n")
+                writer.print("Content-Type: application/json\r\n")
+                writer.print("Content-Length: ${jsonBody.length}\r\n")
+                writer.print("\r\n")
+                writer.print(jsonBody)
+                writer.flush()
+
+                val reader = BufferedReader(InputStreamReader(socket.getInputStream(), "UTF-8"))
+                var line = reader.readLine()
+
+                var statusCode = 500
+                if (line != null && line.startsWith("HTTP/1.")) {
+                    val parts = line.split(" ")
+                    if (parts.size >= 2) {
+                        statusCode = parts[1].toIntOrNull() ?: 500
+                    }
+                }
+
+                while (line != null && line.isNotEmpty()) {
+                    line = reader.readLine()
+                }
+
+                val bodyBuilder = StringBuilder()
+                while (true) {
+                    line = reader.readLine()
+                    if (line == null) break
+                    bodyBuilder.append(line)
+                }
+
+                socket.close()
+                val responseBody = bodyBuilder.toString()
+
+                if (statusCode in 200..299) {
+                    // We need to parse into AllGamesResponseDTO
+                    val type = object : com.google.gson.reflect.TypeToken<AllGamesResponseDTO<List<GameResponseDTO>>>() {}.type
+                    val parsed: AllGamesResponseDTO<List<GameResponseDTO>> = Gson().fromJson(responseBody, type)
+                    
+                    if (parsed.success) {
+                        Result.success(mapResponseToGames(parsed.data))
+                    } else {
+                        Result.failure(Exception("Error en la respuesta del servidor"))
+                    }
+                } else {
+                    Result.failure(Exception("Error $statusCode: $responseBody"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    override suspend fun getMostVisitedGames(): Result<List<Game>> {
+        return fetchCarouselWithSocket("/api/juegos/sistema/visitados")
+    }
+
+    override suspend fun getMostSoldGames(): Result<List<Game>> {
+        return fetchCarouselWithSocket("/api/juegos/sistema/comprados")
+    }
+
+    override suspend fun getMostBorrowedGames(): Result<List<Game>> {
+        return fetchCarouselWithSocket("/api/juegos/sistema/prestados")
     }
 
     override suspend fun updateGamePartial(gameId: String, updatedFields: Map<String, Any>): Result<Unit> {
