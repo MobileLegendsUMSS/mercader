@@ -8,18 +8,16 @@ import retrofit2.http.*
 
 interface ReserveApiService {
 
-    // Registrar prestamo (POST con query params + body)
     @POST("/api/servicios/usuarios/prestamo")
     suspend fun registerReserve(
-        @Query("id_usuario") userId: String,
         @Query("id_juego") gameId: String,
         @Body request: ReserveRequest
     ): Response<ReserveResponse>
 
-    // Ver prestamos del usuario (GET con query + body)
     @GET("/api/servicios/usuarios/prestamos")
     suspend fun getReserves(
-        @Query("id_usuario") userId: String,
-        @Body filters: ReserveFilterRequest
+        @Query("vigente") vigente: Boolean,
+        @Query("recogido") recogido: Boolean,
+        @Query("devuelto") devuelto: Boolean
     ): Response<ReserveResponse>
 }
