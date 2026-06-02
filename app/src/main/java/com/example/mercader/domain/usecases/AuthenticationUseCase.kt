@@ -1,6 +1,6 @@
 package com.example.mercader.domain.usecases
 
-import com.example.mercader.data.local.ITokenRepository  // ← Importar la interfaz
+import com.example.mercader.data.local.ITokenRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -3,6 +3,7 @@ package com.example.mercader.ui.screens.profile
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.models.UserPurchase
 import com.example.mercader.domain.models.UserLoan
+import com.example.mercader.domain.models.TopGame
 
 data class ProfileState(
     val username: String = "",
@@ -21,5 +22,8 @@ data class ProfileState(
     val purchasesError: String? = null,
     val loans: List<UserLoan> = emptyList(),
     val isLoansLoading: Boolean = false,
-    val loansError: String? = null
+    val loansError: String? = null,
+    val topGames: List<TopGame> = emptyList(),
+    val isTopGamesLoading: Boolean = false,
+    val topGamesError: String? = null
 )

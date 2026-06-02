@@ -8,6 +8,10 @@ import com.example.mercader.data.repositories.CartRepository
 import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class CartRepositoryImpl @Inject constructor(
     private val apiService: CartApiService
@@ -121,6 +125,55 @@ class CartRepositoryImpl @Inject constructor(
         } catch (e: HttpException) {
             Result.failure(Exception("Error del servidor: ${e.message}"))
         } catch (e: Exception) {
+            Result.failure(Exception("Error inesperado: ${e.message}"))
+        }
+    }
+
+    override suspend fun checkoutWithReceipt(
+        metodoPagoId: String,
+        receiptFile: File
+    ): Result<Unit> {
+        return try {
+            println("💳 CartRepository: checkoutWithReceipt - metodoPagoId: $metodoPagoId")
+            println("💳 Archivo: ${receiptFile.name}, tamaño: ${receiptFile.length()} bytes")
+
+            // Crear el part para id_metodo_pago
+            val metodoPagoPart = MultipartBody.Part.createFormData(
+                "id_metodo_pago",
+                metodoPagoId
+            )
+
+            // Crear el part para el archivo de comprobante
+            val requestFile = receiptFile.asRequestBody("image/*".toMediaTypeOrNull())
+            val comprobantePart = MultipartBody.Part.createFormData(
+                "comprobante",
+                receiptFile.name,
+                requestFile
+            )
+
+            val response = apiService.checkoutWithReceipt(metodoPagoPart, comprobantePart)
+
+            println("💳 Response code: ${response.code()}")
+            println("💳 Response successful: ${response.isSuccessful}")
+            println("💳 Response body: ${response.body()}")
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                println("Compra realizada exitosamente con comprobante")
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al procesar la compra"
+                println("❌ Error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: IOException) {
+            println("❌ Error de red: ${e.message}")
+            Result.failure(Exception("Error de red: ${e.message}"))
+        } catch (e: HttpException) {
+            println("❌ Error HTTP: ${e.message}")
+            Result.failure(Exception("Error del servidor: ${e.message}"))
+        } catch (e: Exception) {
+            println("❌ Error inesperado: ${e.message}")
+            e.printStackTrace()
             Result.failure(Exception("Error inesperado: ${e.message}"))
         }
     }

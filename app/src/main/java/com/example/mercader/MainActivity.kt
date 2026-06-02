@@ -37,6 +37,7 @@ import com.example.mercader.ui.screens.cart.CartScreen
 import com.example.mercader.ui.screens.cart.CartViewModel
 import com.example.mercader.ui.screens.profile.ProfileViewModel
 import com.example.mercader.ui.screens.profile.ProfileScreen
+import com.example.mercader.ui.screens.profile.AdminProfileSimpleScreen
 
 import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.CartManager
@@ -52,6 +53,7 @@ sealed class AppScreen {
     object Stock        : AppScreen()
     object Cart         : AppScreen()
     object Profile      : AppScreen()
+    object AdminProfile : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -127,7 +129,8 @@ class MainActivity : ComponentActivity() {
                             AdminHome(
                                 onNavigateToGameForm = { currentScreen = AppScreen.GameForm },
                                 onNavigateToStock = { currentScreen = AppScreen.Stock },
-                                onSwitchToUser = { currentScreen = AppScreen.UserHome }
+                                onSwitchToUser = { currentScreen = AppScreen.UserHome },
+                                onNavigateToProfile = { currentScreen = AppScreen.AdminProfile }
                             )
                         }
 
@@ -194,6 +197,15 @@ class MainActivity : ComponentActivity() {
                                 viewModel = profileViewModel,
                                 cartManager = cartManager,
                                 reserveManager = reserveManager
+                            )
+                        }
+                        is AppScreen.AdminProfile -> {
+                            AdminProfileSimpleScreen(
+                                onBack = { currentScreen = AppScreen.AdminHome },
+                                onLogout = {
+                                    authViewModel.resetState()
+                                    currentScreen = AppScreen.Login
+                                }
                             )
                         }
                     }

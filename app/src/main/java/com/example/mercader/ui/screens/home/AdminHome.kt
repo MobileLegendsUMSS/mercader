@@ -25,6 +25,7 @@ fun AdminHome(
     onNavigateToGameForm: () -> Unit,
     onNavigateToStock: () -> Unit,
     onSwitchToUser: () -> Unit,
+    onNavigateToProfile: () -> Unit
 ) {
     var sidebarVisible by remember { mutableStateOf(false) }
     var showInProgressModal by remember { mutableStateOf(false) }
@@ -114,7 +115,11 @@ fun AdminHome(
                     onNavigateToStock()
                 },
                 onSellos = { showInProgressModal = true },
-                onOfertas = { showInProgressModal = true }
+                onOfertas = { showInProgressModal = true },
+                onProfile = {  // ← Nuevo callback
+                    sidebarVisible = false
+                    onNavigateToProfile()
+                }
             )
         }
 

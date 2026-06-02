@@ -192,10 +192,10 @@ class GameRepositoryImpl @Inject constructor(
 
                     if (response.isSuccessful) {
                         successCount++
-                        Log.d("GameRepository", "✓ Campo ${fieldUpdate.fieldName} actualizado")
+                        Log.d("GameRepository", "Campo ${fieldUpdate.fieldName} actualizado")
                     } else {
                         val errorMsg = "Error al actualizar ${fieldUpdate.fieldName}: ${response.code()}"
-                        Log.e("GameRepository", "✗ $errorMsg")
+                        Log.e("GameRepository", "$errorMsg")
                         errors.add(errorMsg)
                     }
 

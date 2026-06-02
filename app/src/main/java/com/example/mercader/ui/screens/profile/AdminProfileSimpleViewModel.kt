@@ -3,6 +3,7 @@ package com.example.mercader.ui.screens.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mercader.domain.repositories.UserRepository
+import com.example.mercader.domain.usecases.AuthenticationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,15 +11,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class AdminProfileSimpleState(
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val username: String = "",
+    val name: String = "",
+    val lastName: String = "",
+    val phone: String = "",
+    val email: String = "",
+    val rol: String = ""
+)
+
 @HiltViewModel
-class ProfileViewModel @Inject constructor(
-    private val userRepository: UserRepository
+class AdminProfileSimpleViewModel @Inject constructor(
+    private val userRepository: UserRepository,
+    private val authUseCase: AuthenticationUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ProfileState())
-    val state: StateFlow<ProfileState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(AdminProfileSimpleState())
+    val state: StateFlow<AdminProfileSimpleState> = _state.asStateFlow()
 
-    // Estados de edición
     private val _isEditMode = MutableStateFlow(false)
     val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
 
@@ -37,12 +49,17 @@ class ProfileViewModel @Inject constructor(
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
 
-    fun loadProfile(userId: String) {
+    init {
+        loadAdminProfile()
+        loadUserRol()
+    }
+
+    private fun loadAdminProfile() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
             try {
-                val result = userRepository.getUserProfile(userId)
+                val result = userRepository.getUserProfile("")
                 result.fold(
                     onSuccess = { profile ->
                         _state.value = _state.value.copy(
@@ -51,11 +68,9 @@ class ProfileViewModel @Inject constructor(
                             lastName = profile.lastName,
                             phone = profile.phone,
                             email = profile.email,
-                            mercaPoints = profile.mercaPoints,
                             isLoading = false,
                             errorMessage = null
                         )
-                        // Inicializar valores editados
                         _editedName.value = profile.name
                         _editedLastName.value = profile.lastName
                         _editedPhone.value = profile.phone
@@ -74,10 +89,19 @@ class ProfileViewModel @Inject constructor(
                     errorMessage = e.message ?: "Error al cargar el perfil"
                 )
             }
-            loadFavorites()
-            loadPurchases()
-            loadLoans()
-            loadTopGames()
+        }
+    }
+
+    private fun loadUserRol() {
+        viewModelScope.launch {
+            val rol = authUseCase.getUserRol()
+            _state.value = _state.value.copy(
+                rol = when(rol?.lowercase()) {
+                    "superadmin" -> "SUPER ADMIN"
+                    "admin" -> "ADMINISTRADOR"
+                    else -> "ADMIN"
+                }
+            )
         }
     }
 
@@ -163,119 +187,9 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun loadFavorites() {
+    fun logout() {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isFavoritesLoading = true, favoritesError = null)
-            try {
-                val result = userRepository.getFavorites()
-                result.fold(
-                    onSuccess = { favorites ->
-                        _state.value = _state.value.copy(
-                            favorites = favorites,
-                            isFavoritesLoading = false,
-                            favoritesError = null
-                        )
-                    },
-                    onFailure = { error ->
-                        _state.value = _state.value.copy(
-                            isFavoritesLoading = false,
-                            favoritesError = error.message ?: "Error al cargar favoritos"
-                        )
-                    }
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isFavoritesLoading = false,
-                    favoritesError = e.message ?: "Error al cargar favoritos"
-                )
-            }
-        }
-    }
-
-    fun loadPurchases() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isPurchasesLoading = true, purchasesError = null)
-            try {
-                val result = userRepository.getUserPurchases()
-                result.fold(
-                    onSuccess = { purchases ->
-                        _state.value = _state.value.copy(
-                            purchases = purchases,
-                            isPurchasesLoading = false,
-                            purchasesError = null
-                        )
-                    },
-                    onFailure = { error ->
-                        _state.value = _state.value.copy(
-                            isPurchasesLoading = false,
-                            purchasesError = error.message ?: "Error al cargar compras"
-                        )
-                    }
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isPurchasesLoading = false,
-                    purchasesError = e.message ?: "Error al cargar compras"
-                )
-            }
-        }
-    }
-
-    fun loadLoans() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoansLoading = true, loansError = null)
-            try {
-                val result = userRepository.getUserLoans()
-                result.fold(
-                    onSuccess = { loans ->
-                        _state.value = _state.value.copy(
-                            loans = loans,
-                            isLoansLoading = false,
-                            loansError = null
-                        )
-                    },
-                    onFailure = { error ->
-                        _state.value = _state.value.copy(
-                            isLoansLoading = false,
-                            loansError = error.message ?: "Error al cargar préstamos"
-                        )
-                    }
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoansLoading = false,
-                    loansError = e.message ?: "Error al cargar préstamos"
-                )
-            }
-        }
-    }
-
-    fun loadTopGames() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isTopGamesLoading = true, topGamesError = null)
-            try {
-                val result = userRepository.getTopGames()
-                result.fold(
-                    onSuccess = { topGames ->
-                        _state.value = _state.value.copy(
-                            topGames = topGames,
-                            isTopGamesLoading = false,
-                            topGamesError = null
-                        )
-                    },
-                    onFailure = { error ->
-                        _state.value = _state.value.copy(
-                            isTopGamesLoading = false,
-                            topGamesError = error.message ?: "Error al cargar top juegos"
-                        )
-                    }
-                )
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isTopGamesLoading = false,
-                    topGamesError = e.message ?: "Error al cargar top juegos"
-                )
-            }
+            authUseCase.logout()
         }
     }
 }
