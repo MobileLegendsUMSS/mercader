@@ -11,5 +11,9 @@ interface GameRepository {
     suspend fun updateGamePartial(gameId: String, updatedFields: Map<String, Any>): Result<Unit>
 
     suspend fun getGames(): Result<List<Game>>
+    suspend fun getRecentGames(): Result<List<Game>>
+    suspend fun getMostVisitedGames(): Result<List<Game>>
+    suspend fun getMostSoldGames(): Result<List<Game>>
+    suspend fun getMostBorrowedGames(): Result<List<Game>>
     suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit>
 }

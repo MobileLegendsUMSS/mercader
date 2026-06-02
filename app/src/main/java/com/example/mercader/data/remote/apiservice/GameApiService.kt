@@ -42,4 +42,16 @@ interface GameApiService {
         @Query("id") id: String,
         @Body body: DeleteGameRequestDto
     ) : DeleteGameResponseDto
+
+    @GET("juegos/sistema/recientes")
+    suspend fun getRecentGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
+
+    @GET("juegos/sistema/visitados")
+    suspend fun getMostVisitedGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
+
+    @GET("juegos/sistema/comprados")
+    suspend fun getMostSoldGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
+
+    @GET("juegos/sistema/prestados")
+    suspend fun getMostBorrowedGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
 }
