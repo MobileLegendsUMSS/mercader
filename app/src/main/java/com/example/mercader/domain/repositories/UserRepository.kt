@@ -4,6 +4,7 @@ import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.models.UserPurchase
 import com.example.mercader.domain.models.UserLoan
+import com.example.mercader.domain.models.TopGame
 
 interface UserRepository {
     suspend fun getUserProfile(userId: String): Result<UserProfile>
@@ -13,6 +14,7 @@ interface UserRepository {
     suspend fun getFavorites(): Result<List<Game>>
     suspend fun getUserPurchases(): Result<List<UserPurchase>>
     suspend fun getUserLoans(): Result<List<UserLoan>>
+    suspend fun getTopGames(): Result<List<TopGame>>
 
     suspend fun editProfile(updatedFields: Map<String, Any>): Result<Unit>
 }

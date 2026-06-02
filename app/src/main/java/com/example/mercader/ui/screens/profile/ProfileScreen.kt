@@ -252,7 +252,7 @@ fun ProfileScreen(
                 }
             }
 
-            TopPlayedGamesSection()
+            TopPlayedGamesSection(state = state)
 
             Row(
                 modifier = Modifier
@@ -427,14 +427,30 @@ private fun TabItem(
 }
 
 @Composable
-fun TopPlayedGamesSection() {
-    val topGames = listOf(
-        "Catan 1" to 42,
-        "Catan 2" to 38,
-        "Catan 3" to 25,
-        "Catan 4" to 19,
-        "Catan 5" to 15
-    )
+fun TopPlayedGamesSection(state: ProfileState) {
+    if (state.isTopGamesLoading) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            }
+        }
+        return
+    }
+
+    if (state.topGames.isEmpty()) {
+        return
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -462,14 +478,14 @@ fun TopPlayedGamesSection() {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Top 5 Juegos Más Jugados",
+                    text = "Top 5 Juegos M\u00e1s Jugados",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            topGames.forEachIndexed { index, (gameName, playCount) ->
+            state.topGames.forEachIndexed { index, topGame ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -494,19 +510,19 @@ fun TopPlayedGamesSection() {
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = gameName,
+                            text = topGame.title,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (index < 3) FontWeight.Bold else FontWeight.Normal,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     Text(
-                        text = "$playCount partidas",
+                        text = "${topGame.loanCount} partidas",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (index < topGames.size - 1) {
+                if (index < state.topGames.size - 1) {
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                         modifier = Modifier.padding(start = 40.dp)
@@ -516,5 +532,3 @@ fun TopPlayedGamesSection() {
         }
     }
 }
-
-

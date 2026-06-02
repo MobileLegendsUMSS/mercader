@@ -7,6 +7,7 @@ import com.example.mercader.data.remote.models.PurchaseListResponseDTO
 import com.example.mercader.data.remote.models.UserLoansRequestDTO
 import com.example.mercader.data.remote.models.UserLoansListResponseDTO
 import com.example.mercader.data.remote.models.EditProfileRequestDTO
+import com.example.mercader.data.remote.models.TopGamesResponseDTO
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -46,5 +47,8 @@ interface UserApiService {
     suspend fun getUserLoans(
         @Body request: UserLoansRequestDTO
     ): Response<UserLoansListResponseDTO>
+
+    @GET("reportes/usuarios/juegos-usados")
+    suspend fun getTopGames(): Response<TopGamesResponseDTO>
 }
 
