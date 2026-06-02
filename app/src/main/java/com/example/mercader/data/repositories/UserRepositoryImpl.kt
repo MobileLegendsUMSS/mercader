@@ -7,6 +7,7 @@ import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.models.UserPurchase
 import com.example.mercader.domain.models.UserPurchaseDetail
 import com.example.mercader.domain.models.UserLoan
+import com.example.mercader.domain.models.TopGame
 import com.example.mercader.domain.repositories.UserRepository
 import javax.inject.Inject
 
@@ -256,6 +257,30 @@ class UserRepositoryImpl @Inject constructor(
                     Result.success(Unit)
                 } else {
                     Result.failure(Exception(body?.message ?: "Error al actualizar el perfil"))
+                }
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getTopGames(): Result<List<TopGame>> {
+        return try {
+            val response = userApiService.getTopGames()
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    val topGames = body.data.map { dto ->
+                        TopGame(
+                            title = dto.title,
+                            loanCount = dto.loanCount
+                        )
+                    }
+                    Result.success(topGames)
+                } else {
+                    Result.success(emptyList())
                 }
             } else {
                 Result.failure(Exception("Error ${response.code()}: ${response.message()}"))

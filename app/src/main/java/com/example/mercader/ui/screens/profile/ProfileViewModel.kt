@@ -77,6 +77,7 @@ class ProfileViewModel @Inject constructor(
             loadFavorites()
             loadPurchases()
             loadLoans()
+            loadTopGames()
         }
     }
 
@@ -244,6 +245,35 @@ class ProfileViewModel @Inject constructor(
                 _state.value = _state.value.copy(
                     isLoansLoading = false,
                     loansError = e.message ?: "Error al cargar préstamos"
+                )
+            }
+        }
+    }
+
+    fun loadTopGames() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isTopGamesLoading = true, topGamesError = null)
+            try {
+                val result = userRepository.getTopGames()
+                result.fold(
+                    onSuccess = { topGames ->
+                        _state.value = _state.value.copy(
+                            topGames = topGames,
+                            isTopGamesLoading = false,
+                            topGamesError = null
+                        )
+                    },
+                    onFailure = { error ->
+                        _state.value = _state.value.copy(
+                            isTopGamesLoading = false,
+                            topGamesError = error.message ?: "Error al cargar top juegos"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isTopGamesLoading = false,
+                    topGamesError = e.message ?: "Error al cargar top juegos"
                 )
             }
         }
