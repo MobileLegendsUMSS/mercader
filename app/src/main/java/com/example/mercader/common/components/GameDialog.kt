@@ -327,7 +327,7 @@ fun GameDetailDialog(
                                             if (result.isSuccess) {
                                                 Toast.makeText(
                                                     context,
-                                                    "✓ ${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
+                                                    "${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
                                                     Toast.LENGTH_LONG
                                                 ).show()
                                             } else {
@@ -393,7 +393,7 @@ fun GameDetailDialog(
                                             cartQuantity = cartManager.getQuantity(game.id)
                                             Toast.makeText(
                                                 context,
-                                                "✓ ${game.title} se ha añadido al carrito",
+                                                "${game.title} se ha añadido al carrito",
                                                 Toast.LENGTH_LONG
                                             ).show()
                                             onCartUpdate?.invoke()
