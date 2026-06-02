@@ -12,7 +12,6 @@ class ReserveRepositoryImpl @Inject constructor(
 ) : ReserveRepository {
 
     override suspend fun registerReserve(
-        userId: String,
         gameId: String,
         tipoServicio: String,
         fechaPrestamo: String
@@ -27,7 +26,7 @@ class ReserveRepositoryImpl @Inject constructor(
                 fechaPrestamo = fechaPrestamo
             )
 
-            val response = apiService.registerReserve(userId, gameId, request)
+            val response = apiService.registerReserve(gameId, request)
 
             println("📋 Response code: ${response.code()}")
             println("📋 Response successful: ${response.isSuccessful}")

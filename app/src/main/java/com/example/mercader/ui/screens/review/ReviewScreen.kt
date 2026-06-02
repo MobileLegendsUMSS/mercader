@@ -216,7 +216,7 @@ fun ReviewScreen(
                 viewModel.createReview(game.id, rating, content) {
                     Toast.makeText(
                         context,
-                        "✅ Reseña publicada con éxito",
+                        "Reseña publicada con éxito",
                         Toast.LENGTH_LONG
                     ).show()
                 }
