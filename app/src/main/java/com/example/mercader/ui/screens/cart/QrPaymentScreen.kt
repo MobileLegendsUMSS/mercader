@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,28 +22,39 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.mercader.R
 import com.example.mercader.common.components.PrimaryButton
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun QrPaymentScreen(
     totalPrice: Double,
-    purchaseId: String = "",
     onBack: () -> Unit,
-    onConfirmPayment: () -> Unit,
-    viewModel: QrPaymentViewModel = hiltViewModel()
+    onConfirmPayment: (receiptFile: File) -> Unit  // ✅ Cambiado: recibe el archivo
 ) {
-    val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageFile by remember { mutableStateOf<File?>(null) }
+    var isUploading by remember { mutableStateOf(false) }
 
     // Launcher para seleccionar imagen de la galería
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            viewModel.uploadReceipt(it, purchaseId)
+            selectedImageUri = it
+            // Convertir URI a File temporal
+            val tempFile = createTempFileFromUri(context, it)
+            selectedImageFile = tempFile
+            if (tempFile == null) {
+                android.widget.Toast.makeText(
+                    context,
+                    "Error al procesar la imagen",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
@@ -55,7 +65,11 @@ fun QrPaymentScreen(
         if (isGranted) {
             galleryLauncher.launch("image/*")
         } else {
-            viewModel.setErrorMessage("Se necesita permiso para acceder a la galería")
+            android.widget.Toast.makeText(
+                context,
+                "Se necesita permiso para acceder a la galería",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -176,44 +190,30 @@ fun QrPaymentScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Botones
-        Row(
+        // Botón para subir comprobante
+        Button(
+            onClick = { openGallery() },
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isUploading
         ) {
-            OutlinedButton(
-                onClick = { viewModel.downloadQrCode() },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Descargar QR")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Descargar QR")
+            if (isUploading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Subir Comprobante")
             }
-
-            Button(
-                onClick = { openGallery() },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(12.dp),
-                enabled = !state.isUploading
-            ) {
-                if (state.isUploading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Subir Comprobante")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (state.isUploading) "Subiendo..." else "Subir Comprobante")
-            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(if (isUploading) "Procesando..." else "Subir Comprobante")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (state.receiptImageUrl != null) {
+        // Mostrar imagen seleccionada
+        if (selectedImageUri != null) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -223,13 +223,16 @@ fun QrPaymentScreen(
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     AsyncImage(
-                        model = state.receiptImageUrl,
+                        model = selectedImageUri,
                         contentDescription = "Comprobante de pago",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
                     IconButton(
-                        onClick = { viewModel.clearReceipt() },
+                        onClick = {
+                            selectedImageUri = null
+                            selectedImageFile = null
+                        },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(8.dp)
@@ -243,56 +246,45 @@ fun QrPaymentScreen(
                 }
             }
             Text(
-                text = "Comprobante subido correctamente",
+                text = "Comprobante seleccionado correctamente",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
 
-        // Mostrar error
-        if (state.errorMessage != null) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp)
-                ) {
-                    Text(
-                        text = "❌ Error",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = state.errorMessage!!,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        }
-
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Botón Confirmar Pago - se desbloquea solo cuando hay imagen seleccionada
         PrimaryButton(
             text = "Confirmar Pago",
             onClick = {
-                viewModel.confirmPayment(purchaseId, totalPrice) {
-                    onConfirmPayment()
+                selectedImageFile?.let { file ->
+                    isUploading = true
+                    onConfirmPayment(file)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = state.receiptImageUrl != null && !state.isUploading
+            enabled = selectedImageFile != null && !isUploading
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+// Función auxiliar para convertir Uri a File
+private fun createTempFileFromUri(context: android.content.Context, uri: Uri): File? {
+    return try {
+        val contentResolver = context.contentResolver
+        val inputStream = contentResolver.openInputStream(uri) ?: return null
+        val tempFile = File.createTempFile("receipt_", ".jpg", context.cacheDir)
+        FileOutputStream(tempFile).use { outputStream ->
+            inputStream.copyTo(outputStream)
+        }
+        inputStream.close()
+        tempFile
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
     }
 }

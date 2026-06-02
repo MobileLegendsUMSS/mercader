@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken
 import com.example.mercader.domain.models.CartItem
 import com.example.mercader.domain.models.Game
 import com.example.mercader.data.repositories.CartRepository
+import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -206,6 +207,26 @@ class CartManager @Inject constructor(
             if (result.isSuccess) {
                 println("✅ CartManager: Compra exitosa, limpiando cache local")
                 // Limpiar cache local después de compra exitosa
+                clearLocalCache()
+                true
+            } else {
+                val error = result.exceptionOrNull()?.message ?: "Error desconocido"
+                println("❌ CartManager: Error en compra: $error")
+                false
+            }
+        } catch (e: Exception) {
+            println("❌ CartManager: Excepción en checkout: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun checkoutWithReceipt(metodoPagoId: String, receiptFile: File): Boolean {
+        return try {
+            println("💳 CartManager: Procesando compra con comprobante")
+            val result = cartRepository.checkoutWithReceipt(metodoPagoId, receiptFile)
+
+            if (result.isSuccess) {
+                println("✅ CartManager: Compra exitosa, limpiando cache local")
                 clearLocalCache()
                 true
             } else {
