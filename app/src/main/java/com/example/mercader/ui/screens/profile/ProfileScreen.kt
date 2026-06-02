@@ -312,7 +312,6 @@ fun ProfileScreen(
     }
 }
 
-// Modificar ProfileHeader para incluir botón de editar
 @Composable
 private fun ProfileHeader(
     onBack: () -> Unit,
@@ -375,7 +374,6 @@ private fun ProfileHeader(
                 )
             }
 
-            // Botón de Cerrar Sesión
             IconButton(
                 onClick = onLogoutClick,
                 modifier = Modifier
