@@ -58,18 +58,17 @@ fun CartScreen(
         QrPaymentScreen(
             totalPrice = state.totalPrice,
             onBack = { paymentScreen = null },
-            onConfirmPayment = {
-                viewModel.processCheckout(
-                    onSuccess = {
-                        android.widget.Toast.makeText(
-                            context,
-                            "Compra realizada con éxito!",
-                            android.widget.Toast.LENGTH_LONG
-                        ).show()
-                        paymentScreen = null
-                        onBack()
-                    }
-                )
+            onConfirmPayment = { receiptFile ->
+                // Procesar el pago con el archivo del comprobante
+                viewModel.processCheckoutWithReceipt(receiptFile) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Compra realizada con éxito!",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    paymentScreen = null
+                    onBack()
+                }
             }
         )
         return
