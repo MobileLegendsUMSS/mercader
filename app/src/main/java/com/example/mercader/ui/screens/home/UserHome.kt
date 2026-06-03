@@ -42,7 +42,7 @@ fun UserHome(
     filterViewModel: FilterViewModel = hiltViewModel(),
     homeViewModel: HomeViewModel = hiltViewModel()
 ) {
-    var showInProgressModal by remember { mutableStateOf(false) }
+
     var showCollectionScreen by remember { mutableStateOf(false) }
     var showFilterScreen by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -183,7 +183,7 @@ fun UserHome(
         }
 
         UserBottomNav(
-            onInProgress = { showInProgressModal = true },
+            onInProgress = { },
             onSearch = {
                 searchQuery = ""
                 appliedFilters = null
@@ -192,10 +192,6 @@ fun UserHome(
             onCartClick = onNavigateToCart,
             onProfileClick = onNavigateToProfile
         )
-    }
-
-    if (showInProgressModal) {
-        InProgressModal(onDismiss = { showInProgressModal = false })
     }
 }
 
