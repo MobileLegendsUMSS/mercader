@@ -31,7 +31,12 @@ fun AdminLoanManagementScreen(
     val tabs = listOf("Pendientes", "Recogidos", "Devueltos")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
+    // ✅ Limpiar lista y cargar al cambiar de tab
     LaunchedEffect(selectedTabIndex) {
+        // Primero limpiar la lista (mostrará loading)
+        viewModel.clearLoans()
+
+        // Luego cargar los nuevos datos según la pestaña
         when (selectedTabIndex) {
             0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
             1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
@@ -89,7 +94,8 @@ fun AdminLoanManagementScreen(
 
         // Contenido
         when {
-            state.isLoading && state.loans.isEmpty() -> {
+            state.isLoading -> {
+                // ✅ Mostrar loading inmediatamente, sin lista anterior
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -110,7 +116,14 @@ fun AdminLoanManagementScreen(
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.loadLoans(true, false, false) }) {
+                        Button(onClick = {
+                            // Reintentar según la pestaña actual
+                            when (selectedTabIndex) {
+                                0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
+                                1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
+                                2 -> viewModel.loadLoans(vigente = false, recogido = false, devuelto = true)
+                            }
+                        }) {
                             Text("Reintentar")
                         }
                     }
@@ -123,6 +136,7 @@ fun AdminLoanManagementScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = "📋", fontSize = 64.sp)
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = when (selectedTabIndex) {
                                 0 -> "No hay préstamos pendientes"

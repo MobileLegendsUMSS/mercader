@@ -3,6 +3,7 @@ package com.example.mercader.data.repositories
 import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.data.remote.models.EditProfileRequestDTO
 import com.example.mercader.data.remote.models.UpdateLoanRequestDTO
+import com.example.mercader.data.remote.models.UserLoansRequestDTO
 import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.models.UserPurchase
@@ -299,7 +300,14 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             println("📋 Admin: Obteniendo todos los préstamos - vigente:$vigente, recogido:$recogido, devuelto:$devuelto")
 
-            val response = userApiService.getAllLoans(vigente, recogido, devuelto)
+            // ✅ Crear el body con los filtros
+            val request = UserLoansRequestDTO(
+                vigent = vigente,
+                collected = recogido,
+                returned = devuelto
+            )
+
+            val response = userApiService.getAllLoans(request)
 
             if (response.isSuccessful && response.body()?.success == true) {
                 val loans = response.body()?.data?.map { item ->

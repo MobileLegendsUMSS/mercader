@@ -78,4 +78,12 @@ class AdminLoanViewModel @Inject constructor(
     fun clearError() {
         _state.value = _state.value.copy(errorMessage = null)
     }
+
+    fun clearLoans() {
+        _state.value = _state.value.copy(
+            loans = emptyList(),
+            isLoading = true,
+            errorMessage = null
+        )
+    }
 }

@@ -30,8 +30,13 @@ fun GameFormScreen(
             viewModel.resetSuccess()
         }
     }
+
     LaunchedEffect(gameToEdit) {
-        gameToEdit?.let { viewModel.setGameToEdit(it) }
+        if (gameToEdit != null) {
+            viewModel.setGameToEdit(gameToEdit)
+        } else {
+            viewModel.resetForm()
+        }
     }
 
     state.errorMessage?.let { error ->
@@ -169,18 +174,18 @@ fun GameFormScreen(
                                 modifier = Modifier.padding(start = 4.dp)
                             )
                         }
+                    }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = state.isLoanAvailable,
-                                onCheckedChange = { viewModel.updateLoanAvailable(it) }
-                            )
-                            Text(
-                                text = "Préstamo",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(start = 4.dp)
-                            )
-                        }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = state.isLoanAvailable,
+                            onCheckedChange = { viewModel.updateLoanAvailable(it) }
+                        )
+                        Text(
+                            text = "Préstamo",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
                     }
                 }
 

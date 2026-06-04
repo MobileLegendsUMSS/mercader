@@ -12,6 +12,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.mercader.domain.models.UserLoan
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -25,8 +26,7 @@ fun AdminLoanDetailModal(
     var showPickupConfirm by remember { mutableStateOf(false) }
     var showReturnConfirm by remember { mutableStateOf(false) }
 
-    val currentDateTime = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        .format(Date())
+    val currentDateTime = getCurrentBoliviaDateTime()
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -74,7 +74,7 @@ fun AdminLoanDetailModal(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                DetailRow(label = "ID Préstamo", value = loan.loanId.take(15) + "...")
+                // DetailRow(label = "ID Préstamo", value = loan.loanId.take(15) + "...")
                 DetailRow(label = "Fecha solicitud", value = formatDate(loan.requestDate))
                 DetailRow(label = "Fecha límite", value = formatDate(loan.limitDate))
 
@@ -171,6 +171,15 @@ private fun DetailRow(label: String, value: String) {
             fontWeight = FontWeight.Medium
         )
     }
+}
+
+private fun getCurrentBoliviaDateTime(): String {
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+    val calendar = Calendar.getInstance().apply {
+        // Ajustar a Bolivia (UTC-4)
+        add(Calendar.HOUR_OF_DAY, -4)
+    }
+    return dateFormat.format(calendar.time)
 }
 
 @Composable

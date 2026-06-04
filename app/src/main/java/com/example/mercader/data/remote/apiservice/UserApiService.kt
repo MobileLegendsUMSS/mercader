@@ -54,11 +54,9 @@ interface UserApiService {
     suspend fun getTopGames(): Response<TopGamesResponseDTO>
 
     // Obtener todos los préstamos (Admin)
-    @GET("servicios/admin/prestamo")
+    @POST("servicios/admin/prestamo")
     suspend fun getAllLoans(
-        @Query("vigente") vigente: Boolean,
-        @Query("recogido") recogido: Boolean,
-        @Query("devuelto") devuelto: Boolean
+        @Body request: UserLoansRequestDTO
     ): Response<UserLoansListResponseDTO>
 
     // Actualizar préstamo (Admin) - recogida/devolución

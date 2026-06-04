@@ -22,9 +22,9 @@ import com.example.mercader.common.components.SidebarMenu
 fun AdminHome(
     onNavigateToGameForm: () -> Unit,
     onNavigateToStock: () -> Unit,
-    onSwitchToUser: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToLoanManagement: () -> Unit
+    onNavigateToLoanManagement: () -> Unit,
+    onNavigateToReports: () -> Unit
 ) {
     var sidebarVisible by remember { mutableStateOf(false) }
     var showInProgressModal by remember { mutableStateOf(false) }
@@ -122,7 +122,12 @@ fun AdminHome(
                 onLoanManagement = {
                     sidebarVisible = false
                     onNavigateToLoanManagement()
+                },
+                onReport ={
+                    sidebarVisible = false
+                    onNavigateToReports()
                 }
+
             )
         }
 

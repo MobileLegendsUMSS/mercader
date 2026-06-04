@@ -59,11 +59,11 @@ fun AdminLoanCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = "ID: ${loan.loanId.take(10)}...",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                //  Text(
+                //      text = "ID: ${loan.loanId.take(10)}...",
+                //      style = MaterialTheme.typography.bodySmall,
+                //      color = MaterialTheme.colorScheme.onSurfaceVariant
+                //  )
                 Text(
                     text = "Tipo: ${if (loan.service == "prestamo") "Préstamo (3h)" else "Alquiler (24h)"}",
                     style = MaterialTheme.typography.bodySmall,
