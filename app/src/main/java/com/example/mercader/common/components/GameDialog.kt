@@ -35,9 +35,6 @@ import kotlinx.coroutines.launch
 fun GameDetailDialog(
     game: Game,
     onDismiss: () -> Unit,
-    onReserve: () -> Unit = {},
-    onBuy: () -> Unit = {},
-    onRent: () -> Unit = {},
     onTutorial: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
@@ -47,7 +44,8 @@ fun GameDetailDialog(
     onEditGame: ((Game) -> Unit)? = null,
     onCartUpdate: (() -> Unit)? = null,
     onNavigateToCart: (() -> Unit)? = null,
-    onNavigateToReviews: ((Game) -> Unit)? = null
+    onNavigateToReviews: ((Game) -> Unit)? = null,
+    isAdmin: Boolean = false
 ) {
     var showModal by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -109,40 +107,40 @@ fun GameDetailDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Grupo izquierdo (corazón + comentario)
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)  // Espacio entre los dos iconos
-                    ) {
-                        // Boton favorito (corazón)
-                        IconButton(
-                            onClick = {
-                                favoriteViewModel.toggleFavorite(game.id) { message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            modifier = Modifier.size(40.dp),
-                            enabled = !isFavoriteLoading
+                    if(!isAdmin) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)  // Espacio entre los dos iconos
                         ) {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Favorito",
-                                tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                            IconButton(
+                                onClick = {
+                                    favoriteViewModel.toggleFavorite(game.id) { message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.size(40.dp),
+                                enabled = !isFavoriteLoading
+                            ) {
+                                Icon(
+                                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = "Favorito",
+                                    tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
 
-                        // Boton reseña
-                        IconButton(
-                            onClick = {
-                                onNavigateToReviews?.invoke(game)
-                                //Toast.makeText(context, "Reseñas", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.comment_icon),
-                                contentDescription = "Reseñas",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            // Boton reseña
+                            IconButton(
+                                onClick = {
+                                    onNavigateToReviews?.invoke(game)
+                                    //Toast.makeText(context, "Reseñas", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.comment_icon),
+                                    contentDescription = "Reseñas",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
 
@@ -304,141 +302,155 @@ fun GameDetailDialog(
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        SecondaryButton(
-                            text = "Retirar Juego",
-                            onClick = { showModal = true },
-                            modifier = Modifier.weight(1f)
-                        )
+                    if (isAdmin) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Button(
+                                onClick = { showModal = true },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text("Retirar Juego")
+                            }
 
-                        if (showReserveModal) {
-                            ReserveModal(
-                                gameTitle = game.title,
-                                onDismiss = { showReserveModal = false },
-                                onConfirm = { tipoServicio ->
-                                    showReserveModal = false
-                                    isProcessingReserve = true
+                            Button(
+                                onClick = { onEditGame?.invoke(game) },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondary
+                                )
+                            ) {
+                                Text("Editar Juego")
+                            }
+                        }
+
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Button(
+                                onClick = { showReserveModal = true },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Solicitar Préstamo")
+                            }
+                        }
+                    }
+
+                    if (!isAdmin) {
+                        Button(
+                            onClick = {
+                                if (isInCart) {
+                                    onNavigateToCart?.invoke()
+                                    onDismiss()
+                                } else {
+                                    isAddingToCart = true
                                     coroutineScope.launch {
                                         try {
-                                            val result = reserveManager.bookReserve(game.id, tipoServicio)
-                                            if (result.isSuccess) {
+                                            val added = cartManager.addToCart(game)
+                                            if (added) {
+                                                isInCart = true
+                                                cartQuantity = cartManager.getQuantity(game.id)
                                                 Toast.makeText(
                                                     context,
-                                                    "${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
+                                                    "${game.title} se ha añadido al carrito",
                                                     Toast.LENGTH_LONG
                                                 ).show()
+                                                onCartUpdate?.invoke()
                                             } else {
-                                                val error = result.exceptionOrNull()?.message ?: "Error desconocido"
-                                                Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(
+                                                    context,
+                                                    "Error al añadir ${game.title} al carrito",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
                                         } catch (e: Exception) {
-                                            Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                context,
+                                                "Error de conexión: ${e.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         } finally {
-                                            isProcessingReserve = false
+                                            isAddingToCart = false
                                         }
                                     }
                                 }
-                            )
-                        }
-
-                        if (showModal) {
-                            DeleteGameModal(
-                                gameName = game.title,
-                                onConfirm = { justificacionRetiro ->
-                                    Log.d("TestScreen", "Justificacion: $justificacionRetiro")
-                                    viewModel.deleteGame(
-                                        id = game.id,
-                                        justificacionRetiro = justificacionRetiro
-                                    )
-                                    showModal = false
-                                },
-                                onDismiss = { showModal = false }
-                            )
-                        }
-
-                        SecondaryButton(
-                            text = "Editar Juego",
-                            onClick = {
-                                onEditGame?.invoke(game)
                             },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        SecondaryButton(
-                            text = "Solicitar Prestamo",
-                            onClick = { showReserveModal = true },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    // Botón dinámico del carrito
-                    Button(
-                        onClick = {
-                            if (isInCart) {
-                                // Navegar al carrito
-                                onNavigateToCart?.invoke()
-                                onDismiss()
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isAddingToCart && !isLoadingCartState,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isInCart)
+                                    MaterialTheme.colorScheme.tertiary
+                                else
+                                    MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            if (isAddingToCart) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
                             } else {
-                                // Agregar al carrito con corrutina
-                                isAddingToCart = true
+                                Text(
+                                    text = if (isInCart) "Ver Carrito ($cartQuantity)" else "Añadir al Carrito",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
+                    }
+                    if (showReserveModal) {
+                        ReserveModal(
+                            gameTitle = game.title,
+                            onDismiss = { showReserveModal = false },
+                            onConfirm = { tipoServicio ->
+                                showReserveModal = false
+                                isProcessingReserve = true
                                 coroutineScope.launch {
                                     try {
-                                        val added = cartManager.addToCart(game)
-                                        if (added) {
-                                            // Actualizar estado local
-                                            isInCart = true
-                                            cartQuantity = cartManager.getQuantity(game.id)
+                                        val result = reserveManager.bookReserve(game.id, tipoServicio)
+                                        if (result.isSuccess) {
                                             Toast.makeText(
                                                 context,
-                                                "${game.title} se ha añadido al carrito",
+                                                "${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
                                                 Toast.LENGTH_LONG
                                             ).show()
-                                            onCartUpdate?.invoke()
                                         } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Error al añadir ${game.title} al carrito",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            val error = result.exceptionOrNull()?.message ?: "Error desconocido"
+                                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
                                         }
                                     } catch (e: Exception) {
-                                        Toast.makeText(
-                                            context,
-                                            "Error de conexión: ${e.message}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
                                     } finally {
-                                        isAddingToCart = false
+                                        isProcessingReserve = false
                                     }
                                 }
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isAddingToCart && !isLoadingCartState,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isInCart)
-                                MaterialTheme.colorScheme.tertiary
-                            else
-                                MaterialTheme.colorScheme.primary
                         )
-                    ) {
-                        if (isAddingToCart) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text(
-                                text = if (isInCart) "Ver Carrito ($cartQuantity)" else "Añadir al Carrito",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
+                    }
+
+                    if (showModal) {
+                        DeleteGameModal(
+                            gameName = game.title,
+                            onConfirm = { justificacionRetiro ->
+                                Log.d("TestScreen", "Justificacion: $justificacionRetiro")
+                                viewModel.deleteGame(
+                                    id = game.id,
+                                    justificacionRetiro = justificacionRetiro
+                                )
+                                showModal = false
+                            },
+                            onDismiss = { showModal = false }
+                        )
                     }
                 }
-
                 Spacer(modifier = Modifier.height(6.dp))
             }
         }

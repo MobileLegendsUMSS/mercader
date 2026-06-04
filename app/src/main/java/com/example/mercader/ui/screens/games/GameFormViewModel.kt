@@ -1,5 +1,6 @@
 package com.example.mercader.ui.screens.games
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -93,6 +94,7 @@ class GameFormViewModel @Inject constructor(
 
     fun setGameToEdit(game: Game) {
         existingGame = game
+        Log.d("Category"," ${existingGame?.category}")
         val newState = GameFormState(
             id = game.id,
             title = game.title,
@@ -313,5 +315,22 @@ class GameFormViewModel @Inject constructor(
 
     fun resetSuccess() {
         _state.update { it.copy(saveSuccess = false) }
+    }
+
+    fun resetForm() {
+        _state.update {
+            GameFormState(
+                gameCategories = it.gameCategories,
+                difficulties = it.difficulties,
+                editorials = it.editorials
+            )
+        }
+        existingGame = null
+        originalState = null
+    }
+    fun clearGameToEdit() {
+        existingGame = null
+        originalState = null
+        resetForm() // Llama al resetForm que ya creamos
     }
 }

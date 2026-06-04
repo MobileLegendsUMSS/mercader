@@ -7,10 +7,13 @@ import com.example.mercader.data.remote.apiservice.ReserveApiService
 import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.data.remote.apiservice.ReviewApiService
 import com.example.mercader.data.remote.apiservice.AuthApiService
+import com.example.mercader.data.remote.apiservice.ReportApiService
 import com.example.mercader.data.repositories.CartRepository
+import com.example.mercader.data.repositories.ReportRepositoryImpl
 import com.example.mercader.data.repository.CartRepositoryImpl
 import com.example.mercader.data.repository.ReviewRepositoryImpl
 import com.example.mercader.data.repositories.UserRepositoryImpl
+import com.example.mercader.data.repository.ReportRepository
 import com.example.mercader.domain.repositories.ReviewRepository
 import com.example.mercader.domain.repositories.UserRepository
 import dagger.Module
@@ -66,6 +69,20 @@ object NetworkModule {
     @Singleton
     fun provideCartApiService(retrofit: Retrofit): CartApiService {
         return retrofit.create(CartApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportApiService(retrofit: Retrofit): ReportApiService {
+        return retrofit.create(ReportApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideReportRepository(
+        apiService: ReportApiService
+    ): ReportRepository {
+        return ReportRepositoryImpl(apiService)
     }
 
     @Provides
