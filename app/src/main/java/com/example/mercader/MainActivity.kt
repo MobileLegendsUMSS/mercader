@@ -42,6 +42,8 @@ import com.example.mercader.ui.screens.profile.AdminProfileSimpleScreen
 import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
+import com.example.mercader.ui.screens.reports.ReportScreen
+import com.example.mercader.ui.screens.reports.ReportViewModel
 
 sealed class AppScreen {
     object Splash       : AppScreen()
@@ -54,6 +56,7 @@ sealed class AppScreen {
     object Cart         : AppScreen()
     object Profile      : AppScreen()
     object AdminProfile : AppScreen()
+    object Reports      : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -76,14 +79,12 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // 🟢 Inicialización de Estados y ViewModels Centralizados
                     var gameToEdit: Game? by remember { mutableStateOf(null) }
-                    val collectionViewModel: CollectionViewModel = hiltViewModel()
                     val authViewModel: AuthViewModel = hiltViewModel() // 🟢 Instanciado correctamente con Hilt
                     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Splash) }
 
                     // 🗺️ Router principal
                     when (currentScreen) {
                         is AppScreen.Splash -> {
-                            // 🟢 Validar de entrada usando el ViewModel si hay sesión activa en el backend
                             LaunchedEffect(Unit) {
                                 authViewModel.checkAuthentication(
                                     onAuthenticated = { isAdmin, rol ->
@@ -107,8 +108,8 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.Login -> {
                             LoginScreen(
-                                viewModel = authViewModel, // 🟢 Pasamos el ViewModel de Hilt
-                                onLoginSuccess = { isAdmin ->
+                                viewModel = authViewModel,
+                                 onLoginSuccess = { isAdmin ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                 },
                                 onNavigateToSignup = { currentScreen = AppScreen.SignUp }
@@ -117,7 +118,7 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.SignUp -> {
                             SignupScreen(
-                                viewModel = authViewModel, // 🟢 Pasamos el ViewModel de Hilt
+                                viewModel = authViewModel,
                                 onSignupSuccess = { isAdmin ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                 },
@@ -129,13 +130,14 @@ class MainActivity : ComponentActivity() {
                             AdminHome(
                                 onNavigateToGameForm = { currentScreen = AppScreen.GameForm },
                                 onNavigateToStock = { currentScreen = AppScreen.Stock },
-                                onSwitchToUser = { currentScreen = AppScreen.UserHome },
-                                onNavigateToProfile = { currentScreen = AppScreen.AdminProfile }
+                                onNavigateToProfile = { currentScreen = AppScreen.AdminProfile },
+                                onNavigateToReports = { currentScreen = AppScreen.Reports }
                             )
                         }
 
                         is AppScreen.UserHome -> {
                             val filterViewModel: FilterViewModel = hiltViewModel()
+                            val collectionViewModel: CollectionViewModel = hiltViewModel()
                             UserHome(
                                 onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
                                 onNavigateToCart = { currentScreen = AppScreen.Cart },
@@ -149,7 +151,11 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.GameForm -> {
                             val viewModel: GameFormViewModel = hiltViewModel()
-
+                            val collectionViewModel: CollectionViewModel = hiltViewModel()
+                            if (gameToEdit == null) {
+                                viewModel.resetForm()
+                            }
+                             
                             GameFormScreen(
                                 viewModel = viewModel,
                                 gameToEdit = gameToEdit,
@@ -161,11 +167,18 @@ class MainActivity : ComponentActivity() {
                                 onClose = {
                                     gameToEdit = null
                                     currentScreen = AppScreen.AdminHome
+                                    viewModel.clearGameToEdit()
                                 }
                             )
                         }
 
                         is AppScreen.Stock -> {
+                            val collectionViewModel: CollectionViewModel = hiltViewModel()
+
+                            LaunchedEffect(currentScreen) {
+                                collectionViewModel.loadGames()
+                            }
+
                             CollectionScreen(
                                 viewModel = collectionViewModel,
                                 cartManager = cartManager,
@@ -207,6 +220,12 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = AppScreen.Login
                                 }
                             )
+                        }
+                        is AppScreen.Reports -> {
+                            val reportViewModel: ReportViewModel = hiltViewModel()
+                            ReportScreen(
+                                viewModel = reportViewModel,
+                                onBack = { currentScreen = AppScreen.AdminHome })
                         }
                     }
                 }

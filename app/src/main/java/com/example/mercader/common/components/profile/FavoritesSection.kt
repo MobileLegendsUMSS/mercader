@@ -171,7 +171,8 @@ import com.example.mercader.ui.screens.profile.ProfileViewModel
             onDismiss = {
                 selectedGame = null
                 viewModel.loadFavorites()
-            }
+            },
+            isAdmin=false
         )
     }
 }

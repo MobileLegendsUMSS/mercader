@@ -59,6 +59,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.documentfile:documentfile:1.0.1")
+
 
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("androidx.documentfile:documentfile:1.0.1")

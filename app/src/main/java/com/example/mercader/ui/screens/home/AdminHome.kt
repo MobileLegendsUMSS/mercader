@@ -24,8 +24,8 @@ import com.example.mercader.common.components.SidebarMenu
 fun AdminHome(
     onNavigateToGameForm: () -> Unit,
     onNavigateToStock: () -> Unit,
-    onSwitchToUser: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToReports: () -> Unit
 ) {
     var sidebarVisible by remember { mutableStateOf(false) }
     var showInProgressModal by remember { mutableStateOf(false) }
@@ -116,10 +116,15 @@ fun AdminHome(
                 },
                 onSellos = { showInProgressModal = true },
                 onOfertas = { showInProgressModal = true },
-                onProfile = {  // ← Nuevo callback
+                onProfile = {
                     sidebarVisible = false
                     onNavigateToProfile()
+                },
+                onReport ={
+                    sidebarVisible = false
+                    onNavigateToReports()
                 }
+
             )
         }
 

@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-
+import com.example.mercader.common.utils.parseErrorMessage
 
 
 @Composable
@@ -88,7 +88,7 @@ fun LoginScreen(
         val currentError = localErrorMessage ?: (authState as? AuthState.Error)?.message
         currentError?.let {
             Text(
-                text = it,
+                text = it.parseErrorMessage(),
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
