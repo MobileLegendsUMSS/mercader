@@ -178,11 +178,45 @@ class GameFormViewModel @Inject constructor(
     fun updateLoanAvailable(checked: Boolean) {
         _state.update { it.copy(isLoanAvailable = checked) }
     }
+    
+    fun updateImageUri(uri: android.net.Uri?) {
+        _state.update { it.copy(imageUri = uri) }
+    }
     fun saveGame() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
             try {
                 val currentState = _state.value
+
+                if (!isEditMode && currentState.imageUri == null) {
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Debe seleccionar una imagen de portada"
+                        )
+                    }
+                    return@launch
+                }
+                
+                if (currentState.category.id.isEmpty() || currentState.difficulty.id.isEmpty() || currentState.editorial.id.isEmpty()) {
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Debe seleccionar categoría, dificultad y editorial"
+                        )
+                    }
+                    return@launch
+                }
+
+                if (!currentState.isPurchaseAvailable && !currentState.isRentAvailable && !currentState.isLoanAvailable) {
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Debe habilitar al menos un tipo de servicio (Venta, Alquiler o Préstamo)"
+                        )
+                    }
+                    return@launch
+                }
 
                 val result = if (isEditMode) {
                     val updatedFields = getUpdatedFields()
@@ -309,7 +343,8 @@ class GameFormViewModel @Inject constructor(
             price = state.price,
             isPurchaseAvailable = state.isPurchaseAvailable,
             isRentAvailable = state.isRentAvailable,
-            isLoanAvailable = state.isLoanAvailable
+            isLoanAvailable = state.isLoanAvailable,
+            imageUrl = state.imageUri?.toString()
         )
     }
 

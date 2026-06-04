@@ -20,6 +20,7 @@ data class Game(
     val price: Float = 0f,
     val isPurchaseAvailable: Boolean = false,
     val isRentAvailable: Boolean = false,
-    val isLoanAvailable: Boolean = false
+    val isLoanAvailable: Boolean = false,
+    val imageUrl: String? = null
 )
 

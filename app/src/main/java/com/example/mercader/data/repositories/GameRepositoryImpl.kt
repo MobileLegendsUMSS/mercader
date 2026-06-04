@@ -19,11 +19,17 @@ import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import javax.net.ssl.SSLSocketFactory
 import com.google.gson.Gson
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.MultipartBody
+import android.net.Uri
 
 class GameRepositoryImpl @Inject constructor(
     private val apiService: GameApiService,
     private val networkHandler: NetworkHandler,
-    private val tokenRepository: com.example.mercader.data.local.ITokenRepository
+    private val tokenRepository: com.example.mercader.data.local.ITokenRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : GameRepository {
 
     override suspend fun saveGame(game: Game): Result<Unit> {
@@ -32,28 +38,63 @@ class GameRepositoryImpl @Inject constructor(
                 return Result.failure(IOException("No hay conexion a internet"))
             }
 
-            val requestDTO = GameRequestDTO(
-                services = listOf(
-                    if (game.isPurchaseAvailable) "compra" else null,
-                    if (game.isRentAvailable) "alquiler" else null,
-                    if (game.isLoanAvailable) "prestamo" else null
-                ).filterNotNull(),
-                titulo = game.title,
-                descripcion =game.description,
-                tutorial = game.tutorial,
-                cant_min_pers = game.nMinPerson,
-                cant_max_pers = game.nMaxPerson,
-                duracion_min = game.minMinutes,
-                duracion_max = game.maxMinutes,
-                precio = game.price,
-                disponible = true,
-                activo= true,
-                cantidad = game.stock,
-                id_dificultad = game.difficulty.id,
-                id_editorial = game.editorial.id,
-            )
+            val fields = mutableMapOf<String, okhttp3.RequestBody>()
+            fun addPart(key: String, value: Any) {
+                fields[key] = value.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            }
 
-            val response = apiService.saveGame(requestDTO,game.category.id)
+            addPart("titulo", game.title)
+            addPart("descripcion", game.description)
+            addPart("tutorial", game.tutorial)
+            addPart("cant_min_pers", game.nMinPerson)
+            addPart("cant_max_pers", game.nMaxPerson)
+            addPart("duracion_min", game.minMinutes)
+            addPart("duracion_max", game.maxMinutes)
+            addPart("precio", game.price)
+            addPart("disponible", true)
+            addPart("activo", true)
+            addPart("cantidad", game.stock)
+            addPart("id_dificultad", game.difficulty.id)
+            addPart("id_editorial", game.editorial.id)
+
+            val servicesList = listOfNotNull(
+                if (game.isPurchaseAvailable) "compra" else null,
+                if (game.isRentAvailable) "alquiler" else null,
+                if (game.isLoanAvailable) "prestamo" else null
+            )
+            val serviceParts = servicesList.map { service ->
+                MultipartBody.Part.createFormData("services", service)
+            }
+
+            var imagePart: MultipartBody.Part? = null
+            game.imageUrl?.let { uriString ->
+                try {
+                    val uri = Uri.parse(uriString)
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    if (inputStream != null) {
+                        val tempFile = java.io.File.createTempFile("upload", ".jpg", context.cacheDir)
+                        tempFile.outputStream().use { output ->
+                            inputStream.copyTo(output)
+                        }
+                        val requestFile = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                        imagePart = MultipartBody.Part.createFormData("portada", tempFile.name, requestFile)
+                    }
+                } catch (e: Exception) {
+                    Log.e("GameRepository", "Error al procesar la imagen: ${e.message}")
+                }
+            }
+
+            if (imagePart == null) {
+                val emptyBody = "".toRequestBody("image/jpeg".toMediaTypeOrNull())
+                imagePart = MultipartBody.Part.createFormData("portada", "empty.jpg", emptyBody)
+            }
+
+            val response = apiService.saveGame(
+                idCategory = game.category.id,
+                portada = imagePart!!,
+                fields = fields,
+                services = serviceParts
+            )
             Log.d("GameRepository", "Respuesta de API: $response")
             if (response.isSuccessful) {
                 Result.success(Unit)
@@ -151,7 +192,11 @@ class GameRepositoryImpl @Inject constructor(
                 if (it.id_dificultad != null) Difficulty(it.id_dificultad._id, it.id_dificultad.descripcion) else Difficulty("", ""),
                 if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre) else Editorial("", ""),
                 it.cantidad ?: 0,
-                it.precio ?: 0.0f
+                it.precio ?: 0.0f,
+                isPurchaseAvailable = false,
+                isRentAvailable = false,
+                isLoanAvailable = false,
+                imageUrl = it.imagen
             )
         }
     }

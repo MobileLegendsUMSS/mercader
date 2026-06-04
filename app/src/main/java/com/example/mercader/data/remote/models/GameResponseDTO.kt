@@ -17,7 +17,8 @@ data class GameResponseDTO(
     val createdAt: String?,
     val updatedAt: String?,
     val activo: Boolean?,
-    val justificacionRetiro: String?
+    val justificacionRetiro: String?,
+    val imagen: String?
 )
 
 data class AllGamesResponseDTO<T>(
