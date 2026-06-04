@@ -42,6 +42,7 @@ import com.example.mercader.ui.screens.profile.AdminProfileSimpleScreen
 import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
+import com.example.mercader.ui.screens.admin.AdminLoanManagementScreen
 
 sealed class AppScreen {
     object Splash       : AppScreen()
@@ -54,6 +55,7 @@ sealed class AppScreen {
     object Cart         : AppScreen()
     object Profile      : AppScreen()
     object AdminProfile : AppScreen()
+    object AdminLoanManagement : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -130,7 +132,8 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToGameForm = { currentScreen = AppScreen.GameForm },
                                 onNavigateToStock = { currentScreen = AppScreen.Stock },
                                 onSwitchToUser = { currentScreen = AppScreen.UserHome },
-                                onNavigateToProfile = { currentScreen = AppScreen.AdminProfile }
+                                onNavigateToProfile = { currentScreen = AppScreen.AdminProfile } ,
+                                onNavigateToLoanManagement = { currentScreen = AppScreen.AdminLoanManagement }
                             )
                         }
 
@@ -206,6 +209,11 @@ class MainActivity : ComponentActivity() {
                                     authViewModel.resetState()
                                     currentScreen = AppScreen.Login
                                 }
+                            )
+                        }
+                        is AppScreen.AdminLoanManagement -> {
+                            AdminLoanManagementScreen(
+                                onBack = { currentScreen = AppScreen.AdminHome }
                             )
                         }
                     }
