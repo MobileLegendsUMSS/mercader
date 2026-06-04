@@ -5,7 +5,6 @@ import android.content.Context
 import com.example.mercader.data.local.ITokenRepository
 import com.example.mercader.data.local.TokenRepository
 import com.example.mercader.data.remote.AuthApi
-import com.example.mercader.data.remote.apiservice.PaymentApiService
 import com.example.mercader.domain.usecases.AuthenticationUseCase
 import dagger.Module
 import dagger.Provides
@@ -39,12 +38,6 @@ object AppModule {
         tokenRepository: ITokenRepository
     ): AuthenticationUseCase {
         return AuthenticationUseCase(tokenRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun providePaymentApiService(retrofit: Retrofit): PaymentApiService {
-        return retrofit.create(PaymentApiService::class.java)
     }
 
     @Provides
