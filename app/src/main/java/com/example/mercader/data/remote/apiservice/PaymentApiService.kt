@@ -26,7 +26,6 @@ interface PaymentApiService {
     ): Response<ConfirmPaymentResponse>
 }
 
-// Si el backend devuelve una estructura diferente, ajústala aquí
 data class UploadReceiptResponse(
     val success: Boolean,
     val imageUrl: String,

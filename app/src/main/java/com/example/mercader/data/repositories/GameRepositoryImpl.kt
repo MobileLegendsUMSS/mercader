@@ -163,6 +163,7 @@ class GameRepositoryImpl @Inject constructor(
             }
 
             val response = apiService.getGames()
+            Log.d("ResponseCollection"," ${response}")
             if (response.isSuccessful) {
                 val gamesResponse = response.body()
                 if (gamesResponse != null && gamesResponse.success) {
