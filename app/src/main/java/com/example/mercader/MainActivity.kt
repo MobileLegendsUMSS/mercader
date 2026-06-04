@@ -150,6 +150,10 @@ class MainActivity : ComponentActivity() {
                         is AppScreen.GameForm -> {
                             val viewModel: GameFormViewModel = hiltViewModel()
 
+                            if (gameToEdit == null) {
+                                viewModel.resetForm()
+                            }
+                             
                             GameFormScreen(
                                 viewModel = viewModel,
                                 gameToEdit = gameToEdit,
@@ -161,6 +165,7 @@ class MainActivity : ComponentActivity() {
                                 onClose = {
                                     gameToEdit = null
                                     currentScreen = AppScreen.AdminHome
+                                    viewModel.clearGameToEdit()
                                 }
                             )
                         }
