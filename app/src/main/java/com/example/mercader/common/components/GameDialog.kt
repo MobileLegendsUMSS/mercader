@@ -411,7 +411,7 @@ fun GameDetailDialog(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !isAddingToCart && !isLoadingCartState,
+                            enabled = !isAddingToCart && !isLoadingCartState && game.isPurchaseAvailable,  // ← AÑADIR game.isPurchaseAvailable
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (isInCart)
                                     MaterialTheme.colorScheme.tertiary
@@ -437,7 +437,6 @@ fun GameDetailDialog(
                     if (showReserveModal) {
                         ReserveModal(
                             gameTitle = game.title,
-                            isPurchaseAvailable = game.isPurchaseAvailable,
                             isRentAvailable = game.isRentAvailable,
                             isLoanAvailable = game.isLoanAvailable,
                             onDismiss = { showReserveModal = false },
