@@ -12,7 +12,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-//import coil.compose.AsyncImage
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.example.mercader.domain.models.Game
 
 @Composable
@@ -35,12 +36,24 @@ fun GameCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Placeholder de imagen
-            Text(
-                text = "🎮",
-                fontSize = 80.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            if (!game.imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = game.imageUrl,
+                    contentDescription = "Portada de ${game.title}",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Placeholder de imagen
+                Text(
+                    text = "🎮",
+                    fontSize = 80.sp,
+                    modifier = Modifier.padding(bottom = 16.dp).weight(1f)
+                )
+            }
 
             // Titulo centrado
             Text(

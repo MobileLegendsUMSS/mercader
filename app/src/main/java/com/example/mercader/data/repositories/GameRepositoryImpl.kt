@@ -196,7 +196,7 @@ class GameRepositoryImpl @Inject constructor(
                 isPurchaseAvailable = false,
                 isRentAvailable = false,
                 isLoanAvailable = false,
-                imageUrl = it.imagen
+                imageUrl = it.portada
             )
         }
     }
