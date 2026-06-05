@@ -3,7 +3,6 @@ package com.example.mercader.common.components
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -42,14 +41,17 @@ fun GameDetailDialog(
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
     favoriteViewModel: FavoriteViewModel = hiltViewModel(),
-    cartManager: CartManager,
-    reserveManager: ReserveManager,
+    cartManager: CartManager? = null,  // ✅ Cambiado a nullable
+    reserveManager: ReserveManager? = null,  // ✅ Cambiado a nullable
     onEditGame: ((Game) -> Unit)? = null,
+    onDeleteGame: ((Game) -> Unit)? = null,  // ✅ Nuevo callback para eliminar
     onCartUpdate: (() -> Unit)? = null,
     onNavigateToCart: (() -> Unit)? = null,
-    onNavigateToReviews: ((Game) -> Unit)? = null
+    onNavigateToReviews: ((Game) -> Unit)? = null,
+    isAdminMode: Boolean = false  // ✅ Nuevo parámetro para modo admin
 ) {
     var showModal by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }  // ✅ Confirmación de eliminación
     val context = LocalContext.current
     var isInCart by remember { mutableStateOf(false) }
     var cartQuantity by remember { mutableStateOf(0) }
@@ -62,22 +64,26 @@ fun GameDetailDialog(
     val isFavorite = favoriteIds.contains(game.id)
     val isFavoriteLoading by favoriteViewModel.isLoading.collectAsState()
 
-    // CoroutineScope para lanzar corrutinas
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(game.id) {
         Log.d("FAVORITE_DEBUG", "Game ID en Dialog: '${game.id}'")
-        isLoadingCartState = true
-        favoriteViewModel.loadFavorites()
-        try {
-            isInCart = cartManager.isInCart(game.id)
-            if (isInCart) {
-                cartQuantity = cartManager.getQuantity(game.id)
+        if (!isAdminMode && cartManager != null) {
+            isLoadingCartState = true
+            favoriteViewModel.loadFavorites()
+            try {
+                isInCart = cartManager.isInCart(game.id)
+                if (isInCart) {
+                    cartQuantity = cartManager.getQuantity(game.id)
+                }
+            } catch (e: Exception) {
+                Log.e("GameDetailDialog", "Error loading cart state: ${e.message}")
+            } finally {
+                isLoadingCartState = false
             }
-        } catch (e: Exception) {
-            Log.e("GameDetailDialog", "Error loading cart state: ${e.message}")
-        } finally {
+        } else {
             isLoadingCartState = false
+            favoriteViewModel.loadFavorites()
         }
     }
 
@@ -109,39 +115,54 @@ fun GameDetailDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Grupo izquierdo (corazón + comentario)
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)  // Espacio entre los dos iconos
-                    ) {
-                        // Boton favorito (corazón)
-                        IconButton(
-                            onClick = {
-                                favoriteViewModel.toggleFavorite(game.id) { message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            modifier = Modifier.size(40.dp),
-                            enabled = !isFavoriteLoading
+                    // Grupo izquierdo (corazón + comentario) - Ocultar en modo admin
+                    if (!isAdminMode) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                contentDescription = "Favorito",
-                                tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                            // Boton favorito (corazón)
+                            IconButton(
+                                onClick = {
+                                    favoriteViewModel.toggleFavorite(game.id) { message ->
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.size(40.dp),
+                                enabled = !isFavoriteLoading
+                            ) {
+                                Icon(
+                                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = "Favorito",
+                                    tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
 
-                        // Boton reseña
-                        IconButton(
-                            onClick = {
-                                onNavigateToReviews?.invoke(game)
-                                //Toast.makeText(context, "Reseñas", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.size(40.dp)
+                            // Boton reseña
+                            IconButton(
+                                onClick = {
+                                    onNavigateToReviews?.invoke(game)
+                                },
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.comment_icon),
+                                    contentDescription = "Reseñas",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
+                        // En modo admin, mostrar un indicador de admin
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.comment_icon),
-                                contentDescription = "Reseñas",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            Text(
+                                text = "👑 Modo Admin",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -158,7 +179,6 @@ fun GameDetailDialog(
                         )
                     }
                 }
-
 
                 // ── Columna Principal ─────────────────────────────────
                 Column(
@@ -233,6 +253,40 @@ fun GameDetailDialog(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Stock para modo admin
+                    if (isAdminMode) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "📦 Stock disponible:",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${game.stock} unidades",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (game.stock > 0)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
                     // Categorías
                     Text(
                         text = "Categorías",
@@ -262,7 +316,7 @@ fun GameDetailDialog(
 
                     // Descripción
                     Text(
-                        text = "Descripcion",
+                        text = "Descripción",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -304,137 +358,111 @@ fun GameDetailDialog(
                         .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        SecondaryButton(
-                            text = "Retirar Juego",
-                            onClick = { showModal = true },
-                            modifier = Modifier.weight(1f)
-                        )
+                    if (isAdminMode) {
+                        // ✅ MODO ADMIN: Botones de Editar y Eliminar
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            SecondaryButton(
+                                text = "✏️ Editar Juego",
+                                onClick = {
+                                    onEditGame?.invoke(game)
+                                    onDismiss()
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
 
-                        if (showReserveModal) {
-                            ReserveModal(
-                                gameTitle = game.title,
-                                onDismiss = { showReserveModal = false },
-                                onConfirm = { tipoServicio ->
-                                    showReserveModal = false
-                                    isProcessingReserve = true
-                                    coroutineScope.launch {
-                                        try {
-                                            val result = reserveManager.bookReserve(game.id, tipoServicio)
-                                            if (result.isSuccess) {
+                            Button(
+                                onClick = { showDeleteConfirmation = true },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text("🗑️ Eliminar")
+                            }
+                        }
+                    } else {
+                        // ✅ MODO USUARIO: Botones originales
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            SecondaryButton(
+                                text = "Retirar Juego",
+                                onClick = { showModal = true },
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            SecondaryButton(
+                                text = "Solicitar Préstamo",
+                                onClick = { showReserveModal = true },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        // Botón dinámico del carrito (solo usuario)
+                        if (cartManager != null) {
+                            Button(
+                                onClick = {
+                                    if (isInCart) {
+                                        onNavigateToCart?.invoke()
+                                        onDismiss()
+                                    } else {
+                                        isAddingToCart = true
+                                        coroutineScope.launch {
+                                            try {
+                                                val added = cartManager.addToCart(game)
+                                                if (added) {
+                                                    isInCart = true
+                                                    cartQuantity = cartManager.getQuantity(game.id)
+                                                    Toast.makeText(
+                                                        context,
+                                                        "✓ ${game.title} se ha añadido al carrito",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                    onCartUpdate?.invoke()
+                                                } else {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Error al añadir ${game.title} al carrito",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            } catch (e: Exception) {
                                                 Toast.makeText(
                                                     context,
-                                                    "✓ ${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
-                                                    Toast.LENGTH_LONG
+                                                    "Error de conexión: ${e.message}",
+                                                    Toast.LENGTH_SHORT
                                                 ).show()
-                                            } else {
-                                                val error = result.exceptionOrNull()?.message ?: "Error desconocido"
-                                                Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                                            } finally {
+                                                isAddingToCart = false
                                             }
-                                        } catch (e: Exception) {
-                                            Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
-                                        } finally {
-                                            isProcessingReserve = false
                                         }
                                     }
-                                }
-                            )
-                        }
-
-                        if (showModal) {
-                            DeleteGameModal(
-                                gameName = game.title,
-                                onConfirm = { justificacionRetiro ->
-                                    Log.d("TestScreen", "Justificacion: $justificacionRetiro")
-                                    viewModel.deleteGame(
-                                        id = game.id,
-                                        justificacionRetiro = justificacionRetiro
-                                    )
-                                    showModal = false
                                 },
-                                onDismiss = { showModal = false }
-                            )
-                        }
-
-                        SecondaryButton(
-                            text = "Editar Juego",
-                            onClick = {
-                                onEditGame?.invoke(game)
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        SecondaryButton(
-                            text = "Solicitar Prestamo",
-                            onClick = { showReserveModal = true },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    // Botón dinámico del carrito
-                    Button(
-                        onClick = {
-                            if (isInCart) {
-                                // Navegar al carrito
-                                onNavigateToCart?.invoke()
-                                onDismiss()
-                            } else {
-                                // Agregar al carrito con corrutina
-                                isAddingToCart = true
-                                coroutineScope.launch {
-                                    try {
-                                        val added = cartManager.addToCart(game)
-                                        if (added) {
-                                            // Actualizar estado local
-                                            isInCart = true
-                                            cartQuantity = cartManager.getQuantity(game.id)
-                                            Toast.makeText(
-                                                context,
-                                                "✓ ${game.title} se ha añadido al carrito",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                            onCartUpdate?.invoke()
-                                        } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Error al añadir ${game.title} al carrito",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    } catch (e: Exception) {
-                                        Toast.makeText(
-                                            context,
-                                            "Error de conexión: ${e.message}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } finally {
-                                        isAddingToCart = false
-                                    }
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isAddingToCart && !isLoadingCartState,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isInCart)
+                                        MaterialTheme.colorScheme.tertiary
+                                    else
+                                        MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                if (isAddingToCart) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Text(
+                                        text = if (isInCart) "Ver Carrito ($cartQuantity)" else "Añadir al Carrito",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
                                 }
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isAddingToCart && !isLoadingCartState,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isInCart)
-                                MaterialTheme.colorScheme.tertiary
-                            else
-                                MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        if (isAddingToCart) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        } else {
-                            Text(
-                                text = if (isInCart) "Ver Carrito ($cartQuantity)" else "Añadir al Carrito",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
                         }
                     }
                 }
@@ -442,5 +470,80 @@ fun GameDetailDialog(
                 Spacer(modifier = Modifier.height(6.dp))
             }
         }
+    }
+
+    // Modal para "Retirar Juego" (solo usuario)
+    if (showModal) {
+        DeleteGameModal(
+            gameName = game.title,
+            onConfirm = { justificacionRetiro ->
+                Log.d("TestScreen", "Justificacion: $justificacionRetiro")
+                viewModel.deleteGame(
+                    id = game.id,
+                    justificacionRetiro = justificacionRetiro
+                )
+                showModal = false
+            },
+            onDismiss = { showModal = false }
+        )
+    }
+
+    // ✅ Modal de confirmación de eliminación (modo admin)
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Eliminar juego") },
+            text = { Text("¿Estás seguro de que deseas eliminar \"${game.title}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        onDeleteGame?.invoke(game)
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // Modal de reserva (solo usuario)
+    if (showReserveModal && reserveManager != null) {
+        ReserveModal(
+            gameTitle = game.title,
+            onDismiss = { showReserveModal = false },
+            onConfirm = { tipoServicio ->
+                showReserveModal = false
+                isProcessingReserve = true
+                coroutineScope.launch {
+                    try {
+                        val result = reserveManager.bookReserve(game.id, tipoServicio)
+                        if (result.isSuccess) {
+                            Toast.makeText(
+                                context,
+                                "✓ ${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            val error = result.exceptionOrNull()?.message ?: "Error desconocido"
+                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
+                    } finally {
+                        isProcessingReserve = false
+                    }
+                }
+            }
+        )
     }
 }

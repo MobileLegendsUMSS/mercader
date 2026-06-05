@@ -80,6 +80,22 @@ class GameRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getGameServices(gameId: String): Result<List<String>> {
+        return try {
+            val response = apiService.getGameServices(gameId)
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                val services = body.services ?: emptyList()
+                Result.success(services)
+            } else {
+                Result.failure(Exception("Error al obtener servicios del juego"))
+            }
+        } catch (e: Exception) {
+            Log.e("GameRepository", "Error en getGameServices: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
     override suspend fun getDifficulties(): Result<List<Difficulty>> {
         return try {
             if (!networkHandler.isNetworkAvailable()) {

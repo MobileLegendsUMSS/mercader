@@ -38,6 +38,7 @@ import com.example.mercader.ui.screens.cart.CartViewModel
 import com.example.mercader.ui.screens.profile.ProfileViewModel
 import com.example.mercader.ui.screens.profile.ProfileScreen
 import com.example.mercader.ui.screens.profile.AdminProfileSimpleScreen
+import com.example.mercader.ui.screens.admin.AdminStockScreen
 
 import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.CartManager
@@ -165,15 +166,32 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        // En MainActivity.kt, cambiar el case de AppScreen.Stock:
+
                         is AppScreen.Stock -> {
-                            CollectionScreen(
-                                viewModel = collectionViewModel,
-                                cartManager = cartManager,
+                            val adminStockViewModel: com.example.mercader.ui.screens.admin.AdminStockViewModel = hiltViewModel()
+
+                            AdminStockScreen(
                                 onBack = { currentScreen = AppScreen.AdminHome },
-                                reserveManager = reserveManager,
                                 onEditGame = { game ->
                                     gameToEdit = game
                                     currentScreen = AppScreen.GameForm
+                                },
+                                onDeleteGame = { game ->
+                                    adminStockViewModel.deleteGame(
+                                        gameId = game.id,
+                                        onSuccess = {
+                                            collectionViewModel.refreshGames()
+                                        },
+                                        onError = { error ->
+                                            // Mostrar error (puedes usar un Snackbar o Toast)
+                                            android.widget.Toast.makeText(
+                                                this@MainActivity,
+                                                error,
+                                                android.widget.Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    )
                                 }
                             )
                         }
