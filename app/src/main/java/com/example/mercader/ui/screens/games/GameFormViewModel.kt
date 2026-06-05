@@ -94,13 +94,16 @@ class GameFormViewModel @Inject constructor(
 
     fun setGameToEdit(game: Game) {
         existingGame = game
-        Log.d("Category"," ${existingGame?.category}")
+        val descripciontemp=game.category.descripcion
         val newState = GameFormState(
             id = game.id,
             title = game.title,
             description = game.description,
             tutorial = game.tutorial ?: "",
-            category = game.category,
+            category = Category(
+                _state.value.gameCategories.find { it.descripcion == descripciontemp }?.id ?: "",
+                descripciontemp
+            ),
             nMinPerson = game.nMinPerson,
             nMaxPerson = game.nMaxPerson,
             minMinutes = game.minMinutes,
@@ -245,7 +248,9 @@ class GameFormViewModel @Inject constructor(
         }
 
         if (currentState.category != original.category) {
-            updatedFields["difficulty"] = mapOf(
+            Log.d("Categorias", "Categoria rara: ${currentState.category}"+
+                "Categoria rara: ${original.category}")
+            updatedFields["category"] = mapOf(
                 "id" to currentState.category.id,
                 "descripcion" to currentState.category.descripcion
             )

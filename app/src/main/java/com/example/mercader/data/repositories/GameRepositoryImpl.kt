@@ -135,7 +135,7 @@ class GameRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun mapResponseToGames(data: List<com.example.mercader.data.remote.models.GameResponseDTO>?): List<Game> {
+    private fun mapResponseToGames(data: List<GameResponseDTO>?): List<Game> {
         if (data == null) return emptyList()
         return data.map {
             Game(
@@ -143,7 +143,7 @@ class GameRepositoryImpl @Inject constructor(
                 it.titulo ?: "Sin título",
                 it.descripcion ?: "Sin descripción",
                 it.tutorial ?: "",
-                Category("", ""),
+                Category(it.categorias[0], it.categorias[0]),
                 it.cant_min_pers ?: 1,
                 it.cant_max_pers ?: 4,
                 it.duracion_min ?: 30,
@@ -151,7 +151,11 @@ class GameRepositoryImpl @Inject constructor(
                 if (it.id_dificultad != null) Difficulty(it.id_dificultad._id, it.id_dificultad.descripcion) else Difficulty("", ""),
                 if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre) else Editorial("", ""),
                 it.cantidad ?: 0,
-                it.precio ?: 0.0f
+                it.precio ?: 0.0f,
+                it.servicios.contains("compra"),
+                it.servicios.contains("alquiler"),
+                it.servicios.contains("prestamo")
+
             )
         }
     }
@@ -282,7 +286,6 @@ class GameRepositoryImpl @Inject constructor(
 
             val fieldUpdates = convertToFieldUpdates(updatedFields)
 
-            // Hacer una llamada por cada campo a actualizar
             val errors = mutableListOf<String>()
             var successCount = 0
 
@@ -332,8 +335,7 @@ class GameRepositoryImpl @Inject constructor(
 
     private fun convertToFieldUpdates(updatedFields: Map<String, Any>): List<GameEditDTO> {
         val fieldUpdates = mutableListOf<GameEditDTO>()
-
-        // Mapeo de nuestros nombres de campo a los nombres que espera el backend
+        Log.e("SERECONOCE","$updatedFields")
         updatedFields.forEach { (key, value) ->
             when (key) {
                 "title" -> {
@@ -356,6 +358,12 @@ class GameRepositoryImpl @Inject constructor(
                 }
                 "maxMinutes" -> {
                     fieldUpdates.add(GameEditDTO("duracion_max", value))
+                }
+                "category" -> {
+                    val categoryMap = value as? Map<*, *>
+                    categoryMap?.get("descripcion")?.let { descripcion ->
+                        fieldUpdates.add(GameEditDTO("categoria", descripcion))
+                    }
                 }
                 "difficulty" -> {
                     val difficultyMap = value as? Map<*, *>
