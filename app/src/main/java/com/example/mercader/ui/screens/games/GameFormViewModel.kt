@@ -28,7 +28,6 @@ class GameFormViewModel @Inject constructor(
     val state: StateFlow<GameFormState> = _state.asStateFlow()
     private var existingGame: Game? = null
 
-    // Guardar el estado original para comparar cambios
     private var originalState: GameFormState? = null
 
     private val isEditMode: Boolean
@@ -114,7 +113,10 @@ class GameFormViewModel @Inject constructor(
             price = game.price,
             gameCategories = _state.value.gameCategories,
             difficulties = _state.value.difficulties,
-            editorials = _state.value.editorials
+            editorials = _state.value.editorials,
+            isPurchaseAvailable=game.isPurchaseAvailable,
+            isLoanAvailable = game.isLoanAvailable,
+            isRentAvailable = game.isRentAvailable
         )
 
         // Guardar el estado original para comparar cambios
