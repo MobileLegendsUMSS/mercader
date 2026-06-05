@@ -113,8 +113,6 @@ fun AdminHome(
                     sidebarVisible = false
                     onNavigateToStock()
                 },
-                onSellos = { showInProgressModal = true },
-                onOfertas = { showInProgressModal = true },
                 onProfile = {
                     sidebarVisible = false
                     onNavigateToProfile()
