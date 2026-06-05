@@ -17,5 +17,19 @@ interface UserRepository {
     suspend fun getTopGames(): Result<List<TopGame>>
 
     suspend fun editProfile(updatedFields: Map<String, Any>): Result<Unit>
+
+    // Obtener todos los prestamos (admin)
+    suspend fun getAllLoans(
+        vigente: Boolean,
+        recogido: Boolean,
+        devuelto: Boolean
+    ): Result<List<UserLoan>>
+
+    // Actualizar prestamo (admin)
+    suspend fun updateLoan(
+        loanId: String,
+        fechaInicio: String?,
+        fechaFin: String?
+    ): Result<Unit>
 }
 
