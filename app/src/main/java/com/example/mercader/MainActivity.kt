@@ -42,6 +42,7 @@ import com.example.mercader.ui.screens.profile.AdminProfileSimpleScreen
 import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
+import com.example.mercader.ui.screens.admin.AdminLoanManagementScreen
 import com.example.mercader.ui.screens.reports.ReportScreen
 import com.example.mercader.ui.screens.reports.ReportViewModel
 
@@ -56,6 +57,7 @@ sealed class AppScreen {
     object Cart         : AppScreen()
     object Profile      : AppScreen()
     object AdminProfile : AppScreen()
+    object AdminLoanManagement : AppScreen()
     object Reports      : AppScreen()
 }
 
@@ -131,7 +133,8 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToGameForm = { currentScreen = AppScreen.GameForm },
                                 onNavigateToStock = { currentScreen = AppScreen.Stock },
                                 onNavigateToProfile = { currentScreen = AppScreen.AdminProfile },
-                                onNavigateToReports = { currentScreen = AppScreen.Reports }
+                                onNavigateToReports = { currentScreen = AppScreen.Reports },
+                                onNavigateToLoanManagement = { currentScreen = AppScreen.AdminLoanManagement }
                             )
                         }
 
@@ -155,7 +158,7 @@ class MainActivity : ComponentActivity() {
                             if (gameToEdit == null) {
                                 viewModel.resetForm()
                             }
-                             
+
                             GameFormScreen(
                                 viewModel = viewModel,
                                 gameToEdit = gameToEdit,
@@ -219,6 +222,11 @@ class MainActivity : ComponentActivity() {
                                     authViewModel.resetState()
                                     currentScreen = AppScreen.Login
                                 }
+                            )
+                        }
+                        is AppScreen.AdminLoanManagement -> {
+                            AdminLoanManagementScreen(
+                                onBack = { currentScreen = AppScreen.AdminHome }
                             )
                         }
                         is AppScreen.Reports -> {
