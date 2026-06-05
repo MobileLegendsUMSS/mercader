@@ -1,6 +1,7 @@
 // ui/screens/games/CollectionScreen.kt
 package com.example.mercader.ui.screens.games
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -63,6 +64,15 @@ fun CollectionScreen(
         }
     }
     val isAdmin = onEditGame != null
+    val visibleGames = remember(filteredGames, isAdmin) {
+        if (isAdmin) {
+            filteredGames
+        } else {
+            filteredGames.filter { game ->
+                game.stock > 0 && game.active
+            }
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -174,7 +184,7 @@ fun CollectionScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filteredGames) { game ->
+                items(visibleGames) { game ->
                     GameCard(
                         game = game,
                         onClick = { selectedGame = game },

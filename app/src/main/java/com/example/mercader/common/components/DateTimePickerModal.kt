@@ -1,5 +1,6 @@
 package com.example.mercader.common.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +22,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
+@SuppressLint("NewApi")
 @Composable
 fun DateTimePickerModal(
     title: String,
@@ -29,22 +31,14 @@ fun DateTimePickerModal(
 ) {
     val context = LocalContext.current
 
-    // Obtener fecha/hora actual de Bolivia (UTC-4)
     val currentBoliviaDateTime = getCurrentBoliviaDateTimeObject()
-
     var selectedDate by remember { mutableStateOf(currentBoliviaDateTime.toLocalDate()) }
     var selectedTime by remember { mutableStateOf(currentBoliviaDateTime.toLocalTime()) }
     var showDatePicker by remember { mutableStateOf(true) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    // Validaciones
+    // ✅ Solo validar fecha futura (hora puede ser cualquiera)
     val isDateValid = !selectedDate.isAfter(currentBoliviaDateTime.toLocalDate())
-    val isTimeValid = if (selectedDate == currentBoliviaDateTime.toLocalDate()) {
-        !selectedTime.isAfter(currentBoliviaDateTime.toLocalTime())
-    } else {
-        true
-    }
-    val isSelectionValid = isDateValid && isTimeValid
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -70,14 +64,12 @@ fun DateTimePickerModal(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Título
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
 
-                // Fecha seleccionada
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -104,7 +96,6 @@ fun DateTimePickerModal(
                     }
                 }
 
-                // Botones de selector
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -123,7 +114,6 @@ fun DateTimePickerModal(
                     }
                 }
 
-                // Mensajes de validación
                 if (!isDateValid) {
                     Text(
                         text = "⚠️ La fecha no puede ser futura",
@@ -131,17 +121,9 @@ fun DateTimePickerModal(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
-                if (!isTimeValid) {
-                    Text(
-                        text = "⚠️ La hora no puede ser futura",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Botones de acción
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -161,7 +143,7 @@ fun DateTimePickerModal(
                         },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = isSelectionValid
+                        enabled = isDateValid
                     ) {
                         Text("Confirmar")
                     }
@@ -170,7 +152,6 @@ fun DateTimePickerModal(
         }
     }
 
-    // DatePicker Modal
     if (showDatePicker) {
         DatePickerModal(
             initialDate = selectedDate,
@@ -182,12 +163,9 @@ fun DateTimePickerModal(
         )
     }
 
-    // TimePicker Modal
     if (showTimePicker) {
         TimePickerModal(
             initialTime = selectedTime,
-            selectedDate = selectedDate,
-            currentDateTime = currentBoliviaDateTime,
             onDismiss = { showTimePicker = false },
             onTimeSelected = { time ->
                 selectedTime = time
@@ -197,6 +175,7 @@ fun DateTimePickerModal(
     }
 }
 
+@SuppressLint("NewApi")
 @Composable
 fun DatePickerModal(
     initialDate: LocalDate,
@@ -228,7 +207,6 @@ fun DatePickerModal(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Date Picker simple usando calendario manual
                 DatePickerGrid(
                     selectedDate = selectedDate,
                     currentDate = currentBoliviaDate,
@@ -261,20 +239,15 @@ fun DatePickerModal(
     }
 }
 
+@SuppressLint("NewApi")
 @Composable
 fun TimePickerModal(
     initialTime: LocalTime,
-    selectedDate: LocalDate,
-    currentDateTime: LocalDateTime,
     onDismiss: () -> Unit,
     onTimeSelected: (LocalTime) -> Unit
 ) {
     var selectedHour by remember { mutableStateOf(initialTime.hour) }
     var selectedMinute by remember { mutableStateOf(initialTime.minute) }
-
-    val currentHour = currentDateTime.hour
-    val currentMinute = currentDateTime.minute
-    val isToday = selectedDate == currentDateTime.toLocalDate()
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -298,26 +271,23 @@ fun TimePickerModal(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Selector de hora simple
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Selector de hora
+                    // Selector de hora (▲ = aumentar, ▼ = disminuir)
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Hora", style = MaterialTheme.typography.labelMedium)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
+                            // ▲ Aumentar hora
                             IconButton(
                                 onClick = {
-                                    if (selectedHour > 0) {
-                                        val newHour = selectedHour - 1
-                                        if (!isToday || newHour >= currentHour) {
-                                            selectedHour = newHour
-                                        }
+                                    if (selectedHour < 23) {
+                                        selectedHour++
                                     }
                                 }
                             ) {
@@ -329,13 +299,11 @@ fun TimePickerModal(
                                 modifier = Modifier.width(60.dp),
                                 textAlign = TextAlign.Center
                             )
+                            // ▼ Disminuir hora
                             IconButton(
                                 onClick = {
-                                    if (selectedHour < 23) {
-                                        val newHour = selectedHour + 1
-                                        if (!isToday || newHour <= 23) {
-                                            selectedHour = newHour
-                                        }
+                                    if (selectedHour > 0) {
+                                        selectedHour--
                                     }
                                 }
                             ) {
@@ -346,20 +314,18 @@ fun TimePickerModal(
 
                     Text(":", fontSize = 32.sp, modifier = Modifier.padding(horizontal = 16.dp))
 
-                    // Selector de minutos
+                    // Selector de minutos (▲ = aumentar, ▼ = disminuir)
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Minuto", style = MaterialTheme.typography.labelMedium)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
+                            // ▲ Aumentar minuto
                             IconButton(
                                 onClick = {
-                                    if (selectedMinute > 0) {
-                                        val newMinute = selectedMinute - 1
-                                        if (!isToday || selectedHour > currentHour || newMinute >= currentMinute) {
-                                            selectedMinute = newMinute
-                                        }
+                                    if (selectedMinute < 59) {
+                                        selectedMinute++
                                     }
                                 }
                             ) {
@@ -371,10 +337,11 @@ fun TimePickerModal(
                                 modifier = Modifier.width(60.dp),
                                 textAlign = TextAlign.Center
                             )
+                            // ▼ Disminuir minuto
                             IconButton(
                                 onClick = {
-                                    if (selectedMinute < 59) {
-                                        selectedMinute++
+                                    if (selectedMinute > 0) {
+                                        selectedMinute--
                                     }
                                 }
                             ) {
@@ -407,18 +374,17 @@ fun TimePickerModal(
     }
 }
 
+@SuppressLint("NewApi")
 @Composable
 fun DatePickerGrid(
     selectedDate: LocalDate,
     currentDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    // Implementación simple de grid de fechas
     val daysInMonth = selectedDate.lengthOfMonth()
     val firstDayOfMonth = selectedDate.withDayOfMonth(1).dayOfWeek.value
 
     Column {
-        // Header con mes y año
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -454,7 +420,6 @@ fun DatePickerGrid(
             }
         }
 
-        // Días de la semana
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -469,11 +434,6 @@ fun DatePickerGrid(
             }
         }
 
-        // Grid de días
-        val calendar = Calendar.getInstance()
-        calendar.set(selectedDate.year, selectedDate.monthValue - 1, 1)
-        val startOffset = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7
-
         Column {
             for (week in 0..5) {
                 Row(
@@ -481,7 +441,7 @@ fun DatePickerGrid(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     for (dayInWeek in 0..6) {
-                        val dayNumber = week * 7 + dayInWeek - startOffset + 1
+                        val dayNumber = week * 7 + dayInWeek - (firstDayOfMonth - 1) + 1
                         val date = if (dayNumber in 1..daysInMonth) {
                             LocalDate.of(selectedDate.year, selectedDate.monthValue, dayNumber)
                         } else null
@@ -493,7 +453,7 @@ fun DatePickerGrid(
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(2.dp)
-                                .size(40.dp)  // Tamaño fijo cuadrado
+                                .size(40.dp)
                                 .clickable(enabled = isSelectable) {
                                     if (isSelectable) onDateSelected(date)
                                 },
@@ -526,6 +486,7 @@ fun DatePickerGrid(
 }
 
 // Funciones auxiliares
+@SuppressLint("NewApi")
 private fun getCurrentBoliviaDateTimeObject(): LocalDateTime {
     val calendar = Calendar.getInstance().apply {
         add(Calendar.HOUR_OF_DAY, -4)
@@ -533,17 +494,20 @@ private fun getCurrentBoliviaDateTimeObject(): LocalDateTime {
     return LocalDateTime.ofInstant(calendar.toInstant(), ZoneId.systemDefault())
 }
 
+@SuppressLint("NewApi")
 private fun combineDateAndTime(date: LocalDate, time: LocalTime): String {
     val dateTime = LocalDateTime.of(date, time)
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     return dateTime.format(formatter)
 }
 
+@SuppressLint("NewApi")
 private fun formatDateForDisplay(date: LocalDate): String {
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     return date.format(formatter)
 }
 
+@SuppressLint("NewApi")
 private fun formatTimeForDisplay(time: LocalTime): String {
     return String.format("%02d:%02d", time.hour, time.minute)
 }
