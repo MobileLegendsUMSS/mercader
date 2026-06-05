@@ -12,7 +12,13 @@ import com.example.mercader.common.constants.SliderType
 import com.example.mercader.domain.models.Game
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
 @Composable
 fun GameFormScreen(
@@ -23,6 +29,12 @@ fun GameFormScreen(
 ) {
     val buttonText = if (gameToEdit != null) "Actualizar Juego" else "Guardar Juego"
     val state by viewModel.state.collectAsState()
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        viewModel.updateImageUri(uri)
+    }
 
     LaunchedEffect(state.saveSuccess) {
         if (state.saveSuccess) {
@@ -39,8 +51,10 @@ fun GameFormScreen(
         }
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     state.errorMessage?.let { error ->
         LaunchedEffect(error) {
+            android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -51,6 +65,39 @@ fun GameFormScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 SectionTitle("Información del juego")
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    if (state.imageUri != null) {
+                        AsyncImage(
+                            model = state.imageUri,
+                            contentDescription = "Portada del juego",
+                            modifier = Modifier
+                                .size(150.dp)
+                                .padding(bottom = 8.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else if (gameToEdit?.imageUrl != null) {
+                        AsyncImage(
+                            model = gameToEdit.imageUrl,
+                            contentDescription = "Portada del juego",
+                            modifier = Modifier
+                                .size(150.dp)
+                                .padding(bottom = 8.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    
+                    Button(
+                        onClick = { imagePickerLauncher.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Subir Imagen", modifier = Modifier.padding(end = 8.dp))
+                        Text(if (state.imageUri != null || gameToEdit?.imageUrl != null) "Cambiar Imagen" else "Subir Imagen de Portada")
+                    }
+                }
 
                 ThinTextField(
                     value = state.title,

@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.CollectionViewModel.DeleteViewModel
@@ -179,13 +181,24 @@ fun GameDetailDialog(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Imagen
-                    ImagePlaceholder(
-                        emoji = "🎮",
-                        contentDescription = game.title,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
+                    if (!game.imageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = game.imageUrl,
+                            contentDescription = game.title,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        ImagePlaceholder(
+                            emoji = "🎮",
+                            contentDescription = game.title,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
