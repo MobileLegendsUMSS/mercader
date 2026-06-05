@@ -14,7 +14,6 @@ import androidx.compose.ui.window.DialogProperties
 @Composable
 fun ReserveModal(
     gameTitle: String,
-    isPurchaseAvailable: Boolean = false,
     isRentAvailable: Boolean = false,
     isLoanAvailable: Boolean = false,
     onDismiss: () -> Unit,
@@ -25,7 +24,6 @@ fun ReserveModal(
             when {
                 isLoanAvailable -> "prestamo"
                 isRentAvailable -> "alquiler"
-                isPurchaseAvailable -> "compra"
                 else -> null
             }
         )
@@ -34,7 +32,6 @@ fun ReserveModal(
     val availableServices = listOf(
         isLoanAvailable to "prestamo",
         isRentAvailable to "alquiler",
-        isPurchaseAvailable to "compra"
     ).filter { it.first }.map { it.second }
 
     Dialog(
@@ -87,19 +84,8 @@ fun ReserveModal(
                     Column(
                         modifier = Modifier.padding(vertical = 8.dp)
                     ) {
-                        if (isPurchaseAvailable) {
-                            ServiceRadioOption(
-                                selected = selectedService == "compra",
-                                onClick = { selectedService = "compra" },
-                                emoji = "💰",
-                                title = "Compra Directa",
-                                description = "Adquiere el juego para siempre"
-                            )
-                        }
-
 
                         if (isRentAvailable) {
-                            if (isPurchaseAvailable) HorizontalDivider()
                             ServiceRadioOption(
                                 selected = selectedService == "alquiler",
                                 onClick = { selectedService = "alquiler" },
@@ -110,7 +96,7 @@ fun ReserveModal(
                         }
 
                         if (isLoanAvailable) {
-                            if (isPurchaseAvailable || isRentAvailable) HorizontalDivider()
+                            if (isRentAvailable) HorizontalDivider()
                             ServiceRadioOption(
                                 selected = selectedService == "prestamo",
                                 onClick = { selectedService = "prestamo" },
