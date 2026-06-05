@@ -22,7 +22,8 @@ fun SidebarMenu(
     onOfertas: () -> Unit,
     onProfile: () -> Unit,
     onLoanManagement: () -> Unit,
-    onReport: () -> Unit
+    onReport: () -> Unit,
+    onPurchases: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -70,6 +71,7 @@ fun SidebarMenu(
                 SidebarButton(text = "Gestión de Préstamos", onClick = onLoanManagement)
                 SidebarButton(text = "Sellos de Clientes", onClick = onSellos)
                 SidebarButton(text = "Estadisticas", onClick = onReport)
+                SidebarButton(text = "Gestión de Compras", onClick = onPurchases)
             }
 
             // Parte inferior del menú - Perfil y Logout

@@ -28,7 +28,7 @@ fun AdminPurchaseManagementScreen(
     val context = LocalContext.current
     var selectedPurchase by remember { mutableStateOf<AdminPurchaseItemDTO?>(null) }
 
-    val tabs = listOf("Pendientes", "Aceptadas", "Rechazadas", "Todas")
+    val tabs = listOf("Pendientes", "Aceptadas", "Rechazadas")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     // Filtrar compras según la pestaña seleccionada
@@ -36,8 +36,7 @@ fun AdminPurchaseManagementScreen(
         when (selectedTabIndex) {
             0 -> state.purchases.filter { it.estado == "pendiente" }
             1 -> state.purchases.filter { it.estado == "aceptado" }
-            2 -> state.purchases.filter { it.estado == "rechazado" }
-            else -> state.purchases
+            else -> state.purchases.filter { it.estado == "rechazado" }
         }
     }
 
@@ -138,7 +137,6 @@ fun AdminPurchaseManagementScreen(
                             text = when (selectedTabIndex) {
                                 0 -> "No hay compras pendientes"
                                 1 -> "No hay compras aceptadas"
-                                2 -> "No hay compras rechazadas"
                                 else -> "No hay compras registradas"
                             },
                             style = MaterialTheme.typography.titleMedium,

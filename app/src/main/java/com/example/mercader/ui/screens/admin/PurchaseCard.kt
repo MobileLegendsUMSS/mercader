@@ -19,6 +19,12 @@ fun PurchaseCard(
     purchase: AdminPurchaseItemDTO,
     onClick: () -> Unit
 ) {
+    val shortId = if (purchase.idCompra.length >= 4) {
+        purchase.idCompra.takeLast(4)
+    } else {
+        purchase.idCompra
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -32,7 +38,7 @@ fun PurchaseCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono según estado
+            // Icono segun estado
             Box(
                 modifier = Modifier
                     .size(50.dp)
@@ -60,7 +66,7 @@ fun PurchaseCard(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Compra #${purchase.idCompra.take(8)}...",
+                    text = "Compra #$shortId",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

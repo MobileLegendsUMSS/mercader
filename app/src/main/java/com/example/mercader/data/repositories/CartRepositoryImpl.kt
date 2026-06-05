@@ -10,8 +10,11 @@ import java.io.IOException
 import javax.inject.Inject
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import retrofit2.http.PartMap
 
 class CartRepositoryImpl @Inject constructor(
     private val apiService: CartApiService
@@ -137,28 +140,30 @@ class CartRepositoryImpl @Inject constructor(
             println("💳 CartRepository: checkoutWithReceipt - metodoPagoId: $metodoPagoId")
             println("💳 Archivo: ${receiptFile.name}, tamaño: ${receiptFile.length()} bytes")
 
-            // Crear el part para id_metodo_pago
-            val metodoPagoPart = MultipartBody.Part.createFormData(
-                "id_metodo_pago",
-                metodoPagoId
-            )
+            val fields = mutableMapOf<String, RequestBody>()
+            fields["id_metodo_pago"] = metodoPagoId.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            // Crear el part para el archivo de comprobante
-            val requestFile = receiptFile.asRequestBody("image/*".toMediaTypeOrNull())
+            // Crear el archivo con MIME type correcto
+            val mimeType = when (receiptFile.extension.lowercase()) {
+                "png" -> "image/png"
+                "jpg", "jpeg" -> "image/jpeg"
+                else -> "image/jpeg"
+            }
+            val requestFile = receiptFile.asRequestBody(mimeType.toMediaTypeOrNull())
             val comprobantePart = MultipartBody.Part.createFormData(
                 "comprobante",
                 receiptFile.name,
                 requestFile
             )
 
-            val response = apiService.checkoutWithReceipt(metodoPagoPart, comprobantePart)
+            val response = apiService.checkoutWithReceipt(fields, comprobantePart)
 
             println("💳 Response code: ${response.code()}")
             println("💳 Response successful: ${response.isSuccessful}")
             println("💳 Response body: ${response.body()}")
 
             if (response.isSuccessful && response.body()?.success == true) {
-                println("Compra realizada exitosamente con comprobante")
+                println("✅ Compra realizada exitosamente con comprobante")
                 Result.success(Unit)
             } else {
                 val errorMessage = response.body()?.message ?: "Error al procesar la compra"

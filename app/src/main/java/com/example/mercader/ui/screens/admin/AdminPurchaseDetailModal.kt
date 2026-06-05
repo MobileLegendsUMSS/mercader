@@ -1,8 +1,9 @@
 package com.example.mercader.ui.screens.admin
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +33,6 @@ fun AdminPurchaseDetailModal(
     var showRejectConfirm by remember { mutableStateOf(false) }
     val detailState by viewModel.state.collectAsState()
 
-    // Cargar detalle de la compra
     LaunchedEffect(purchase.idCompra) {
         viewModel.loadPurchaseDetail(purchase.idCompra)
     }
@@ -48,6 +48,7 @@ fun AdminPurchaseDetailModal(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight(0.85f)  // Altura máxima del modal
                 .padding(horizontal = 24.dp),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
@@ -55,163 +56,184 @@ fun AdminPurchaseDetailModal(
             )
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Título
-                Text(
-                    text = "Detalle de Compra",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                HorizontalDivider()
-
-                // Información del usuario
-                if (detailState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                } else if (detailState.purchaseDetail != null) {
-                    val detail = detailState.purchaseDetail!!
-
+                // ✅ Área scrolleable para el contenido
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Título
                     Text(
-                        text = detail.nombreUsuario,
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "Detalle de Compra",
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
 
-                    if (detail.nombres != null || detail.apellidos != null) {
+                    HorizontalDivider()
+
+                    // Contenido que puede crecer
+                    if (detailState.isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(32.dp))
+                    } else if (detailState.purchaseDetail != null) {
+                        val detail = detailState.purchaseDetail!!
+
                         Text(
-                            text = "${detail.nombres ?: ""} ${detail.apellidos ?: ""}".trim(),
+                            text = "Compra #${purchase.idCompra.takeLast(4)}",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Estado: ${when (purchase.estado) {
+                                "pendiente" -> "Pendiente"
+                                "aceptado" -> "Aceptada"
+                                else -> "Rechazada"
+                            }}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = when (purchase.estado) {
+                                "pendiente" -> MaterialTheme.colorScheme.primary
+                                "aceptado" -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.error
+                            }
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    DetailRow(label = "Total", value = "Bs${String.format("%.2f", detail.total)}")
-                    DetailRow(label = "Método de pago", value = purchase.metodoPago)
-                    DetailRow(label = "Estado", value = when (purchase.estado) {
-                        "pendiente" -> "Pendiente"
-                        "aceptado" -> "Aceptada"
-                        else -> "Rechazada"
-                    })
-                    DetailRow(label = "Fecha", value = formatDate(detail.fechaCreacion))
+                        DetailRow(label = "Usuario", value = detail.nombreUsuario)
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        if (detail.nombres != null || detail.apellidos != null) {
+                            DetailRow(
+                                label = "Nombre completo",
+                                value = "${detail.nombres ?: ""} ${detail.apellidos ?: ""}".trim()
+                            )
+                        }
 
-                    // Comprobante de pago
-                    Text(
-                        text = "Comprobante de pago",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                        DetailRow(label = "Total", value = "Bs${String.format("%.2f", detail.total)}")
+                        DetailRow(label = "Método de pago", value = purchase.metodoPago)
+                        DetailRow(label = "Fecha", value = formatDate(detail.fechaCreacion))
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        AsyncImage(
-                            model = detail.comprobante,
-                            contentDescription = "Comprobante de pago",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Comprobante de pago
+                        Text(
+                            text = "Comprobante de pago",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Detalle del carrito
-                    Text(
-                        text = "Productos",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    detail.detallesCarrito.forEach { item ->
-                        Row(
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .height(200.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            AsyncImage(
+                                model = detail.comprobante,
+                                contentDescription = "Comprobante de pago",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Detalle del carrito
+                        Text(
+                            text = "Productos",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        detail.detallesCarrito.forEach { item ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "${item.title} x${item.quantity}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "Bs${String.format("%.2f", item.priceSubtotal)}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${item.title} x${item.quantity}",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "Total",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Bs${String.format("%.2f", item.priceSubtotal)}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
+                                text = "Bs${String.format("%.2f", detail.total)}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
-
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Total",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Bs${String.format("%.2f", detail.total)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Botones de acción (solo si está pendiente)
-                if (purchase.estado == "pendiente") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = { showRejectConfirm = true },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Text("❌ Rechazar")
-                        }
-
-                        Button(
-                            onClick = { showAcceptConfirm = true },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiary
-                            )
-                        ) {
-                            Text("✅ Aceptar")
-                        }
-                    }
-                }
-
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
-                    Text("Cerrar")
+                    if (purchase.estado == "pendiente") {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { showRejectConfirm = true },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text("Rechazar")
+                            }
+
+                            Button(
+                                onClick = { showAcceptConfirm = true },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Aceptar")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Cerrar")
+                    }
                 }
             }
         }
