@@ -17,6 +17,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.common.components.BackButton
 import com.example.mercader.common.components.ImagePlaceholder
 import com.example.mercader.domain.models.CartItem
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun CartScreen(
@@ -258,11 +260,20 @@ fun CartItemCard(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ImagePlaceholder(
-                    emoji = "🎮",
-                    contentDescription = game.title,
-                    modifier = Modifier.size(60.dp)
-                )
+                if (!game.imageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = game.imageUrl,
+                        contentDescription = game.title,
+                        modifier = Modifier.size(60.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    ImagePlaceholder(
+                        emoji = "🎮",
+                        contentDescription = game.title,
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
 
                 Column {
                     Text(

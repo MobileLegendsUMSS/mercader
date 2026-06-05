@@ -11,13 +11,19 @@ import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Multipart
+import retrofit2.http.Part
+import retrofit2.http.PartMap
 
 interface GameApiService {
 
+    @Multipart
     @POST("juegos/")
     suspend fun saveGame(
-        @Body game: GameRequestDTO,
-        @Query("idCategory") idCategory:String
+        @Query("idCategory") idCategory: String,
+        @Part portada: okhttp3.MultipartBody.Part,
+        @PartMap fields: Map<String, @JvmSuppressWildcards okhttp3.RequestBody>,
+        @Part services: List<okhttp3.MultipartBody.Part>
     ): Response<GameResponseDTO>
 
     @GET("categorias/")

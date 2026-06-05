@@ -15,6 +15,7 @@ data class GameFormState(
     val editorial: Editorial = Editorial("",""),
     val stock: Int = 0,
     val price: Float = 0f,
+    val imageUri: android.net.Uri? = null,
 
     val gameCategories: List<Category> = emptyList(),
     val difficulties: List<Difficulty> = emptyList(),

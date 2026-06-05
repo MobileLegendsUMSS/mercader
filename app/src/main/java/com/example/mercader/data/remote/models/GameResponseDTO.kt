@@ -18,9 +18,13 @@ data class GameResponseDTO(
     val updatedAt: String?,
     val activo: Boolean?,
     val justificacionRetiro: String?,
+    val portada: String?,
+    val visitas: Int?,
+    val ventas: Int?,
+    val prestamos: Int?,
     val categorias: List<String>,
-    val servicios: List<String>
-)
+    val servicios: List<String>,
+    )
 
 data class AllGamesResponseDTO<T>(
     val success: Boolean,
