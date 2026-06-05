@@ -24,7 +24,8 @@ fun AdminHome(
     onNavigateToStock: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToLoanManagement: () -> Unit,
-    onNavigateToReports: () -> Unit
+    onNavigateToReports: () -> Unit,
+    onNavigateToPurchases: () -> Unit
 ) {
     var sidebarVisible by remember { mutableStateOf(false) }
     var showInProgressModal by remember { mutableStateOf(false) }
@@ -124,8 +125,11 @@ fun AdminHome(
                 onReport ={
                     sidebarVisible = false
                     onNavigateToReports()
+                },
+                onPurchases = {  // ← NUEVO
+                    sidebarVisible = false
+                    onNavigateToPurchases()
                 }
-
             )
         }
 

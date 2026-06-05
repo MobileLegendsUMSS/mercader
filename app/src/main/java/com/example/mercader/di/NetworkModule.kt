@@ -1,6 +1,7 @@
 package com.example.mercader.di
 
 import com.example.mercader.common.constants.AppConstants
+import com.example.mercader.data.remote.apiservice.AdminPurchaseApiService
 import com.example.mercader.data.remote.apiservice.CartApiService
 import com.example.mercader.data.remote.apiservice.GameApiService
 import com.example.mercader.data.remote.apiservice.ReserveApiService
@@ -13,7 +14,9 @@ import com.example.mercader.data.repositories.ReportRepositoryImpl
 import com.example.mercader.data.repository.CartRepositoryImpl
 import com.example.mercader.data.repository.ReviewRepositoryImpl
 import com.example.mercader.data.repositories.UserRepositoryImpl
+import com.example.mercader.data.repository.AdminPurchaseRepositoryImpl
 import com.example.mercader.data.repository.ReportRepository
+import com.example.mercader.domain.repositories.AdminPurchaseRepository
 import com.example.mercader.domain.repositories.ReviewRepository
 import com.example.mercader.domain.repositories.UserRepository
 import dagger.Module
@@ -132,5 +135,19 @@ object NetworkModule {
     @Singleton
     fun provideAuthApiService(retrofit: Retrofit): AuthApiService {
         return retrofit.create(AuthApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdminPurchaseApiService(retrofit: Retrofit): AdminPurchaseApiService {
+        return retrofit.create(AdminPurchaseApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAdminPurchaseRepository(
+        apiService: AdminPurchaseApiService
+    ): AdminPurchaseRepository {
+        return AdminPurchaseRepositoryImpl(apiService)
     }
 }
