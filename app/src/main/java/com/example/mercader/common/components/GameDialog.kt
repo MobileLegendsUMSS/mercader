@@ -3,7 +3,6 @@ package com.example.mercader.common.components
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,7 +19,6 @@ import com.example.mercader.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
@@ -31,6 +29,7 @@ import com.example.mercader.ui.screens.games.CollectionViewModel.DeleteViewModel
 import com.example.mercader.ui.screens.games.FavoriteViewModel
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
+import com.example.mercader.ui.screens.games.ReserveModal
 import kotlinx.coroutines.launch
 
 @Composable
@@ -133,7 +132,6 @@ fun GameDetailDialog(
                             IconButton(
                                 onClick = {
                                     onNavigateToReviews?.invoke(game)
-                                    //Toast.makeText(context, "Reseñas", Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.size(40.dp)
                             ) {
@@ -158,7 +156,6 @@ fun GameDetailDialog(
                         )
                     }
                 }
-
 
                 // ── Columna Principal ─────────────────────────────────
                 Column(
@@ -346,8 +343,24 @@ fun GameDetailDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
+                            // Botón de Solicitar Préstamo con lógica mejorada
                             Button(
-                                onClick = { showReserveModal = true },
+                                onClick = {
+                                    // Verificar disponibilidad de al menos un servicio
+                                    val hasAnyService = game.isPurchaseAvailable ||
+                                            game.isRentAvailable ||
+                                            game.isLoanAvailable
+
+                                    if (hasAnyService) {
+                                        showReserveModal = true
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "No hay servicios disponibles para este juego",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.tertiary
@@ -419,9 +432,14 @@ fun GameDetailDialog(
                             }
                         }
                     }
+
+                    // Modal de reserva mejorado con opciones según disponibilidad
                     if (showReserveModal) {
                         ReserveModal(
                             gameTitle = game.title,
+                            isPurchaseAvailable = game.isPurchaseAvailable,
+                            isRentAvailable = game.isRentAvailable,
+                            isLoanAvailable = game.isLoanAvailable,
                             onDismiss = { showReserveModal = false },
                             onConfirm = { tipoServicio ->
                                 showReserveModal = false
@@ -430,9 +448,15 @@ fun GameDetailDialog(
                                     try {
                                         val result = reserveManager.bookReserve(game.id, tipoServicio)
                                         if (result.isSuccess) {
+                                            val servicioTexto = when (tipoServicio) {
+                                                "compra" -> "Compra"
+                                                "alquiler" -> "Alquiler"
+                                                "prestamo" -> "Préstamo"
+                                                else -> "Servicio"
+                                            }
                                             Toast.makeText(
                                                 context,
-                                                "${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
+                                                "${game.title} - $servicioTexto solicitado con éxito!",
                                                 Toast.LENGTH_LONG
                                             ).show()
                                         } else {
@@ -440,7 +464,8 @@ fun GameDetailDialog(
                                             Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
                                         }
                                     } catch (e: Exception) {
-                                        Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_SHORT)
+                                            .show()
                                     } finally {
                                         isProcessingReserve = false
                                     }

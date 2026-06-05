@@ -28,7 +28,6 @@ class GameFormViewModel @Inject constructor(
     val state: StateFlow<GameFormState> = _state.asStateFlow()
     private var existingGame: Game? = null
 
-    // Guardar el estado original para comparar cambios
     private var originalState: GameFormState? = null
 
     private val isEditMode: Boolean
@@ -94,13 +93,16 @@ class GameFormViewModel @Inject constructor(
 
     fun setGameToEdit(game: Game) {
         existingGame = game
-        Log.d("Category"," ${existingGame?.category}")
+        val descripciontemp=game.category.descripcion
         val newState = GameFormState(
             id = game.id,
             title = game.title,
             description = game.description,
             tutorial = game.tutorial ?: "",
-            category = game.category,
+            category = Category(
+                _state.value.gameCategories.find { it.descripcion == descripciontemp }?.id ?: "",
+                descripciontemp
+            ),
             nMinPerson = game.nMinPerson,
             nMaxPerson = game.nMaxPerson,
             minMinutes = game.minMinutes,
@@ -111,7 +113,10 @@ class GameFormViewModel @Inject constructor(
             price = game.price,
             gameCategories = _state.value.gameCategories,
             difficulties = _state.value.difficulties,
-            editorials = _state.value.editorials
+            editorials = _state.value.editorials,
+            isPurchaseAvailable=game.isPurchaseAvailable,
+            isLoanAvailable = game.isLoanAvailable,
+            isRentAvailable = game.isRentAvailable
         )
 
         // Guardar el estado original para comparar cambios
@@ -279,7 +284,9 @@ class GameFormViewModel @Inject constructor(
         }
 
         if (currentState.category != original.category) {
-            updatedFields["difficulty"] = mapOf(
+            Log.d("Categorias", "Categoria rara: ${currentState.category}"+
+                "Categoria rara: ${original.category}")
+            updatedFields["category"] = mapOf(
                 "id" to currentState.category.id,
                 "descripcion" to currentState.category.descripcion
             )
