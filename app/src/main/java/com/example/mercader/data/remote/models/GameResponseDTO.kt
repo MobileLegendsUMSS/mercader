@@ -22,8 +22,8 @@ data class GameResponseDTO(
     val visitas: Int?,
     val ventas: Int?,
     val prestamos: Int?,
-    val categorias: List<String>,
-    val servicios: List<String>,
+    val categorias: List<String>? = emptyList(),
+    val servicios: List<String>? = emptyList(),
     )
 
 data class AllGamesResponseDTO<T>(
