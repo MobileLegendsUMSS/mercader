@@ -19,11 +19,17 @@ import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import javax.net.ssl.SSLSocketFactory
 import com.google.gson.Gson
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.MultipartBody
+import android.net.Uri
 
 class GameRepositoryImpl @Inject constructor(
     private val apiService: GameApiService,
     private val networkHandler: NetworkHandler,
-    private val tokenRepository: com.example.mercader.data.local.ITokenRepository
+    private val tokenRepository: com.example.mercader.data.local.ITokenRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : GameRepository {
 
     override suspend fun saveGame(game: Game): Result<Unit> {
@@ -32,28 +38,63 @@ class GameRepositoryImpl @Inject constructor(
                 return Result.failure(IOException("No hay conexion a internet"))
             }
 
-            val requestDTO = GameRequestDTO(
-                services = listOf(
-                    if (game.isPurchaseAvailable) "compra" else null,
-                    if (game.isRentAvailable) "alquiler" else null,
-                    if (game.isLoanAvailable) "prestamo" else null
-                ).filterNotNull(),
-                titulo = game.title,
-                descripcion =game.description,
-                tutorial = game.tutorial,
-                cant_min_pers = game.nMinPerson,
-                cant_max_pers = game.nMaxPerson,
-                duracion_min = game.minMinutes,
-                duracion_max = game.maxMinutes,
-                precio = game.price,
-                disponible = true,
-                activo= true,
-                cantidad = game.stock,
-                id_dificultad = game.difficulty.id,
-                id_editorial = game.editorial.id,
-            )
+            val fields = mutableMapOf<String, okhttp3.RequestBody>()
+            fun addPart(key: String, value: Any) {
+                fields[key] = value.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            }
 
-            val response = apiService.saveGame(requestDTO,game.category.id)
+            addPart("titulo", game.title)
+            addPart("descripcion", game.description)
+            addPart("tutorial", game.tutorial)
+            addPart("cant_min_pers", game.nMinPerson)
+            addPart("cant_max_pers", game.nMaxPerson)
+            addPart("duracion_min", game.minMinutes)
+            addPart("duracion_max", game.maxMinutes)
+            addPart("precio", game.price)
+            addPart("disponible", true)
+            addPart("activo", true)
+            addPart("cantidad", game.stock)
+            addPart("id_dificultad", game.difficulty.id)
+            addPart("id_editorial", game.editorial.id)
+
+            val servicesList = listOfNotNull(
+                if (game.isPurchaseAvailable) "compra" else null,
+                if (game.isRentAvailable) "alquiler" else null,
+                if (game.isLoanAvailable) "prestamo" else null
+            )
+            val serviceParts = servicesList.map { service ->
+                MultipartBody.Part.createFormData("services", service)
+            }
+
+            var imagePart: MultipartBody.Part? = null
+            game.imageUrl?.let { uriString ->
+                try {
+                    val uri = Uri.parse(uriString)
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    if (inputStream != null) {
+                        val tempFile = java.io.File.createTempFile("upload", ".jpg", context.cacheDir)
+                        tempFile.outputStream().use { output ->
+                            inputStream.copyTo(output)
+                        }
+                        val requestFile = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                        imagePart = MultipartBody.Part.createFormData("portada", tempFile.name, requestFile)
+                    }
+                } catch (e: Exception) {
+                    Log.e("GameRepository", "Error al procesar la imagen: ${e.message}")
+                }
+            }
+
+            if (imagePart == null) {
+                val emptyBody = "".toRequestBody("image/jpeg".toMediaTypeOrNull())
+                imagePart = MultipartBody.Part.createFormData("portada", "empty.jpg", emptyBody)
+            }
+
+            val response = apiService.saveGame(
+                idCategory = game.category.id,
+                portada = imagePart!!,
+                fields = fields,
+                services = serviceParts
+            )
             Log.d("GameRepository", "Respuesta de API: $response")
             if (response.isSuccessful) {
                 Result.success(Unit)
@@ -151,7 +192,11 @@ class GameRepositoryImpl @Inject constructor(
                 if (it.id_dificultad != null) Difficulty(it.id_dificultad._id, it.id_dificultad.descripcion) else Difficulty("", ""),
                 if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre) else Editorial("", ""),
                 it.cantidad ?: 0,
-                it.precio ?: 0.0f
+                it.precio ?: 0.0f,
+                isPurchaseAvailable = false,
+                isRentAvailable = false,
+                isLoanAvailable = false,
+                imageUrl = it.portada
             )
         }
     }
@@ -189,82 +234,49 @@ class GameRepositoryImpl @Inject constructor(
         } catch (e: Exception) { Result.failure(e) }
     }
 
-    private suspend fun fetchCarouselWithSocket(path: String): Result<List<Game>> {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (!networkHandler.isNetworkAvailable()) return@withContext Result.failure(IOException("No hay conexión"))
-
-                val token = tokenRepository.getToken() ?: ""
-                val host = "mercader-server.onrender.com"
-                val jsonBody = """{"allGames":false,"order":"descendente","amount":10}"""
-
-                val factory = SSLSocketFactory.getDefault()
-                val socket = factory.createSocket(host, 443)
-
-                val writer = PrintWriter(OutputStreamWriter(socket.getOutputStream(), "UTF-8"))
-                writer.print("GET $path HTTP/1.0\r\n")
-                writer.print("Host: $host\r\n")
-                writer.print("Authorization: Bearer $token\r\n")
-                writer.print("Content-Type: application/json\r\n")
-                writer.print("Content-Length: ${jsonBody.length}\r\n")
-                writer.print("\r\n")
-                writer.print(jsonBody)
-                writer.flush()
-
-                val reader = BufferedReader(InputStreamReader(socket.getInputStream(), "UTF-8"))
-                var line = reader.readLine()
-
-                var statusCode = 500
-                if (line != null && line.startsWith("HTTP/1.")) {
-                    val parts = line.split(" ")
-                    if (parts.size >= 2) {
-                        statusCode = parts[1].toIntOrNull() ?: 500
-                    }
-                }
-
-                while (line != null && line.isNotEmpty()) {
-                    line = reader.readLine()
-                }
-
-                val bodyBuilder = StringBuilder()
-                while (true) {
-                    line = reader.readLine()
-                    if (line == null) break
-                    bodyBuilder.append(line)
-                }
-
-                socket.close()
-                val responseBody = bodyBuilder.toString()
-
-                if (statusCode in 200..299) {
-                    // We need to parse into AllGamesResponseDTO
-                    val type = object : com.google.gson.reflect.TypeToken<AllGamesResponseDTO<List<GameResponseDTO>>>() {}.type
-                    val parsed: AllGamesResponseDTO<List<GameResponseDTO>> = Gson().fromJson(responseBody, type)
-                    
-                    if (parsed.success) {
-                        Result.success(mapResponseToGames(parsed.data))
-                    } else {
-                        Result.failure(Exception("Error en la respuesta del servidor"))
-                    }
-                } else {
-                    Result.failure(Exception("Error $statusCode: $responseBody"))
-                }
-            } catch (e: Exception) {
-                Result.failure(e)
+    override suspend fun getMostVisitedGames(): Result<List<Game>> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sortedList = response.body()?.data?.sortedByDescending { it.visitas ?: 0 }?.take(10)
+                Result.success(mapResponseToGames(sortedList))
+            } else {
+                Result.failure(Exception("Error en la respuesta"))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    override suspend fun getMostVisitedGames(): Result<List<Game>> {
-        return fetchCarouselWithSocket("/api/juegos/sistema/visitados")
-    }
-
     override suspend fun getMostSoldGames(): Result<List<Game>> {
-        return fetchCarouselWithSocket("/api/juegos/sistema/comprados")
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sortedList = response.body()?.data?.sortedByDescending { it.ventas ?: 0 }?.take(10)
+                Result.success(mapResponseToGames(sortedList))
+            } else {
+                Result.failure(Exception("Error en la respuesta"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun getMostBorrowedGames(): Result<List<Game>> {
-        return fetchCarouselWithSocket("/api/juegos/sistema/prestados")
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sortedList = response.body()?.data?.sortedByDescending { it.prestamos ?: 0 }?.take(10)
+                Result.success(mapResponseToGames(sortedList))
+            } else {
+                Result.failure(Exception("Error en la respuesta"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun updateGamePartial(gameId: String, updatedFields: Map<String, Any>): Result<Unit> {
