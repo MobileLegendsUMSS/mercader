@@ -191,6 +191,7 @@ class GameRepositoryImpl @Inject constructor(
                 it.duracion_max ?: 60,
                 if (it.id_dificultad != null) Difficulty(it.id_dificultad._id, it.id_dificultad.descripcion) else Difficulty("", ""),
                 if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre) else Editorial("", ""),
+                it.activo==true,
                 it.cantidad ?: 0,
                 it.precio ?: 0.0f,
                 it.servicios.contains("compra"),

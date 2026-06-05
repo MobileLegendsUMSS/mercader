@@ -16,6 +16,7 @@ data class Game(
     val maxMinutes: Int = 0,
     val difficulty: Difficulty,
     val editorial: Editorial,
+    val active: Boolean = false,
     val stock: Int = 0,
     val price: Float = 0f,
     val isPurchaseAvailable: Boolean = false,
