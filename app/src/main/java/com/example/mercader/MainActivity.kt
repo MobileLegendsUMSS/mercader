@@ -43,6 +43,10 @@ import com.example.mercader.ui.screens.admin.AdminStockScreen
 import com.example.mercader.domain.models.Game
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
+import com.example.mercader.ui.screens.admin.AdminLoanManagementScreen
+import com.example.mercader.ui.screens.admin.AdminPurchaseManagementScreen
+import com.example.mercader.ui.screens.reports.ReportScreen
+import com.example.mercader.ui.screens.reports.ReportViewModel
 
 sealed class AppScreen {
     object Splash       : AppScreen()
@@ -55,6 +59,9 @@ sealed class AppScreen {
     object Cart         : AppScreen()
     object Profile      : AppScreen()
     object AdminProfile : AppScreen()
+    object AdminLoanManagement : AppScreen()
+    object Reports      : AppScreen()
+    object AdminPurchaseManagement : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -106,10 +113,16 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
+                        is AppScreen.AdminPurchaseManagement -> {
+                            AdminPurchaseManagementScreen(
+                                onBack = { currentScreen = AppScreen.AdminHome }
+                            )
+                        }
+
                         is AppScreen.Login -> {
                             LoginScreen(
-                                viewModel = authViewModel, // 🟢 Pasamos el ViewModel de Hilt
-                                onLoginSuccess = { isAdmin ->
+                                viewModel = authViewModel,
+                                 onLoginSuccess = { isAdmin ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                 },
                                 onNavigateToSignup = { currentScreen = AppScreen.SignUp }
@@ -118,7 +131,7 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.SignUp -> {
                             SignupScreen(
-                                viewModel = authViewModel, // 🟢 Pasamos el ViewModel de Hilt
+                                viewModel = authViewModel,
                                 onSignupSuccess = { isAdmin ->
                                     currentScreen = if (isAdmin) AppScreen.AdminHome else AppScreen.UserHome
                                 },
@@ -130,13 +143,16 @@ class MainActivity : ComponentActivity() {
                             AdminHome(
                                 onNavigateToGameForm = { currentScreen = AppScreen.GameForm },
                                 onNavigateToStock = { currentScreen = AppScreen.Stock },
-                                onSwitchToUser = { currentScreen = AppScreen.UserHome },
-                                onNavigateToProfile = { currentScreen = AppScreen.AdminProfile }
+                                onNavigateToProfile = { currentScreen = AppScreen.AdminProfile },
+                                onNavigateToReports = { currentScreen = AppScreen.Reports },
+                                onNavigateToLoanManagement = { currentScreen = AppScreen.AdminLoanManagement },
+                                onNavigateToPurchases = { currentScreen = AppScreen.AdminPurchaseManagement }
                             )
                         }
 
                         is AppScreen.UserHome -> {
                             val filterViewModel: FilterViewModel = hiltViewModel()
+                            val collectionViewModel: CollectionViewModel = hiltViewModel()
                             UserHome(
                                 onSwitchToAdmin = { currentScreen = AppScreen.AdminHome },
                                 onNavigateToCart = { currentScreen = AppScreen.Cart },
@@ -150,6 +166,10 @@ class MainActivity : ComponentActivity() {
 
                         is AppScreen.GameForm -> {
                             val viewModel: GameFormViewModel = hiltViewModel()
+                            val collectionViewModel: CollectionViewModel = hiltViewModel()
+                            if (gameToEdit == null) {
+                                viewModel.resetForm()
+                            }
 
                             GameFormScreen(
                                 viewModel = viewModel,
@@ -162,17 +182,25 @@ class MainActivity : ComponentActivity() {
                                 onClose = {
                                     gameToEdit = null
                                     currentScreen = AppScreen.AdminHome
+                                    viewModel.clearGameToEdit()
                                 }
                             )
                         }
-
-                        // En MainActivity.kt, cambiar el case de AppScreen.Stock:
-
+                        // no quitar comentarios en revision xd
                         is AppScreen.Stock -> {
                             val adminStockViewModel: com.example.mercader.ui.screens.admin.AdminStockViewModel = hiltViewModel()
+                            //val collectionViewModel: CollectionViewModel = hiltViewModel()
 
+                            //LaunchedEffect(currentScreen) {
+                            //    collectionViewModel.loadGames()
+                            //}
+
+                            //CollectionScreen(
+                            //    viewModel = collectionViewModel,
+                            //    cartManager = cartManager,
                             AdminStockScreen(
                                 onBack = { currentScreen = AppScreen.AdminHome },
+                                //reserveManager = reserveManager,
                                 onEditGame = { game ->
                                     gameToEdit = game
                                     currentScreen = AppScreen.GameForm
@@ -225,6 +253,17 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = AppScreen.Login
                                 }
                             )
+                        }
+                        is AppScreen.AdminLoanManagement -> {
+                            AdminLoanManagementScreen(
+                                onBack = { currentScreen = AppScreen.AdminHome }
+                            )
+                        }
+                        is AppScreen.Reports -> {
+                            val reportViewModel: ReportViewModel = hiltViewModel()
+                            ReportScreen(
+                                viewModel = reportViewModel,
+                                onBack = { currentScreen = AppScreen.AdminHome })
                         }
                     }
                 }

@@ -11,10 +11,25 @@ import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.io.PrintWriter
+import javax.net.ssl.SSLSocketFactory
+import com.google.gson.Gson
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.MultipartBody
+import android.net.Uri
 
 class GameRepositoryImpl @Inject constructor(
     private val apiService: GameApiService,
-    private val networkHandler: NetworkHandler
+    private val networkHandler: NetworkHandler,
+    private val tokenRepository: com.example.mercader.data.local.ITokenRepository,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context
 ) : GameRepository {
 
     override suspend fun saveGame(game: Game): Result<Unit> {
@@ -23,28 +38,63 @@ class GameRepositoryImpl @Inject constructor(
                 return Result.failure(IOException("No hay conexion a internet"))
             }
 
-            val requestDTO = GameRequestDTO(
-                services = listOf(
-                    if (game.isPurchaseAvailable) "compra" else null,
-                    if (game.isRentAvailable) "alquiler" else null,
-                    if (game.isLoanAvailable) "prestamo" else null
-                ).filterNotNull(),
-                titulo = game.title,
-                descripcion =game.description,
-                tutorial = game.tutorial,
-                cant_min_pers = game.nMinPerson,
-                cant_max_pers = game.nMaxPerson,
-                duracion_min = game.minMinutes,
-                duracion_max = game.maxMinutes,
-                precio = game.price,
-                disponible = true,
-                activo= true,
-                cantidad = game.stock,
-                id_dificultad = game.difficulty.id,
-                id_editorial = game.editorial.id,
-            )
+            val fields = mutableMapOf<String, okhttp3.RequestBody>()
+            fun addPart(key: String, value: Any) {
+                fields[key] = value.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            }
 
-            val response = apiService.saveGame(requestDTO,game.category.id)
+            addPart("titulo", game.title)
+            addPart("descripcion", game.description)
+            addPart("tutorial", game.tutorial)
+            addPart("cant_min_pers", game.nMinPerson)
+            addPart("cant_max_pers", game.nMaxPerson)
+            addPart("duracion_min", game.minMinutes)
+            addPart("duracion_max", game.maxMinutes)
+            addPart("precio", game.price)
+            addPart("disponible", true)
+            addPart("activo", true)
+            addPart("cantidad", game.stock)
+            addPart("id_dificultad", game.difficulty.id)
+            addPart("id_editorial", game.editorial.id)
+
+            val servicesList = listOfNotNull(
+                if (game.isPurchaseAvailable) "compra" else null,
+                if (game.isRentAvailable) "alquiler" else null,
+                if (game.isLoanAvailable) "prestamo" else null
+            )
+            val serviceParts = servicesList.map { service ->
+                MultipartBody.Part.createFormData("services", service)
+            }
+
+            var imagePart: MultipartBody.Part? = null
+            game.imageUrl?.let { uriString ->
+                try {
+                    val uri = Uri.parse(uriString)
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    if (inputStream != null) {
+                        val tempFile = java.io.File.createTempFile("upload", ".jpg", context.cacheDir)
+                        tempFile.outputStream().use { output ->
+                            inputStream.copyTo(output)
+                        }
+                        val requestFile = tempFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                        imagePart = MultipartBody.Part.createFormData("portada", tempFile.name, requestFile)
+                    }
+                } catch (e: Exception) {
+                    Log.e("GameRepository", "Error al procesar la imagen: ${e.message}")
+                }
+            }
+
+            if (imagePart == null) {
+                val emptyBody = "".toRequestBody("image/jpeg".toMediaTypeOrNull())
+                imagePart = MultipartBody.Part.createFormData("portada", "empty.jpg", emptyBody)
+            }
+
+            val response = apiService.saveGame(
+                idCategory = game.category.id,
+                portada = imagePart!!,
+                fields = fields,
+                services = serviceParts
+            )
             Log.d("GameRepository", "Respuesta de API: $response")
             if (response.isSuccessful) {
                 Result.success(Unit)
@@ -142,6 +192,31 @@ class GameRepositoryImpl @Inject constructor(
         }
     }
 
+    private fun mapResponseToGames(data: List<GameResponseDTO>?): List<Game> {
+        if (data == null) return emptyList()
+        return data.map {
+            Game(
+                it._id ?: "",
+                it.titulo ?: "Sin título",
+                it.descripcion ?: "Sin descripción",
+                it.tutorial ?: "",
+                Category(it.categorias[0], it.categorias[0]),
+                it.cant_min_pers ?: 1,
+                it.cant_max_pers ?: 4,
+                it.duracion_min ?: 30,
+                it.duracion_max ?: 60,
+                if (it.id_dificultad != null) Difficulty(it.id_dificultad._id, it.id_dificultad.descripcion) else Difficulty("", ""),
+                if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre) else Editorial("", ""),
+                it.cantidad ?: 0,
+                it.precio ?: 0.0f,
+                it.servicios.contains("compra"),
+                it.servicios.contains("alquiler"),
+                it.servicios.contains("prestamo"),
+                imageUrl = it.portada
+            )
+        }
+    }
+
     override suspend fun getGames(): Result<List<Game>> {
         return try {
             if (!networkHandler.isNetworkAvailable()) {
@@ -149,32 +224,71 @@ class GameRepositoryImpl @Inject constructor(
             }
 
             val response = apiService.getGames()
+            Log.d("ResponseCollection"," ${response}")
             if (response.isSuccessful) {
                 val gamesResponse = response.body()
                 if (gamesResponse != null && gamesResponse.success) {
-                    val games  = gamesResponse.data.map {
-                        Game(
-                            it._id,
-                            it.titulo,
-                            it.descripcion,
-                            it.tutorial,
-                            Category("", ""),
-                            it.cant_min_pers,
-                            it.cant_max_pers,
-                            it.duracion_min,
-                            it.duracion_max,
-                            Difficulty(it.id_dificultad._id,it.id_dificultad.descripcion),
-                            Editorial(it.id_editorial._id,it.id_editorial.nombre),
-                            it.cantidad,
-                            it.precio
-                            )
-                    }
-                    Result.success(games)
+                    Result.success(mapResponseToGames(gamesResponse.data))
                 } else {
                     Result.failure(Exception("Error en la respuesta del servidor"))
                 }
             } else {
                 Result.failure(HttpException(response))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getRecentGames(): Result<List<Game>> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getRecentGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(mapResponseToGames(response.body()!!.data))
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun getMostVisitedGames(): Result<List<Game>> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sortedList = response.body()?.data?.sortedByDescending { it.visitas ?: 0 }?.take(10)
+                Result.success(mapResponseToGames(sortedList))
+            } else {
+                Result.failure(Exception("Error en la respuesta"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getMostSoldGames(): Result<List<Game>> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sortedList = response.body()?.data?.sortedByDescending { it.ventas ?: 0 }?.take(10)
+                Result.success(mapResponseToGames(sortedList))
+            } else {
+                Result.failure(Exception("Error en la respuesta"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getMostBorrowedGames(): Result<List<Game>> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.getGames()
+            if (response.isSuccessful && response.body()?.success == true) {
+                val sortedList = response.body()?.data?.sortedByDescending { it.prestamos ?: 0 }?.take(10)
+                Result.success(mapResponseToGames(sortedList))
+            } else {
+                Result.failure(Exception("Error en la respuesta"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -196,7 +310,6 @@ class GameRepositoryImpl @Inject constructor(
 
             val fieldUpdates = convertToFieldUpdates(updatedFields)
 
-            // Hacer una llamada por cada campo a actualizar
             val errors = mutableListOf<String>()
             var successCount = 0
 
@@ -208,10 +321,10 @@ class GameRepositoryImpl @Inject constructor(
 
                     if (response.isSuccessful) {
                         successCount++
-                        Log.d("GameRepository", "✓ Campo ${fieldUpdate.fieldName} actualizado")
+                        Log.d("GameRepository", "Campo ${fieldUpdate.fieldName} actualizado")
                     } else {
                         val errorMsg = "Error al actualizar ${fieldUpdate.fieldName}: ${response.code()}"
-                        Log.e("GameRepository", "✗ $errorMsg")
+                        Log.e("GameRepository", "$errorMsg")
                         errors.add(errorMsg)
                     }
 
@@ -246,8 +359,7 @@ class GameRepositoryImpl @Inject constructor(
 
     private fun convertToFieldUpdates(updatedFields: Map<String, Any>): List<GameEditDTO> {
         val fieldUpdates = mutableListOf<GameEditDTO>()
-
-        // Mapeo de nuestros nombres de campo a los nombres que espera el backend
+        Log.e("SERECONOCE","$updatedFields")
         updatedFields.forEach { (key, value) ->
             when (key) {
                 "title" -> {
@@ -271,6 +383,12 @@ class GameRepositoryImpl @Inject constructor(
                 "maxMinutes" -> {
                     fieldUpdates.add(GameEditDTO("duracion_max", value))
                 }
+                "category" -> {
+                    val categoryMap = value as? Map<*, *>
+                    categoryMap?.get("descripcion")?.let { descripcion ->
+                        fieldUpdates.add(GameEditDTO("categoria", descripcion))
+                    }
+                }
                 "difficulty" -> {
                     val difficultyMap = value as? Map<*, *>
                     difficultyMap?.get("descripcion")?.let { descripcion ->
@@ -283,18 +401,6 @@ class GameRepositoryImpl @Inject constructor(
                         fieldUpdates.add(GameEditDTO("editorial", nombre))
                     }
                 }
-                /*"difficulty" -> {
-                    val difficultyMap = value as? Map<*, *>
-                    difficultyMap?.get("id")?.let { id ->
-                        fieldUpdates.add(GameEditDTO("id_dificultad", id))
-                    }
-                }
-                "editorial" -> {
-                    val editorialMap = value as? Map<*, *>
-                    editorialMap?.get("id")?.let { id ->
-                        fieldUpdates.add(GameEditDTO("id_editorial", id))
-                    }
-                }*/
                 "stock" -> {
                     fieldUpdates.add(GameEditDTO("cantidad", value))
                 }

@@ -1,4 +1,4 @@
-package com.example.mercader.common.components
+package com.example.mercader.ui.screens.games
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,10 +14,25 @@ import androidx.compose.ui.window.DialogProperties
 @Composable
 fun ReserveModal(
     gameTitle: String,
+    isRentAvailable: Boolean = false,
+    isLoanAvailable: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (tipoServicio: String) -> Unit
 ) {
-    var selectedService by remember { mutableStateOf("prestamo") }
+    var selectedService by remember {
+        mutableStateOf(
+            when {
+                isLoanAvailable -> "prestamo"
+                isRentAvailable -> "alquiler"
+                else -> null
+            }
+        )
+    }
+
+    val availableServices = listOf(
+        isLoanAvailable to "prestamo",
+        isRentAvailable to "alquiler",
+    ).filter { it.first }.map { it.second }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -45,7 +60,7 @@ fun ReserveModal(
             ) {
                 // Título
                 Text(
-                    text = "Solicitar Préstamo",
+                    text = "Solicitar Servicio",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -59,7 +74,7 @@ fun ReserveModal(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Opciones de servicio
+                // Opciones de servicio disponibles
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -69,69 +84,55 @@ fun ReserveModal(
                     Column(
                         modifier = Modifier.padding(vertical = 8.dp)
                     ) {
-                        // Opción Préstamo (3 horas)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selectedService == "prestamo",
-                                onClick = { selectedService = "prestamo" }
+
+                        if (isRentAvailable) {
+                            ServiceRadioOption(
+                                selected = selectedService == "alquiler",
+                                onClick = { selectedService = "alquiler" },
+                                emoji = "🎮",
+                                title = "Alquiler",
+                                description = "24 horas de alquiler"
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "📖 Préstamo",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "3 horas de préstamo",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
                         }
 
-                        HorizontalDivider()
-
-                        // Opción Alquiler (24 horas)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selectedService == "alquiler",
-                                onClick = { selectedService = "alquiler" }
+                        if (isLoanAvailable) {
+                            if (isRentAvailable) HorizontalDivider()
+                            ServiceRadioOption(
+                                selected = selectedService == "prestamo",
+                                onClick = { selectedService = "prestamo" },
+                                emoji = "📖",
+                                title = "Préstamo",
+                                description = "3 horas de préstamo"
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "🎮 Alquiler",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "24 horas de alquiler",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
                         }
                     }
                 }
 
-                // Info adicional
-                Text(
-                    text = "⚠️ El juego debe ser devuelto antes de la fecha límite",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Mensaje si no hay servicios disponibles
+                if (availableServices.isEmpty()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = "No hay servicios disponibles para este juego en este momento",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(16.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                } else {
+                    // Info adicional solo si hay servicios disponibles
+                    Text(
+                        text = "El juego debe ser devuelto antes de la fecha límite",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -150,16 +151,50 @@ fun ReserveModal(
 
                     Button(
                         onClick = {
-                            val tipo = if (selectedService == "prestamo") "prestamo" else "alquiler"
-                            onConfirm(tipo)
+                            selectedService?.let { onConfirm(it) }
                         },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = selectedService != null && availableServices.isNotEmpty()
                     ) {
                         Text("Confirmar")
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ServiceRadioOption(
+    selected: Boolean,
+    onClick: () -> Unit,
+    emoji: String,
+    title: String,
+    description: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                text = "$emoji $title",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

@@ -17,6 +17,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.common.components.BackButton
 import com.example.mercader.common.components.ImagePlaceholder
 import com.example.mercader.domain.models.CartItem
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun CartScreen(
@@ -25,51 +27,27 @@ fun CartScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
-    var showPaymentModal by remember { mutableStateOf(false) }
     var paymentScreen by remember { mutableStateOf<PaymentFlow?>(null) }
 
     LaunchedEffect(Unit) {
         viewModel.loadCart()
     }
 
-    // Si estamos en una pantalla de pago, mostrarla sin el resto del carrito
-    if (paymentScreen == PaymentFlow.CARD) {
-        CardPaymentScreen(
-            totalPrice = state.totalPrice,
-            onBack = { paymentScreen = null },
-            onConfirmPayment = {
-                viewModel.processCheckout(
-                    onSuccess = {
-                        android.widget.Toast.makeText(
-                            context,
-                            "✅ Compra realizada con éxito!",
-                            android.widget.Toast.LENGTH_LONG
-                        ).show()
-                        paymentScreen = null
-                        onBack()
-                    }
-                )
-            }
-        )
-        return
-    }
-
     if (paymentScreen == PaymentFlow.QR) {
         QrPaymentScreen(
             totalPrice = state.totalPrice,
             onBack = { paymentScreen = null },
-            onConfirmPayment = {
-                viewModel.processCheckout(
-                    onSuccess = {
-                        android.widget.Toast.makeText(
-                            context,
-                            "✅ Compra realizada con éxito!",
-                            android.widget.Toast.LENGTH_LONG
-                        ).show()
-                        paymentScreen = null
-                        onBack()
-                    }
-                )
+            onConfirmPayment = { receiptFile ->
+                // Procesar el pago con el archivo del comprobante
+                viewModel.processCheckoutWithReceipt(receiptFile) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Compra realizada con éxito!",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    paymentScreen = null
+                    onBack()
+                }
             }
         )
         return
@@ -233,7 +211,7 @@ fun CartScreen(
                     Button(
                         onClick = {
                             if (state.cartItems.isNotEmpty()) {
-                                showPaymentModal = true
+                                paymentScreen = PaymentFlow.QR
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -248,22 +226,6 @@ fun CartScreen(
                 }
             }
         }
-    }
-
-    // Modal de selección de método de pago (fuera del Column)
-    if (showPaymentModal) {
-        PaymentMethodModal(
-            totalPrice = state.totalPrice,
-            onDismiss = { showPaymentModal = false },
-            onSelectCardPayment = {
-                showPaymentModal = false
-                paymentScreen = PaymentFlow.CARD
-            },
-            onSelectQrPayment = {
-                showPaymentModal = false
-                paymentScreen = PaymentFlow.QR
-            }
-        )
     }
 }
 
@@ -298,11 +260,20 @@ fun CartItemCard(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ImagePlaceholder(
-                    emoji = "🎮",
-                    contentDescription = game.title,
-                    modifier = Modifier.size(60.dp)
-                )
+                if (!game.imageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = game.imageUrl,
+                        contentDescription = game.title,
+                        modifier = Modifier.size(60.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    ImagePlaceholder(
+                        emoji = "🎮",
+                        contentDescription = game.title,
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
 
                 Column {
                     Text(
@@ -372,7 +343,6 @@ fun CartItemCard(
                 // Botón eliminar
                 IconButton(
                     onClick = {
-                        println("🗑️ CartItemCard: Botón eliminar presionado para juego: ${game.title}")
                         onRemove()
                     },
                     modifier = Modifier.size(32.dp),
@@ -392,5 +362,5 @@ fun CartItemCard(
 
 // ✅ Enum class definido FUERA de la función CartScreen
 enum class PaymentFlow {
-    CARD, QR
+    QR
 }

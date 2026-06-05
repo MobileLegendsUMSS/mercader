@@ -11,13 +11,19 @@ import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Multipart
+import retrofit2.http.Part
+import retrofit2.http.PartMap
 
 interface GameApiService {
 
+    @Multipart
     @POST("juegos/")
     suspend fun saveGame(
-        @Body game: GameRequestDTO,
-        @Query("idCategory") idCategory:String
+        @Query("idCategory") idCategory: String,
+        @Part portada: okhttp3.MultipartBody.Part,
+        @PartMap fields: Map<String, @JvmSuppressWildcards okhttp3.RequestBody>,
+        @Part services: List<okhttp3.MultipartBody.Part>
     ): Response<GameResponseDTO>
 
     @GET("categorias/")
@@ -47,4 +53,16 @@ interface GameApiService {
         @Query("id") id: String,
         @Body body: DeleteGameRequestDto
     ) : DeleteGameResponseDto
+
+    @GET("juegos/sistema/recientes")
+    suspend fun getRecentGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
+
+    @GET("juegos/sistema/visitados")
+    suspend fun getMostVisitedGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
+
+    @GET("juegos/sistema/comprados")
+    suspend fun getMostSoldGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
+
+    @GET("juegos/sistema/prestados")
+    suspend fun getMostBorrowedGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
 }

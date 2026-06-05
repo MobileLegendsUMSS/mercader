@@ -1,5 +1,6 @@
 package com.example.mercader.ui.screens.games
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -27,7 +28,6 @@ class GameFormViewModel @Inject constructor(
     val state: StateFlow<GameFormState> = _state.asStateFlow()
     private var existingGame: Game? = null
 
-    // Guardar el estado original para comparar cambios
     private var originalState: GameFormState? = null
 
     private val isEditMode: Boolean
@@ -93,12 +93,16 @@ class GameFormViewModel @Inject constructor(
 
     fun setGameToEdit(game: Game) {
         existingGame = game
+        val descripciontemp=game.category.descripcion
         val newState = GameFormState(
             id = game.id,
             title = game.title,
             description = game.description,
             tutorial = game.tutorial ?: "",
-            category = game.category,
+            category = Category(
+                _state.value.gameCategories.find { it.descripcion == descripciontemp }?.id ?: "",
+                descripciontemp
+            ),
             nMinPerson = game.nMinPerson,
             nMaxPerson = game.nMaxPerson,
             minMinutes = game.minMinutes,
@@ -109,7 +113,10 @@ class GameFormViewModel @Inject constructor(
             price = game.price,
             gameCategories = _state.value.gameCategories,
             difficulties = _state.value.difficulties,
-            editorials = _state.value.editorials
+            editorials = _state.value.editorials,
+            isPurchaseAvailable=game.isPurchaseAvailable,
+            isLoanAvailable = game.isLoanAvailable,
+            isRentAvailable = game.isRentAvailable
         )
 
         // Guardar el estado original para comparar cambios
@@ -176,11 +183,45 @@ class GameFormViewModel @Inject constructor(
     fun updateLoanAvailable(checked: Boolean) {
         _state.update { it.copy(isLoanAvailable = checked) }
     }
+    
+    fun updateImageUri(uri: android.net.Uri?) {
+        _state.update { it.copy(imageUri = uri) }
+    }
     fun saveGame() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
             try {
                 val currentState = _state.value
+
+                if (!isEditMode && currentState.imageUri == null) {
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Debe seleccionar una imagen de portada"
+                        )
+                    }
+                    return@launch
+                }
+                
+                if (currentState.category.id.isEmpty() || currentState.difficulty.id.isEmpty() || currentState.editorial.id.isEmpty()) {
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Debe seleccionar categoría, dificultad y editorial"
+                        )
+                    }
+                    return@launch
+                }
+
+                if (!currentState.isPurchaseAvailable && !currentState.isRentAvailable && !currentState.isLoanAvailable) {
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = "Debe habilitar al menos un tipo de servicio (Venta, Alquiler o Préstamo)"
+                        )
+                    }
+                    return@launch
+                }
 
                 val result = if (isEditMode) {
                     val updatedFields = getUpdatedFields()
@@ -243,7 +284,9 @@ class GameFormViewModel @Inject constructor(
         }
 
         if (currentState.category != original.category) {
-            updatedFields["difficulty"] = mapOf(
+            Log.d("Categorias", "Categoria rara: ${currentState.category}"+
+                "Categoria rara: ${original.category}")
+            updatedFields["category"] = mapOf(
                 "id" to currentState.category.id,
                 "descripcion" to currentState.category.descripcion
             )
@@ -307,11 +350,29 @@ class GameFormViewModel @Inject constructor(
             price = state.price,
             isPurchaseAvailable = state.isPurchaseAvailable,
             isRentAvailable = state.isRentAvailable,
-            isLoanAvailable = state.isLoanAvailable
+            isLoanAvailable = state.isLoanAvailable,
+            imageUrl = state.imageUri?.toString()
         )
     }
 
     fun resetSuccess() {
         _state.update { it.copy(saveSuccess = false) }
+    }
+
+    fun resetForm() {
+        _state.update {
+            GameFormState(
+                gameCategories = it.gameCategories,
+                difficulties = it.difficulties,
+                editorials = it.editorials
+            )
+        }
+        existingGame = null
+        originalState = null
+    }
+    fun clearGameToEdit() {
+        existingGame = null
+        originalState = null
+        resetForm() // Llama al resetForm que ya creamos
     }
 }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
 @HiltViewModel
@@ -158,6 +159,40 @@ class CartViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 println("CartViewModel: Excepción en checkout: ${e.message}")
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Error al procesar la compra"
+                )
+            }
+        }
+    }
+
+    fun processCheckoutWithReceipt(receiptFile: File, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, errorMessage = null)
+
+            try {
+                println("💳 CartViewModel: Procesando checkout con comprobante")
+                val success = cartManager.checkoutWithReceipt(HARDCODED_PAYMENT_METHOD, receiptFile)
+
+                if (success) {
+                    println("✅ CartViewModel: Checkout exitoso")
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        cartItems = emptyList(),
+                        totalItems = 0,
+                        totalPrice = 0.0
+                    )
+                    onSuccess()
+                } else {
+                    println("❌ CartViewModel: Checkout fallido")
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        errorMessage = "No se pudo completar la compra. Verifica tu conexión o intenta más tarde."
+                    )
+                }
+            } catch (e: Exception) {
+                println("❌ CartViewModel: Excepción en checkout: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     errorMessage = e.message ?: "Error al procesar la compra"

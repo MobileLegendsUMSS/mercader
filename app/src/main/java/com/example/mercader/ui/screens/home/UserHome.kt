@@ -28,6 +28,7 @@ import com.example.mercader.common.utils.ReserveManager
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.*
 import com.example.mercader.ui.screens.review.ReviewScreen
+import com.example.mercader.common.components.GameCarousel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -38,14 +39,17 @@ fun UserHome(
     cartManager: CartManager,
     reserveManager: ReserveManager,
     collectionViewModel: CollectionViewModel = hiltViewModel(),
-    filterViewModel: FilterViewModel = hiltViewModel()
+    filterViewModel: FilterViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
-    var showInProgressModal by remember { mutableStateOf(false) }
+
     var showCollectionScreen by remember { mutableStateOf(false) }
     var showFilterScreen by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var appliedFilters by remember { mutableStateOf<GameFilters?>(null) }
     var selectedGameForReviews by remember { mutableStateOf<Game?>(null) }
+    
+    val homeState by homeViewModel.state.collectAsState()
 
     // Estado para el contador del carrito
     var cartItemCount by remember { mutableStateOf(0) }
@@ -144,17 +148,42 @@ fun UserHome(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            CarouselSection(title = "Condiciones")
+            GameCarousel(
+                title = "Novedades",
+                games = homeState.recentGames,
+                isLoading = homeState.isLoadingRecent,
+                onGameClick = { game -> selectedGameForReviews = game }
+            )
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-            CarouselSection(title = "Mis Preferencias")
+            
+            GameCarousel(
+                title = "Más Visitados",
+                games = homeState.mostVisitedGames,
+                isLoading = homeState.isLoadingVisited,
+                onGameClick = { game -> selectedGameForReviews = game }
+            )
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-            CarouselSection(title = "Visitados")
+            
+            GameCarousel(
+                title = "Los Más Comprados",
+                games = homeState.mostSoldGames,
+                isLoading = homeState.isLoadingSold,
+                onGameClick = { game -> selectedGameForReviews = game }
+            )
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
+            GameCarousel(
+                title = "Los Más Alquilados",
+                games = homeState.mostBorrowedGames,
+                isLoading = homeState.isLoadingBorrowed,
+                onGameClick = { game -> selectedGameForReviews = game }
+            )
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
             Spacer(modifier = Modifier.height(8.dp))
         }
 
         UserBottomNav(
-            onInProgress = { showInProgressModal = true },
+            onInProgress = { },
             onSearch = {
                 searchQuery = ""
                 appliedFilters = null
@@ -163,10 +192,6 @@ fun UserHome(
             onCartClick = onNavigateToCart,
             onProfileClick = onNavigateToProfile
         )
-    }
-
-    if (showInProgressModal) {
-        InProgressModal(onDismiss = { showInProgressModal = false })
     }
 }
 
@@ -262,34 +287,6 @@ private fun UserHeader(
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun CarouselSection(title: String) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "Carrusel $title",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "(vacío — en proceso)",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
-            )
         }
     }
 }

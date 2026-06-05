@@ -18,9 +18,10 @@ fun SidebarMenu(
     onClose: () -> Unit,
     onNewGame: () -> Unit,
     onStock: () -> Unit,
-    onSellos: () -> Unit,
-    onOfertas: () -> Unit,
-    onProfile: () -> Unit,  // ← Nueva opción
+    onProfile: () -> Unit,
+    onLoanManagement: () -> Unit,
+    onReport: () -> Unit,
+    onPurchases: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -65,8 +66,9 @@ fun SidebarMenu(
 
                 SidebarButton(text = "Nuevo Juego +", onClick = onNewGame, primary = true)
                 SidebarButton(text = "Stock", onClick = onStock)
-                SidebarButton(text = "Sellos de Clientes", onClick = onSellos)
-                SidebarButton(text = "Ofertas %", onClick = onOfertas)
+                SidebarButton(text = "Gestión de Préstamos", onClick = onLoanManagement)
+                SidebarButton(text = "Estadisticas", onClick = onReport)
+                SidebarButton(text = "Gestión de Compras", onClick = onPurchases)
             }
 
             // Parte inferior del menú - Perfil y Logout

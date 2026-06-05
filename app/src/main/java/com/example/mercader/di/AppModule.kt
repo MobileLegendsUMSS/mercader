@@ -1,5 +1,6 @@
 package com.example.mercader.di
 
+import android.content.ContentResolver
 import android.content.Context
 import com.example.mercader.data.local.ITokenRepository
 import com.example.mercader.data.local.TokenRepository
@@ -38,4 +39,13 @@ object AppModule {
     ): AuthenticationUseCase {
         return AuthenticationUseCase(tokenRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideContentResolver(
+        @ApplicationContext context: Context
+    ): ContentResolver {
+        return context.contentResolver
+    }
+
 }

@@ -1,7 +1,6 @@
 package com.example.mercader.ui.screens.profile
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -27,18 +26,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.mercader.common.components.GameCard
-import com.example.mercader.common.components.GameDetailDialog
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
-import com.example.mercader.domain.models.Game
-import com.example.mercader.domain.models.UserPurchase
-import com.example.mercader.domain.models.UserLoan
-
+import com.example.mercader.common.components.profile.FavoritesSection
+import com.example.mercader.common.components.profile.LoansSection
+import com.example.mercader.common.components.profile.PurchasesSection
+import com.example.mercader.common.components.profile.InfoItem
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
@@ -48,6 +47,13 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val isEditMode by viewModel.isEditMode.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+    val editedName by viewModel.editedName.collectAsState()
+    val editedLastName by viewModel.editedLastName.collectAsState()
+    val editedPhone by viewModel.editedPhone.collectAsState()
+    val editedEmail by viewModel.editedEmail.collectAsState()
+
     val userId = "6a15c078ac1f41003b7c14ae"
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -68,6 +74,8 @@ fun ProfileScreen(
         ProfileHeader(
             onBack = onBack,
             onLogoutClick = onLogout,
+            onEditClick = { viewModel.toggleEditMode() },
+            isEditMode = isEditMode,
             backgroundColor = headerBgColor,
             contentColor = headerContentColor
         )
@@ -113,34 +121,6 @@ fun ProfileScreen(
                 }
             }
 
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.15f),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = "${state.mercaPoints} Merca Points",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            }
-
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -155,42 +135,96 @@ fun ProfileScreen(
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
+                    // Campo de nombre de usuario (no editable)
                     InfoItem(
                         icon = Icons.Default.Person,
                         label = "Nombre de Usuario",
                         value = state.username,
-                        placeholder = "@usuario_merca"
+                        placeholder = "@usuario_merca",
+                        isEditing = false
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                    // Campo de nombre (editable)
                     InfoItem(
                         icon = Icons.Default.Person,
                         label = "Nombre",
-                        value = state.name,
-                        placeholder = "Tu Nombre"
+                        value = editedName,
+                        placeholder = "Tu Nombre",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedName(it) }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                    // Campo de apellido (editable)
                     InfoItem(
                         icon = Icons.Default.Person,
                         label = "Apellido",
-                        value = state.lastName,
-                        placeholder = "Tu Apellido"
+                        value = editedLastName,
+                        placeholder = "Tu Apellido",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedLastName(it) }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                    // Campo de teléfono (editable)
                     InfoItem(
                         icon = Icons.Default.Phone,
                         label = "Teléfono",
-                        value = state.phone,
-                        placeholder = "+591 70000000"
+                        value = editedPhone,
+                        placeholder = "+591 70000000",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedPhone(it) }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+
+                    // Campo de email (editable)
                     InfoItem(
                         icon = Icons.Default.Email,
                         label = "Correo Electrónico",
-                        value = state.email,
-                        placeholder = "correo@ejemplo.com"
+                        value = editedEmail,
+                        placeholder = "correo@ejemplo.com",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedEmail(it) }
                     )
                 }
             }
+
+            // Botón Guardar (solo visible en modo edición)
+            if (isEditMode) {
+                Button(
+                    onClick = { viewModel.saveProfileChanges() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = !isSaving,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Guardar Cambios",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            TopPlayedGamesSection(state = state)
 
             Row(
                 modifier = Modifier
@@ -255,6 +289,8 @@ fun ProfileScreen(
 private fun ProfileHeader(
     onBack: () -> Unit,
     onLogoutClick: () -> Unit,
+    onEditClick: () -> Unit,
+    isEditMode: Boolean,
     backgroundColor: androidx.compose.ui.graphics.Color,
     contentColor: androidx.compose.ui.graphics.Color
 ) {
@@ -288,67 +324,46 @@ private fun ProfileHeader(
             )
         }
 
-        IconButton(
-            onClick = onLogoutClick,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.ExitToApp,
-                contentDescription = "Cerrar sesión",
-                tint = MaterialTheme.colorScheme.error
-            )
+            // Botón de Editar/Guardar
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (isEditMode)
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        else
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
+                    )
+            ) {
+                Icon(
+                    imageVector = if (isEditMode) Icons.Default.Close else Icons.Default.Edit,
+                    contentDescription = if (isEditMode) "Cancelar edición" else "Editar perfil",
+                    tint = if (isEditMode) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                )
+            }
+
+            IconButton(
+                onClick = onLogoutClick,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Cerrar sesión",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }
 
-@Composable
-private fun InfoItem(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    placeholder: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value.ifEmpty { placeholder },
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (value.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}
 
 @Composable
 private fun TabItem(
@@ -382,338 +397,108 @@ private fun TabItem(
 }
 
 @Composable
-private fun PurchasesSection(state: ProfileState) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        if (state.isPurchasesLoading && state.purchases.isEmpty()) {
+fun TopPlayedGamesSection(state: ProfileState) {
+    if (state.isTopGamesLoading) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp),
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
-            }
-        } else if (state.purchases.isEmpty()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Aún no tienes compras registradas. ¡Compra tus juegos favoritos desde el carrito!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else {
-            state.purchases.forEach { purchase ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                purchase.details.forEach { detail ->
-                                    Text(
-                                        text = "${detail.title} (x${detail.quantity})",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Pago: ${purchase.paymentMethod}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                            }
-                            Text(
-                                text = "$${String.format("%.2f", purchase.total)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.padding(start = 8.dp)
-                            )
-                        }
-                    }
-                }
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
             }
         }
+        return
     }
-}
 
-@Composable
-private fun LoansSection(state: ProfileState) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        if (state.isLoansLoading && state.loans.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (state.loans.isEmpty()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Aún no tienes préstamos activos. ¡Reserva o alquila tus juegos favoritos desde la colección!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else {
-            state.loans.forEach { loan ->
-                val limitDateString = if (loan.limitDate.length >= 10) {
-                    val parts = loan.limitDate.substring(0, 10).split("-")
-                    if (parts.size == 3) "${parts[2]}/${parts[1]}/${parts[0]}" else loan.limitDate
-                } else {
-                    loan.limitDate
-                }
-                
-                val statusText = if (loan.startDate == null) "Pendiente de recojo" else "Devuelve antes de: $limitDateString"
-                val badgeText = if (loan.startDate == null) "Pendiente" else "Activo"
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                    ),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = loan.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Tipo: ${loan.service} • $statusText",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                            }
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                            ) {
-                                Text(
-                                    text = badgeText,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    if (state.topGames.isEmpty()) {
+        return
     }
-}
 
-@Composable
-private fun FavoritesSection(
-    state: ProfileState,
-    viewModel: ProfileViewModel,
-    cartManager: CartManager,
-    reserveManager: ReserveManager,
-) {
-    var currentPage by remember { mutableStateOf(0) }
-    var selectedGame by remember { mutableStateOf<Game?>(null) }
-
-    Column(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+        )
     ) {
-        if (state.isFavoritesLoading && state.favorites.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (state.favorites.isEmpty()) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                )
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Aún no tienes juegos favoritos. ¡Añade algunos desde la colección!",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else {
-            val pageSize = 3
-            val totalPages = (state.favorites.size + pageSize - 1) / pageSize
-
-            LaunchedEffect(state.favorites.size) {
-                if (currentPage >= totalPages) {
-                    currentPage = maxOf(0, totalPages - 1)
-                }
-            }
-
-            val startIndex = currentPage * pageSize
-            val endIndex = minOf(startIndex + pageSize, state.favorites.size)
-            val currentPageGames = state.favorites.subList(startIndex, endIndex)
-
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                currentPageGames.forEach { game ->
-                    GameCard(
-                        game = game,
-                        onClick = { selectedGame = game },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                repeat(pageSize - currentPageGames.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Top 5",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Top 5 Juegos M\u00e1s Jugados",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
 
-            if (totalPages > 1) {
+            state.topGames.forEachIndexed { index, topGame ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    IconButton(
-                        onClick = { if (currentPage > 0) currentPage-- },
-                        enabled = currentPage > 0
-                    ) {
-                        Text("◀", color = if (currentPage > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(totalPages) { index ->
-                            val isSelected = index == currentPage
-                            Box(
-                                modifier = Modifier
-                                    .size(if (isSelected) 8.dp else 6.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (isSelected) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                                    )
-                            )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = CircleShape,
+                            color = if (index < 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "${index + 1}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (index < 3) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = topGame.title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (index < 3) FontWeight.Bold else FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
-
-                    IconButton(
-                        onClick = { if (currentPage < totalPages - 1) currentPage++ },
-                        enabled = currentPage < totalPages - 1
-                    ) {
-                        Text("▶", color = if (currentPage < totalPages - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline)
-                    }
+                    Text(
+                        text = "${topGame.loanCount} partidas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (index < state.topGames.size - 1) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                        modifier = Modifier.padding(start = 40.dp)
+                    )
                 }
             }
         }
-    }
-
-    selectedGame?.let { game ->
-        GameDetailDialog(
-            game = game,
-            cartManager = cartManager,
-            reserveManager = reserveManager,
-            onDismiss = {
-                selectedGame = null
-                viewModel.loadFavorites()
-            }
-        )
     }
 }

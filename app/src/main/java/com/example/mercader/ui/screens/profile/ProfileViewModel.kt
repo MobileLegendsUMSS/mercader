@@ -18,6 +18,25 @@ class ProfileViewModel @Inject constructor(
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state.asStateFlow()
 
+    // Estados de edición
+    private val _isEditMode = MutableStateFlow(false)
+    val isEditMode: StateFlow<Boolean> = _isEditMode.asStateFlow()
+
+    private val _editedName = MutableStateFlow("")
+    val editedName: StateFlow<String> = _editedName.asStateFlow()
+
+    private val _editedLastName = MutableStateFlow("")
+    val editedLastName: StateFlow<String> = _editedLastName.asStateFlow()
+
+    private val _editedPhone = MutableStateFlow("")
+    val editedPhone: StateFlow<String> = _editedPhone.asStateFlow()
+
+    private val _editedEmail = MutableStateFlow("")
+    val editedEmail: StateFlow<String> = _editedEmail.asStateFlow()
+
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
     fun loadProfile(userId: String) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
@@ -36,6 +55,11 @@ class ProfileViewModel @Inject constructor(
                             isLoading = false,
                             errorMessage = null
                         )
+                        // Inicializar valores editados
+                        _editedName.value = profile.name
+                        _editedLastName.value = profile.lastName
+                        _editedPhone.value = profile.phone
+                        _editedEmail.value = profile.email
                     },
                     onFailure = { error ->
                         _state.value = _state.value.copy(
@@ -53,6 +77,89 @@ class ProfileViewModel @Inject constructor(
             loadFavorites()
             loadPurchases()
             loadLoans()
+            loadTopGames()
+        }
+    }
+
+    fun toggleEditMode() {
+        if (_isEditMode.value) {
+            _editedName.value = _state.value.name
+            _editedLastName.value = _state.value.lastName
+            _editedPhone.value = _state.value.phone
+            _editedEmail.value = _state.value.email
+        }
+        _isEditMode.value = !_isEditMode.value
+    }
+
+    fun updateEditedName(value: String) {
+        _editedName.value = value
+    }
+
+    fun updateEditedLastName(value: String) {
+        _editedLastName.value = value
+    }
+
+    fun updateEditedPhone(value: String) {
+        _editedPhone.value = value
+    }
+
+    fun updateEditedEmail(value: String) {
+        _editedEmail.value = value
+    }
+
+    fun saveProfileChanges() {
+        viewModelScope.launch {
+            _isSaving.value = true
+            _state.value = _state.value.copy(errorMessage = null)
+
+            val updatedFields = mutableMapOf<String, Any>()
+
+            if (_editedName.value != _state.value.name) {
+                updatedFields["nombres"] = _editedName.value
+            }
+            if (_editedLastName.value != _state.value.lastName) {
+                updatedFields["apellidos"] = _editedLastName.value
+            }
+            if (_editedPhone.value != _state.value.phone) {
+                updatedFields["telefono"] = _editedPhone.value
+            }
+            if (_editedEmail.value != _state.value.email) {
+                updatedFields["correo_contacto"] = _editedEmail.value
+            }
+
+            if (updatedFields.isEmpty()) {
+                _isEditMode.value = false
+                _isSaving.value = false
+                return@launch
+            }
+
+            try {
+                val result = userRepository.editProfile(updatedFields)
+                result.fold(
+                    onSuccess = {
+                        // Actualizar estado con los nuevos valores
+                        _state.value = _state.value.copy(
+                            name = _editedName.value,
+                            lastName = _editedLastName.value,
+                            phone = _editedPhone.value,
+                            email = _editedEmail.value
+                        )
+                        _isEditMode.value = false
+                        _isSaving.value = false
+                    },
+                    onFailure = { error ->
+                        _state.value = _state.value.copy(
+                            errorMessage = error.message ?: "Error al actualizar el perfil"
+                        )
+                        _isSaving.value = false
+                    }
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    errorMessage = e.message ?: "Error al actualizar el perfil"
+                )
+                _isSaving.value = false
+            }
         }
     }
 
@@ -142,5 +249,33 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
-}
 
+    fun loadTopGames() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isTopGamesLoading = true, topGamesError = null)
+            try {
+                val result = userRepository.getTopGames()
+                result.fold(
+                    onSuccess = { topGames ->
+                        _state.value = _state.value.copy(
+                            topGames = topGames,
+                            isTopGamesLoading = false,
+                            topGamesError = null
+                        )
+                    },
+                    onFailure = { error ->
+                        _state.value = _state.value.copy(
+                            isTopGamesLoading = false,
+                            topGamesError = error.message ?: "Error al cargar top juegos"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isTopGamesLoading = false,
+                    topGamesError = e.message ?: "Error al cargar top juegos"
+                )
+            }
+        }
+    }
+}

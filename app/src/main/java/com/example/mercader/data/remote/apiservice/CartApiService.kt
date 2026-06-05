@@ -5,6 +5,8 @@ import com.example.mercader.data.remote.models.BuyResponse
 import com.example.mercader.data.remote.models.CartRequest
 import com.example.mercader.data.remote.models.CartResponse
 import com.example.mercader.data.remote.models.DeleteFromCartRequest
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -31,5 +33,12 @@ interface CartApiService {
     @POST("/api/servicios/usuarios/compra")
     suspend fun checkout(
         @Body request: BuyRequest
+    ): Response<BuyResponse>
+
+    @Multipart
+    @POST("/api/servicios/usuarios/compra")
+    suspend fun checkoutWithReceipt(
+        @PartMap fields: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part comprobante: MultipartBody.Part
     ): Response<BuyResponse>
 }

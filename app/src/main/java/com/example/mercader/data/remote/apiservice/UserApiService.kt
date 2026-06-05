@@ -6,6 +6,10 @@ import com.example.mercader.data.remote.models.FavoritesListResponseDTO
 import com.example.mercader.data.remote.models.PurchaseListResponseDTO
 import com.example.mercader.data.remote.models.UserLoansRequestDTO
 import com.example.mercader.data.remote.models.UserLoansListResponseDTO
+import com.example.mercader.data.remote.models.EditProfileRequestDTO
+import com.example.mercader.data.remote.models.LoanActionResponseDTO
+import com.example.mercader.data.remote.models.TopGamesResponseDTO
+import com.example.mercader.data.remote.models.UpdateLoanRequestDTO
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -13,6 +17,7 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.HTTP
 import retrofit2.http.Body
+import retrofit2.http.PATCH
 
 interface UserApiService {
 
@@ -35,9 +40,30 @@ interface UserApiService {
     @GET("servicios/usuarios/compra")
     suspend fun getUserPurchases(): Response<PurchaseListResponseDTO>
 
+    @PATCH("/api/perfil/usuarios/info-personal")
+    suspend fun editPersonalInfo(
+        @Body updatedFields: EditProfileRequestDTO
+    ): Response<UserProfileBaseResponse>
+
     @HTTP(method = "GET", path = "servicios/usuarios/prestamos", hasBody = true)
     suspend fun getUserLoans(
         @Body request: UserLoansRequestDTO
     ): Response<UserLoansListResponseDTO>
+
+    @GET("reportes/usuarios/juegos-usados")
+    suspend fun getTopGames(): Response<TopGamesResponseDTO>
+
+    // Obtener todos los préstamos (Admin)
+    @POST("servicios/admin/prestamo")
+    suspend fun getAllLoans(
+        @Body request: UserLoansRequestDTO
+    ): Response<UserLoansListResponseDTO>
+
+    // Actualizar préstamo (Admin) - recogida/devolución
+    @PATCH("servicios/admin/prestamo")
+    suspend fun updateLoan(
+        @Query("id_prestamo") loanId: String,
+        @Body request: UpdateLoanRequestDTO
+    ): Response<LoanActionResponseDTO>
 }
 

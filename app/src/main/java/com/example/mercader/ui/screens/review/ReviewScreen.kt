@@ -24,6 +24,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.R
 import com.example.mercader.common.components.AddReviewModal
 import com.example.mercader.common.components.ImagePlaceholder
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.models.Review
 import java.text.SimpleDateFormat
@@ -103,14 +105,25 @@ fun ReviewScreen(
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Imagen placeholder
-                ImagePlaceholder(
-                    emoji = "🎮",
-                    contentDescription = game.title,
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                )
+                // Imagen de portada
+                if (!game.imageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = game.imageUrl,
+                        contentDescription = game.title,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    ImagePlaceholder(
+                        emoji = "🎮",
+                        contentDescription = game.title,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -216,7 +229,7 @@ fun ReviewScreen(
                 viewModel.createReview(game.id, rating, content) {
                     Toast.makeText(
                         context,
-                        "✅ Reseña publicada con éxito",
+                        "Reseña publicada con éxito",
                         Toast.LENGTH_LONG
                     ).show()
                 }

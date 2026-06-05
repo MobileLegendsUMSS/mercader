@@ -7,22 +7,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import com.example.mercader.common.components.profile.InfoItem
 
 @Composable
 fun AdminProfileSimpleScreen(
@@ -31,6 +29,12 @@ fun AdminProfileSimpleScreen(
     viewModel: AdminProfileSimpleViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val isEditMode by viewModel.isEditMode.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+    val editedName by viewModel.editedName.collectAsState()
+    val editedLastName by viewModel.editedLastName.collectAsState()
+    val editedPhone by viewModel.editedPhone.collectAsState()
+    val editedEmail by viewModel.editedEmail.collectAsState()
     val scope = rememberCoroutineScope()
 
     Column(
@@ -38,8 +42,11 @@ fun AdminProfileSimpleScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Header
-        AdminProfileHeader(onBack = onBack)
+        AdminProfileHeader(
+            onBack = onBack,
+            onEditClick = { viewModel.toggleEditMode() },
+            isEditMode = isEditMode
+        )
 
         Column(
             modifier = Modifier
@@ -52,7 +59,6 @@ fun AdminProfileSimpleScreen(
         ) {
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Avatar con icono de admin (usando Person en lugar de AdminPanelSettings)
             Box(
                 modifier = Modifier
                     .size(108.dp)
@@ -83,7 +89,6 @@ fun AdminProfileSimpleScreen(
                 }
             }
 
-            // Badge de rol
             Surface(
                 shape = RoundedCornerShape(20.dp),
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
@@ -112,7 +117,6 @@ fun AdminProfileSimpleScreen(
                 }
             }
 
-            // Tarjeta de información personal
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
@@ -127,84 +131,133 @@ fun AdminProfileSimpleScreen(
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
-                    AdminInfoItem(
+                    InfoItem(
                         icon = Icons.Default.Person,
                         label = "Nombre de Usuario",
                         value = state.username,
-                        isLoading = state.isLoading
+                        placeholder = "@usuario_merca",
+                        isEditing = false
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                    AdminInfoItem(
+
+                    InfoItem(
                         icon = Icons.Default.Person,
                         label = "Nombres",
-                        value = state.name,
-                        isLoading = state.isLoading
+                        value = editedName,
+                        placeholder = "Tu Nombre",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedName(it) }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                    AdminInfoItem(
+
+                    InfoItem(
                         icon = Icons.Default.Person,
                         label = "Apellidos",
-                        value = state.lastName,
-                        isLoading = state.isLoading
+                        value = editedLastName,
+                        placeholder = "Tu Apellido",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedLastName(it) }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                    AdminInfoItem(
+
+                    InfoItem(
                         icon = Icons.Default.Phone,
                         label = "Teléfono",
-                        value = state.phone,
-                        isLoading = state.isLoading
+                        value = editedPhone,
+                        placeholder = "+591 70000000",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedPhone(it) }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                    AdminInfoItem(
+
+                    InfoItem(
                         icon = Icons.Default.Email,
                         label = "Correo Electrónico",
-                        value = state.email,
-                        isLoading = state.isLoading
+                        value = editedEmail,
+                        placeholder = "correo@ejemplo.com",
+                        isEditing = isEditMode,
+                        onValueChange = { viewModel.updateEditedEmail(it) }
                     )
                 }
             }
 
-            // Botón de cerrar sesión
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
-                )
-            ) {
-                Row(
+            if (isEditMode) {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            viewModel.saveProfileChanges()
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            scope.launch {
-                                viewModel.logout()
-                                onLogout()
-                            }
-                        }
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = !isSaving,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ExitToApp,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Guardar Cambios",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            } else {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Cerrar Sesión",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                scope.launch {
+                                    viewModel.logout()
+                                    onLogout()
+                                }
+                            }
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Cerrar Sesión",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
 
-            // Mostrar error si existe
             state.errorMessage?.let { error ->
                 Text(
                     text = error,
@@ -220,7 +273,11 @@ fun AdminProfileSimpleScreen(
 }
 
 @Composable
-private fun AdminProfileHeader(onBack: () -> Unit) {
+private fun AdminProfileHeader(
+    onBack: () -> Unit,
+    onEditClick: () -> Unit,
+    isEditMode: Boolean
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -251,60 +308,25 @@ private fun AdminProfileHeader(onBack: () -> Unit) {
             )
         }
 
-        Spacer(modifier = Modifier.width(44.dp))
-    }
-}
-
-@Composable
-private fun AdminInfoItem(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    isLoading: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .width(120.dp)
-                        .height(20.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                )
-            } else {
-                Text(
-                    text = value.ifEmpty { "No especificado" },
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (isEditMode)
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        else
+                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                    )
+            ) {
+                Icon(
+                    imageVector = if (isEditMode) Icons.Default.Close else Icons.Default.Edit,
+                    contentDescription = if (isEditMode) "Cancelar edición" else "Editar perfil",
+                    tint = if (isEditMode) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimary
                 )
             }
         }

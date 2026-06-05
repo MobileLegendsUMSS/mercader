@@ -1,11 +1,15 @@
 package com.example.mercader.data.repositories
 
 import com.example.mercader.data.remote.apiservice.UserApiService
+import com.example.mercader.data.remote.models.EditProfileRequestDTO
+import com.example.mercader.data.remote.models.UpdateLoanRequestDTO
+import com.example.mercader.data.remote.models.UserLoansRequestDTO
 import com.example.mercader.domain.models.UserProfile
 import com.example.mercader.domain.models.Game
 import com.example.mercader.domain.models.UserPurchase
 import com.example.mercader.domain.models.UserPurchaseDetail
 import com.example.mercader.domain.models.UserLoan
+import com.example.mercader.domain.models.TopGame
 import com.example.mercader.domain.repositories.UserRepository
 import javax.inject.Inject
 
@@ -236,6 +240,128 @@ class UserRepositoryImpl @Inject constructor(
             } catch (e: Exception) {
                 Result.failure(e)
             }
+        }
+    }
+    override suspend fun editProfile(updatedFields: Map<String, Any>): Result<Unit> {
+        return try {
+            val request = EditProfileRequestDTO(
+                nombres = updatedFields["nombres"] as? String,
+                apellidos = updatedFields["apellidos"] as? String,
+                telefono = updatedFields["telefono"] as? String,
+                correoContacto = updatedFields["correo_contacto"] as? String
+            )
+
+            val response = userApiService.editPersonalInfo(request)
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al actualizar el perfil"))
+                }
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getTopGames(): Result<List<TopGame>> {
+        return try {
+            val response = userApiService.getTopGames()
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    val topGames = body.data.map { dto ->
+                        TopGame(
+                            title = dto.title,
+                            loanCount = dto.loanCount
+                        )
+                    }
+                    Result.success(topGames)
+                } else {
+                    Result.success(emptyList())
+                }
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getAllLoans(
+        vigente: Boolean,
+        recogido: Boolean,
+        devuelto: Boolean
+    ): Result<List<UserLoan>> {
+        return try {
+            println("📋 Admin: Obteniendo todos los préstamos - vigente:$vigente, recogido:$recogido, devuelto:$devuelto")
+
+            // ✅ Crear el body con los filtros
+            val request = UserLoansRequestDTO(
+                vigent = vigente,
+                collected = recogido,
+                returned = devuelto
+            )
+
+            val response = userApiService.getAllLoans(request)
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                val loans = response.body()?.data?.map { item ->
+                    UserLoan(
+                        loanId = item.loanId,
+                        title = item.title,
+                        description = item.description ?: "",
+                        service = item.service,
+                        requestDate = item.requestDate,
+                        limitDate = item.limitDate,
+                        startDate = item.startDate,
+                        endDate = item.endDate
+                    )
+                } ?: emptyList()
+
+                println("✅ ${loans.size} préstamos obtenidos")
+                Result.success(loans)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al obtener préstamos"
+                println("❌ Error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            println("❌ Excepción: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateLoan(
+        loanId: String,
+        fechaInicio: String?,
+        fechaFin: String?
+    ): Result<Unit> {
+        return try {
+            println("📋 Admin: Actualizando préstamo $loanId")
+            println("📋 fechaInicio: $fechaInicio, fechaFin: $fechaFin")
+
+            val request = UpdateLoanRequestDTO(
+                fechaInicio = fechaInicio,
+                fechaFin = fechaFin
+            )
+            val response = userApiService.updateLoan(loanId, request)
+
+            if (response.isSuccessful && response.body()?.success == true) {
+                println("✅ Préstamo actualizado exitosamente")
+                Result.success(Unit)
+            } else {
+                val errorMessage = response.body()?.message ?: "Error al actualizar préstamo"
+                println("❌ Error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            println("❌ Excepción: ${e.message}")
+            Result.failure(e)
         }
     }
 }

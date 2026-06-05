@@ -22,36 +22,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.domain.models.Game
 import com.example.mercader.ui.screens.games.CollectionViewModel.DeleteViewModel
 import com.example.mercader.ui.screens.games.FavoriteViewModel
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
+import com.example.mercader.ui.screens.games.ReserveModal
 import kotlinx.coroutines.launch
 
 @Composable
 fun GameDetailDialog(
     game: Game,
     onDismiss: () -> Unit,
-    onReserve: () -> Unit = {},
-    onBuy: () -> Unit = {},
-    onRent: () -> Unit = {},
     onTutorial: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
     favoriteViewModel: FavoriteViewModel = hiltViewModel(),
-    cartManager: CartManager? = null,  // ✅ Cambiado a nullable
-    reserveManager: ReserveManager? = null,  // ✅ Cambiado a nullable
+    cartManager: CartManager? = null,  // ? Nullable para modo admin
+    reserveManager: ReserveManager? = null,  // ? Nullable para modo admin
     onEditGame: ((Game) -> Unit)? = null,
-    onDeleteGame: ((Game) -> Unit)? = null,  // ✅ Nuevo callback para eliminar
+    onDeleteGame: ((Game) -> Unit)? = null,  // ? Callback para eliminar en modo admin
     onCartUpdate: (() -> Unit)? = null,
     onNavigateToCart: (() -> Unit)? = null,
     onNavigateToReviews: ((Game) -> Unit)? = null,
-    isAdminMode: Boolean = false  // ✅ Nuevo parámetro para modo admin
+    isAdminMode: Boolean = false  // ? Modo admin
 ) {
     var showModal by remember { mutableStateOf(false) }
-    var showDeleteConfirmation by remember { mutableStateOf(false) }  // ✅ Confirmación de eliminación
+    var showDeleteConfirmation by remember { mutableStateOf(false) }  // ? Confirmación de eliminación
     val context = LocalContext.current
     var isInCart by remember { mutableStateOf(false) }
     var cartQuantity by remember { mutableStateOf(0) }
@@ -107,7 +107,7 @@ fun GameDetailDialog(
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
-                // ── Box para el boton de cerrar y favorito ──────────────────────────────────────────
+                // ? Header con botones
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -115,12 +115,12 @@ fun GameDetailDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Grupo izquierdo (corazón + comentario) - Ocultar en modo admin
+                    // Grupo izquierdo - Solo visible en modo usuario
                     if (!isAdminMode) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // Boton favorito (corazón)
+                            // Botón favorito
                             IconButton(
                                 onClick = {
                                     favoriteViewModel.toggleFavorite(game.id) { message ->
@@ -137,7 +137,7 @@ fun GameDetailDialog(
                                 )
                             }
 
-                            // Boton reseña
+                            // Botón reseña
                             IconButton(
                                 onClick = {
                                     onNavigateToReviews?.invoke(game)
@@ -152,13 +152,13 @@ fun GameDetailDialog(
                             }
                         }
                     } else {
-                        // En modo admin, mostrar un indicador de admin
+                        // Indicador modo admin
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                         ) {
                             Text(
-                                text = "👑 Modo Admin",
+                                text = "? Modo Admin",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
@@ -167,20 +167,20 @@ fun GameDetailDialog(
                         }
                     }
 
-                    // Boton cerrar (derecha)
+                    // Botón cerrar
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier.size(40.dp)
                     ) {
                         Text(
-                            text = "✕",
+                            text = "?",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // ── Columna Principal ─────────────────────────────────
+                // ? Columna Principal
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -188,7 +188,7 @@ fun GameDetailDialog(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 12.dp)
                 ) {
-                    // Titulo
+                    // Título
                     Text(
                         text = game.title,
                         style = MaterialTheme.typography.headlineMedium,
@@ -201,13 +201,24 @@ fun GameDetailDialog(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Imagen
-                    ImagePlaceholder(
-                        emoji = "🎮",
-                        contentDescription = game.title,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
+                    if (!game.imageUrl.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = game.imageUrl,
+                            contentDescription = game.title,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        ImagePlaceholder(
+                            emoji = "?",
+                            contentDescription = game.title,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -218,7 +229,7 @@ fun GameDetailDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SecondaryButton(
-                            text = "📹 Tutorial",
+                            text = "? Tutorial",
                             onClick = onTutorial,
                             modifier = Modifier
                                 .weight(1f)
@@ -240,20 +251,20 @@ fun GameDetailDialog(
                     ) {
                         InfoChip(
                             value = "${game.nMinPerson} - ${game.nMaxPerson}",
-                            emoji = "👥",
+                            emoji = "?",
                             modifier = Modifier.weight(1f)
                         )
 
                         InfoChip(
                             value = "${game.minMinutes} - ${game.maxMinutes} min",
-                            emoji = "⏱️",
+                            emoji = "??",
                             modifier = Modifier.weight(1f)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Stock para modo admin
+                    // Stock para modo admin (de betterStock)
                     if (isAdminMode) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -269,7 +280,7 @@ fun GameDetailDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "📦 Stock disponible:",
+                                    text = "? Stock disponible:",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -351,7 +362,7 @@ fun GameDetailDialog(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // ── Botones ──────────────────────────────────────────────
+                // ? Botones
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -359,13 +370,13 @@ fun GameDetailDialog(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (isAdminMode) {
-                        // ✅ MODO ADMIN: Botones de Editar y Eliminar
+                        // ? MODO ADMIN: Botones de Editar y Eliminar
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             SecondaryButton(
-                                text = "✏️ Editar Juego",
+                                text = "?? Editar Juego",
                                 onClick = {
                                     onEditGame?.invoke(game)
                                     onDismiss()
@@ -380,11 +391,11 @@ fun GameDetailDialog(
                                     containerColor = MaterialTheme.colorScheme.error
                                 )
                             ) {
-                                Text("🗑️ Eliminar")
+                                Text("?? Eliminar")
                             }
                         }
                     } else {
-                        // ✅ MODO USUARIO: Botones originales
+                        // ? MODO USUARIO: Botones de Retirar y Préstamo
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -395,14 +406,40 @@ fun GameDetailDialog(
                                 modifier = Modifier.weight(1f)
                             )
 
-                            SecondaryButton(
-                                text = "Solicitar Préstamo",
-                                onClick = { showReserveModal = true },
-                                modifier = Modifier.weight(1f)
-                            )
+                            // Botón Solicitar Préstamo con validación de disponibilidad (de dev)
+                            Button(
+                                onClick = {
+                                    val hasAnyService = game.isPurchaseAvailable ||
+                                            game.isRentAvailable ||
+                                            game.isLoanAvailable
+
+                                    if (hasAnyService && reserveManager != null) {
+                                        showReserveModal = true
+                                    } else if (!hasAnyService) {
+                                        Toast.makeText(
+                                            context,
+                                            "No hay servicios disponibles para este juego",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Error: Sistema de reservas no disponible",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                enabled = reserveManager != null,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Text("Solicitar Préstamo")
+                            }
                         }
 
-                        // Botón dinámico del carrito (solo usuario)
+                        // Botón dinámico del carrito (con validación de isPurchaseAvailable de dev)
                         if (cartManager != null) {
                             Button(
                                 onClick = {
@@ -419,7 +456,7 @@ fun GameDetailDialog(
                                                     cartQuantity = cartManager.getQuantity(game.id)
                                                     Toast.makeText(
                                                         context,
-                                                        "✓ ${game.title} se ha añadido al carrito",
+                                                        "? ${game.title} se ha añadido al carrito",
                                                         Toast.LENGTH_LONG
                                                     ).show()
                                                     onCartUpdate?.invoke()
@@ -443,7 +480,7 @@ fun GameDetailDialog(
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                enabled = !isAddingToCart && !isLoadingCartState,
+                                enabled = !isAddingToCart && !isLoadingCartState && game.isPurchaseAvailable,  // ? De dev
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isInCart)
                                         MaterialTheme.colorScheme.tertiary
@@ -472,7 +509,7 @@ fun GameDetailDialog(
         }
     }
 
-    // Modal para "Retirar Juego" (solo usuario)
+    // Modal para "Retirar Juego"
     if (showModal) {
         DeleteGameModal(
             gameName = game.title,
@@ -483,12 +520,13 @@ fun GameDetailDialog(
                     justificacionRetiro = justificacionRetiro
                 )
                 showModal = false
+                onDismiss()  // Cerrar diálogo después de retirar
             },
             onDismiss = { showModal = false }
         )
     }
 
-    // ✅ Modal de confirmación de eliminación (modo admin)
+    // ? Modal de confirmación de eliminación (modo admin)
     if (showDeleteConfirmation) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirmation = false },
@@ -516,10 +554,12 @@ fun GameDetailDialog(
         )
     }
 
-    // Modal de reserva (solo usuario)
+    // ? Modal de reserva mejorado (de dev + betterStock)
     if (showReserveModal && reserveManager != null) {
         ReserveModal(
             gameTitle = game.title,
+            isRentAvailable = game.isRentAvailable,  // ? De dev
+            isLoanAvailable = game.isLoanAvailable,  // ? De dev
             onDismiss = { showReserveModal = false },
             onConfirm = { tipoServicio ->
                 showReserveModal = false
@@ -528,9 +568,15 @@ fun GameDetailDialog(
                     try {
                         val result = reserveManager.bookReserve(game.id, tipoServicio)
                         if (result.isSuccess) {
+                            val servicioTexto = when (tipoServicio) {
+                                "compra" -> "Compra"
+                                "alquiler" -> "Alquiler"
+                                "prestamo" -> "Préstamo"
+                                else -> "Servicio"
+                            }
                             Toast.makeText(
                                 context,
-                                "✓ ${game.title} - ${if (tipoServicio == "prestamo") "Préstamo" else "Alquiler"} solicitado con éxito!",
+                                "? ${game.title} - $servicioTexto solicitado con éxito!",
                                 Toast.LENGTH_LONG
                             ).show()
                         } else {

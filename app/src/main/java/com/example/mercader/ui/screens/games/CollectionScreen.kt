@@ -62,6 +62,7 @@ fun CollectionScreen(
             }
         }
     }
+    val isAdmin = onEditGame != null
 
     Column(modifier = modifier.fillMaxSize()) {
 
@@ -202,7 +203,8 @@ fun CollectionScreen(
             onNavigateToReviews = { gameForReviews ->
                 selectedGame = null
                 onNavigateToReviews?.invoke(gameForReviews)
-            }
+            },
+            isAdmin = isAdmin
         )
     }
 }

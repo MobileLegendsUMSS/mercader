@@ -15,15 +15,12 @@ class ReserveManager @Inject constructor(
 ) {
 
     companion object {
-        private const val HARDCODED_USER_ID = "6a15c078ac1f41003b7c14ae"
 
         // Fecha
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
     }
-
-    fun getCurrentUserId(): String = HARDCODED_USER_ID
 
     // Obtener fecha actual en formato ISO 8601 para Bolivia
     fun getCurrentDateTime(): String {
@@ -43,7 +40,6 @@ class ReserveManager @Inject constructor(
         gameId: String,
         tipoServicio: String
     ): Result<Unit> {
-        val userId = getCurrentUserId()
         val fechaActual = getCurrentDateTime()
 
         println("ReserveManager: Solicitando $tipoServicio")
@@ -51,7 +47,6 @@ class ReserveManager @Inject constructor(
 
         return try {
             val result = reserveRepository.registerReserve(
-                userId = userId,
                 gameId = gameId,
                 serviceType = tipoServicio,
                 reserveDate = fechaActual

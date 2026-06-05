@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -13,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,8 +22,10 @@ import com.example.mercader.common.components.SidebarMenu
 fun AdminHome(
     onNavigateToGameForm: () -> Unit,
     onNavigateToStock: () -> Unit,
-    onSwitchToUser: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    onNavigateToLoanManagement: () -> Unit,
+    onNavigateToReports: () -> Unit,
+    onNavigateToPurchases: () -> Unit
 ) {
     var sidebarVisible by remember { mutableStateOf(false) }
     var showInProgressModal by remember { mutableStateOf(false) }
@@ -114,11 +114,21 @@ fun AdminHome(
                     sidebarVisible = false
                     onNavigateToStock()
                 },
-                onSellos = { showInProgressModal = true },
-                onOfertas = { showInProgressModal = true },
-                onProfile = {  // ← Nuevo callback
+                onProfile = {
                     sidebarVisible = false
                     onNavigateToProfile()
+                },
+                onLoanManagement = {
+                    sidebarVisible = false
+                    onNavigateToLoanManagement()
+                },
+                onReport ={
+                    sidebarVisible = false
+                    onNavigateToReports()
+                },
+                onPurchases = {  // ← NUEVO
+                    sidebarVisible = false
+                    onNavigateToPurchases()
                 }
             )
         }
