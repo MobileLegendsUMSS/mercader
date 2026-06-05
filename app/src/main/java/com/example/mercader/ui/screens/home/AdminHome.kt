@@ -25,7 +25,9 @@ fun AdminHome(
     onNavigateToProfile: () -> Unit,
     onNavigateToLoanManagement: () -> Unit,
     onNavigateToReports: () -> Unit,
-    onNavigateToPurchases: () -> Unit
+    onNavigateToPurchases: () -> Unit,
+    onNavigateToManageUsers: () -> Unit,
+    isSuperAdmin: Boolean = false
 ) {
     var sidebarVisible by remember { mutableStateOf(false) }
     var showInProgressModal by remember { mutableStateOf(false) }
@@ -52,7 +54,7 @@ fun AdminHome(
                         .padding(vertical = 8.dp)
                 )
 
-                Divider()
+                HorizontalDivider()
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -80,14 +82,14 @@ fun AdminHome(
                         onClick = { showInProgressModal = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Juegos en Mesa")
+
                     }
 
                     OutlinedButton(
                         onClick = { showInProgressModal = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Agregar cliente al local")
+
                     }
                 }
             }
@@ -129,7 +131,9 @@ fun AdminHome(
                 onPurchases = {  // ← NUEVO
                     sidebarVisible = false
                     onNavigateToPurchases()
-                }
+                },
+                onManageUsers = onNavigateToManageUsers,
+                isSuperAdmin = isSuperAdmin
             )
         }
 

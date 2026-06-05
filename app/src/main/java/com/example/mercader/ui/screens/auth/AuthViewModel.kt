@@ -40,13 +40,15 @@ class AuthViewModel @Inject constructor(
                 if (response.isSuccessful && response.body() != null) {
                     val authBody = response.body()!!
 
-                    // Guardar token y rol
-                    authUseCase.saveAuthToken(authBody.token, authBody.rol)
+                    // ? Cambiar a saveAuthTokens (plural)
+                    authUseCase.saveAuthTokens(
+                        authBody.accessToken,  // ? accessToken
+                        authBody.refreshToken, // ? refreshToken
+                        authBody.rol
+                    )
                     authUseCase.refreshAccessTime()
 
-                    // Determinar si es admin basado en el rol del backend
                     val isAdmin = authUseCase.isAdmin(authBody.rol)
-
                     _authState.value = AuthState.Success(isAdmin, authBody.rol)
                 } else {
                     val errorMsg = response.errorBody()?.string() ?: "Usuario o contraseña incorrectos"
@@ -86,7 +88,13 @@ class AuthViewModel @Inject constructor(
 
                 if (response.isSuccessful && response.body() != null) {
                     val authBody = response.body()!!
-                    authUseCase.saveAuthToken(authBody.token, authBody.rol)
+
+                    // ? Cambiar a saveAuthTokens (plural)
+                    authUseCase.saveAuthTokens(
+                        authBody.accessToken,  // ? accessToken
+                        authBody.refreshToken, // ? refreshToken
+                        authBody.rol
+                    )
                     authUseCase.refreshAccessTime()
 
                     val isAdmin = authUseCase.isAdmin(authBody.rol)
@@ -130,7 +138,12 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    suspend fun getAuthToken(): String? = authUseCase.getAuthToken()
+    // ? Cambiar nombre de función para que coincida
+    suspend fun getAuthToken(): String? = authUseCase.getAccessToken()
+
+    suspend fun getUserRol(): String? = authUseCase.getUserRol()
+
     suspend fun isUserAuthenticated(): Boolean = authUseCase.isUserAuthenticated()
+
     suspend fun logout() = authUseCase.logout()
 }

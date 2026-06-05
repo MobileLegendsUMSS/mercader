@@ -158,7 +158,7 @@ fun GameDetailDialog(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                         ) {
                             Text(
-                                text = "? Modo Admin",
+                                text = "\uD83D\uDC51 Modo Admin",
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
@@ -229,7 +229,7 @@ fun GameDetailDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SecondaryButton(
-                            text = "? Tutorial",
+                            text = "\uD83D\uDD17 Tutorial",
                             onClick = onTutorial,
                             modifier = Modifier
                                 .weight(1f)
@@ -251,13 +251,13 @@ fun GameDetailDialog(
                     ) {
                         InfoChip(
                             value = "${game.nMinPerson} - ${game.nMaxPerson}",
-                            emoji = "?",
+                            emoji = "\uD83D\uDC64",
                             modifier = Modifier.weight(1f)
                         )
 
                         InfoChip(
                             value = "${game.minMinutes} - ${game.maxMinutes} min",
-                            emoji = "??",
+                            emoji = "⌛",
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -280,7 +280,7 @@ fun GameDetailDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "? Stock disponible:",
+                                    text = "\uD83D\uDCE6 Stock disponible:",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -376,7 +376,7 @@ fun GameDetailDialog(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             SecondaryButton(
-                                text = "?? Editar Juego",
+                                text = "✏\uFE0FEditar Juego",
                                 onClick = {
                                     onEditGame?.invoke(game)
                                     onDismiss()
@@ -391,7 +391,7 @@ fun GameDetailDialog(
                                     containerColor = MaterialTheme.colorScheme.error
                                 )
                             ) {
-                                Text("?? Eliminar")
+                                Text("\uD83D\uDDD1\uFE0F Eliminar")
                             }
                         }
                     } else {
