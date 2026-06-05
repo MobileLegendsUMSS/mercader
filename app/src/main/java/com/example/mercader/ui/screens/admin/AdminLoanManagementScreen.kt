@@ -1,5 +1,6 @@
 package com.example.mercader.ui.screens.admin
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,9 +16,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mercader.common.components.BackButton
 import com.example.mercader.domain.models.UserLoan
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun AdminLoanManagementScreen(
@@ -31,12 +29,16 @@ fun AdminLoanManagementScreen(
     val tabs = listOf("Pendientes", "Recogidos", "Devueltos")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
-    // ✅ Limpiar lista y cargar al cambiar de tab
-    LaunchedEffect(selectedTabIndex) {
-        // Primero limpiar la lista (mostrará loading)
-        viewModel.clearLoans()
+    LaunchedEffect(Unit) {
+        viewModel.toastMessage.collect { message ->
+            if (message != null) {
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
-        // Luego cargar los nuevos datos según la pestaña
+    LaunchedEffect(selectedTabIndex) {
+        viewModel.clearLoans()
         when (selectedTabIndex) {
             0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
             1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
@@ -95,7 +97,6 @@ fun AdminLoanManagementScreen(
         // Contenido
         when {
             state.isLoading -> {
-                // ✅ Mostrar loading inmediatamente, sin lista anterior
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -117,7 +118,6 @@ fun AdminLoanManagementScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = {
-                            // Reintentar según la pestaña actual
                             when (selectedTabIndex) {
                                 0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
                                 1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
@@ -174,40 +174,34 @@ fun AdminLoanManagementScreen(
             onConfirmPickup = { fechaInicio ->
                 viewModel.updateLoan(loan.loanId, fechaInicio, null) { success ->
                     if (success) {
-                        selectedLoan = null
-                        when (selectedTabIndex) {
-                            0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
-                            1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
-                            2 -> viewModel.loadLoans(vigente = false, recogido = false, devuelto = true)
-                        }
+                        Toast.makeText(context, "Recogida registrada con éxito", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(context, "Error al registrar recogida", Toast.LENGTH_LONG).show()
+                    }
+                    selectedLoan = null
+                    // Recargar según la pestaña actual
+                    when (selectedTabIndex) {
+                        0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
+                        1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
+                        2 -> viewModel.loadLoans(vigente = false, recogido = false, devuelto = true)
                     }
                 }
             },
             onConfirmReturn = { fechaFin ->
                 viewModel.updateLoan(loan.loanId, null, fechaFin) { success ->
                     if (success) {
-                        selectedLoan = null
-                        when (selectedTabIndex) {
-                            0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
-                            1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
-                            2 -> viewModel.loadLoans(vigente = false, recogido = false, devuelto = true)
-                        }
+                        Toast.makeText(context, "Devolución registrada con éxito", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(context, "Error al registrar devolución", Toast.LENGTH_LONG).show()
+                    }
+                    selectedLoan = null
+                    when (selectedTabIndex) {
+                        0 -> viewModel.loadLoans(vigente = true, recogido = false, devuelto = false)
+                        1 -> viewModel.loadLoans(vigente = false, recogido = true, devuelto = false)
+                        2 -> viewModel.loadLoans(vigente = false, recogido = false, devuelto = true)
                     }
                 }
             }
         )
-    }
-}
-
-// Función auxiliar para formatear fechas
-fun formatDate(dateString: String?): String {
-    if (dateString.isNullOrEmpty()) return "No registrada"
-    return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-        val outputFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-        val date = inputFormat.parse(dateString)
-        outputFormat.format(date ?: Date())
-    } catch (e: Exception) {
-        dateString
     }
 }

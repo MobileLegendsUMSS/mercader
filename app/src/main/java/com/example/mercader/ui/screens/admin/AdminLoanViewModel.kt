@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.mercader.domain.models.UserLoan
 import com.example.mercader.domain.repositories.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,6 +27,9 @@ class AdminLoanViewModel @Inject constructor(
     private val _state = MutableStateFlow(AdminLoanUiState())
     val state: StateFlow<AdminLoanUiState> = _state.asStateFlow()
 
+    private val _toastMessage = MutableSharedFlow<String>()
+    val toastMessage = _toastMessage.asSharedFlow()
+
     fun loadLoans(vigente: Boolean, recogido: Boolean, devuelto: Boolean) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
@@ -32,9 +37,21 @@ class AdminLoanViewModel @Inject constructor(
             try {
                 val result = userRepository.getAllLoans(vigente, recogido, devuelto)
                 if (result.isSuccess) {
+                    var loans = result.getOrNull() ?: emptyList()
+
+                    loans = loans.filter { loan ->
+                        when {
+                            devuelto -> loan.endDate != null
+                            recogido -> loan.startDate != null && loan.endDate == null
+                            vigente -> loan.startDate == null && loan.endDate == null
+                            else -> true
+                        }
+                    }
+
                     _state.value = _state.value.copy(
-                        loans = result.getOrNull() ?: emptyList(),
-                        isLoading = false
+                        loans = loans,
+                        isLoading = false,
+                        errorMessage = null
                     )
                 } else {
                     _state.value = _state.value.copy(
@@ -61,15 +78,15 @@ class AdminLoanViewModel @Inject constructor(
             try {
                 val result = userRepository.updateLoan(loanId, fechaInicio, fechaFin)
                 if (result.isSuccess) {
+                    _toastMessage.emit("Préstamo actualizado correctamente")
                     onResult(true)
                 } else {
-                    _state.value = _state.value.copy(
-                        errorMessage = result.exceptionOrNull()?.message ?: "Error al actualizar"
-                    )
+                    val error = result.exceptionOrNull()?.message ?: "Error desconocido"
+                    _toastMessage.emit("Error: $error")
                     onResult(false)
                 }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(errorMessage = e.message)
+                _toastMessage.emit("Error: ${e.message}")
                 onResult(false)
             }
         }

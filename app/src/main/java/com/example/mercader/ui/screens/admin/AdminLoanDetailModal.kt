@@ -10,10 +10,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.mercader.common.components.DateTimePickerModal
+import com.example.mercader.common.utils.DateUtils.formatDate
 import com.example.mercader.domain.models.UserLoan
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -94,7 +95,7 @@ fun AdminLoanDetailModal(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("📦 Registrar Recogida")
+                            Text("Registrar Recogida")
                         }
                     }
                     loan.endDate == null -> {
@@ -106,12 +107,12 @@ fun AdminLoanDetailModal(
                                 containerColor = MaterialTheme.colorScheme.tertiary
                             )
                         ) {
-                            Text("🔄 Registrar Devolución")
+                            Text("Registrar Devolución")
                         }
                     }
                     else -> {
                         Text(
-                            text = "✓ Préstamo completado",
+                            text = "Préstamo completado",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -130,26 +131,24 @@ fun AdminLoanDetailModal(
     }
 
     if (showPickupConfirm) {
-        ConfirmActionModal(
+        DateTimePickerModal(
             title = "Registrar Recogida",
-            message = "¿Confirmar que el usuario ha recogido el juego \"${loan.title}\"?",
-            onConfirm = {
-                onConfirmPickup(currentDateTime)
+            onDismiss = { showPickupConfirm = false },
+            onConfirm = { dateTime ->
+                onConfirmPickup(dateTime)
                 showPickupConfirm = false
-            },
-            onDismiss = { showPickupConfirm = false }
+            }
         )
     }
 
     if (showReturnConfirm) {
-        ConfirmActionModal(
+        DateTimePickerModal(
             title = "Registrar Devolución",
-            message = "¿Confirmar que el usuario ha devuelto el juego \"${loan.title}\"?",
-            onConfirm = {
-                onConfirmReturn(currentDateTime)
+            onDismiss = { showReturnConfirm = false },
+            onConfirm = { dateTime ->
+                onConfirmReturn(dateTime)
                 showReturnConfirm = false
-            },
-            onDismiss = { showReturnConfirm = false }
+            }
         )
     }
 }
@@ -180,44 +179,4 @@ private fun getCurrentBoliviaDateTime(): String {
         add(Calendar.HOUR_OF_DAY, -4)
     }
     return dateFormat.format(calendar.time)
-}
-
-@Composable
-private fun ConfirmActionModal(
-    title: String,
-    message: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(text = message, style = MaterialTheme.typography.bodyMedium)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) {
-                        Text("Cancelar")
-                    }
-                    Button(onClick = onConfirm, modifier = Modifier.weight(1f)) {
-                        Text("Confirmar")
-                    }
-                }
-            }
-        }
-    }
 }

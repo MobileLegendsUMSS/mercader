@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mercader.domain.models.UserLoan
+import com.example.mercader.common.utils.DateUtils.formatDate
 
 @Composable
 fun AdminLoanCard(
