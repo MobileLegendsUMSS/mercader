@@ -1,5 +1,6 @@
 package com.example.mercader.data.repositories
 
+import com.example.mercader.data.remote.apiservice.GameApiService
 import com.example.mercader.data.remote.apiservice.UserApiService
 import com.example.mercader.data.remote.models.EditProfileRequestDTO
 import com.example.mercader.data.remote.models.UpdateLoanRequestDTO
@@ -24,7 +25,8 @@ import javax.net.ssl.SSLSocketFactory
 
 class UserRepositoryImpl @Inject constructor(
     private val userApiService: UserApiService,
-    private val tokenRepository: com.example.mercader.data.local.ITokenRepository
+    private val tokenRepository: com.example.mercader.data.local.ITokenRepository,
+    private val gameApiService: GameApiService
 ) : UserRepository {
 
     override suspend fun getUserProfile(userId: String): Result<UserProfile> {
@@ -105,9 +107,23 @@ class UserRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success) {
+                    // Fetch full game catalog to get cover images
+                    val coverMap = mutableMapOf<String, String>()
+                    try {
+                        val gamesResponse = gameApiService.getGames()
+                        if (gamesResponse.isSuccessful) {
+                            gamesResponse.body()?.data?.forEach { gameDto ->
+                                val id = gameDto._id ?: return@forEach
+                                val portada = gameDto.portada ?: return@forEach
+                                coverMap[id] = portada
+                            }
+                        }
+                    } catch (_: Exception) { /* proceed without covers */ }
+
                     val games = body.data?.map {
+                        val gameId = it.id_juego ?: ""
                         Game(
-                            id = it.id_juego ?: "",
+                            id = gameId,
                             title = it.titlo ?: "",
                             description = it.descripcion ?: "",
                             tutorial = "",
@@ -119,8 +135,8 @@ class UserRepositoryImpl @Inject constructor(
                             difficulty = com.example.mercader.data.remote.models.Difficulty("", ""),
                             editorial = com.example.mercader.data.remote.models.Editorial("", ""),
                             stock = if (it.disponible == true) 1 else 0,
-                            price = it.precio ?: 0f
-
+                            price = it.precio ?: 0f,
+                            imageUrl = coverMap[gameId]
                         )
                     } ?: emptyList()
 

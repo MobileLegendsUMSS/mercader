@@ -106,9 +106,10 @@ object NetworkModule {
     @Singleton
     fun provideUserRepository(
         apiService: UserApiService,
-        tokenRepository: com.example.mercader.data.local.ITokenRepository
+        tokenRepository: com.example.mercader.data.local.ITokenRepository,
+        gameApiService: GameApiService
     ): UserRepository {
-        return UserRepositoryImpl(apiService, tokenRepository)
+        return UserRepositoryImpl(apiService, tokenRepository, gameApiService)
     }
 
     @Provides

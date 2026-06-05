@@ -179,12 +179,14 @@ class GameRepositoryImpl @Inject constructor(
     private fun mapResponseToGames(data: List<GameResponseDTO>?): List<Game> {
         if (data == null) return emptyList()
         return data.map {
+            val cats = it.categorias ?: emptyList()
+            val svcs = it.servicios ?: emptyList()
             Game(
                 it._id ?: "",
                 it.titulo ?: "Sin título",
                 it.descripcion ?: "Sin descripción",
                 it.tutorial ?: "",
-                Category(it.categorias[0], it.categorias[0]),
+                if (cats.isNotEmpty()) Category(cats[0], cats[0]) else Category("", ""),
                 it.cant_min_pers ?: 1,
                 it.cant_max_pers ?: 4,
                 it.duracion_min ?: 30,
@@ -194,9 +196,9 @@ class GameRepositoryImpl @Inject constructor(
                 it.activo==true,
                 it.cantidad ?: 0,
                 it.precio ?: 0.0f,
-                it.servicios.contains("compra"),
-                it.servicios.contains("alquiler"),
-                it.servicios.contains("prestamo"),
+                svcs.contains("compra"),
+                svcs.contains("alquiler"),
+                svcs.contains("prestamo"),
                 imageUrl = it.portada
             )
         }
