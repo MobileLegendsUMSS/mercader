@@ -48,15 +48,6 @@ fun FilterScreen(
 
                     SectionTitle("Filtros disponibles")
 
-                    CustomSelector(
-                        value = state.selectedCategory,
-                        onValueChange = { viewModel.updateCategory(it) },
-                        label = "Categoría",
-                        options = state.gameCategories,
-                        itemToString = { it.descripcion },
-                        enabled = true,
-                        placeholder = "Todas las categorías"
-                    )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
