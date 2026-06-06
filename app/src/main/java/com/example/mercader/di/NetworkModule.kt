@@ -19,6 +19,9 @@ import com.example.mercader.data.repository.ReportRepository
 import com.example.mercader.domain.repositories.AdminPurchaseRepository
 import com.example.mercader.domain.repositories.ReviewRepository
 import com.example.mercader.domain.repositories.UserRepository
+import com.example.mercader.data.remote.apiservice.AdminApiService
+import com.example.mercader.data.local.ITokenRepository
+import com.example.mercader.common.utils.RefreshTokenService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -150,5 +153,18 @@ object NetworkModule {
         apiService: AdminPurchaseApiService
     ): AdminPurchaseRepository {
         return AdminPurchaseRepositoryImpl(apiService)
+    }
+    @Provides
+    @Singleton
+    fun provideAdminApiService(retrofit: Retrofit): AdminApiService {
+        return retrofit.create(AdminApiService::class.java)
+    }
+    @Provides
+    @Singleton
+    fun provideRefreshTokenService(
+        authApiService: AuthApiService,
+        tokenRepository: ITokenRepository
+    ): RefreshTokenService {
+        return RefreshTokenService(authApiService, tokenRepository)
     }
 }

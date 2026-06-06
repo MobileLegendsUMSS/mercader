@@ -9,12 +9,16 @@ class AuthenticationUseCase @Inject constructor(
     private val tokenRepository: ITokenRepository
 ) {
 
-    suspend fun saveAuthToken(token: String, rol: String) {
-        tokenRepository.saveToken(token, rol)
+    suspend fun saveAuthTokens(accessToken: String, refreshToken: String, rol: String) {
+        tokenRepository.saveTokens(accessToken, refreshToken, rol)
     }
 
-    suspend fun getAuthToken(): String? {
-        return tokenRepository.getToken()
+    suspend fun getAccessToken(): String? {
+        return tokenRepository.getAccessToken()
+    }
+
+    suspend fun getRefreshToken(): String? {
+        return tokenRepository.getRefreshToken()
     }
 
     suspend fun getUserRol(): String? {
@@ -30,7 +34,7 @@ class AuthenticationUseCase @Inject constructor(
     }
 
     suspend fun logout() {
-        tokenRepository.clearToken()
+        tokenRepository.clearTokens()
     }
 
     fun isAdmin(rol: String?): Boolean {

@@ -4,7 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-// DTOs locales que usa la interfaz
+// DTOs actualizados con refresh token
 data class LoginRequest(
     val nombre: String,
     val contrasenna: String
@@ -21,9 +21,23 @@ data class SigninRequest(
 
 data class AuthResponse(
     val mensaje: String,
-    val token: String,
+    val accessToken: String,  // ? Cambiado de token a accessToken
+    val refreshToken: String, // ? NUEVO
     val usuario: UsuarioResponse,
     val rol: String
+)
+
+// ? NUEVO: Request para refrescar token
+data class RefreshTokenRequest(
+    val refreshToken: String
+)
+
+// ? NUEVO: Respuesta al refrescar
+data class RefreshTokenResponse(
+    val success: Boolean,
+    val accessToken: String,
+    val refreshToken: String,
+    val rol: String? = null
 )
 
 data class UsuarioResponse(
@@ -32,7 +46,6 @@ data class UsuarioResponse(
 )
 
 interface AuthApiService {
-//corregir en caso de local o deploy quitar el api en el
     @POST("auth/login")
     suspend fun login(
         @Body request: LoginRequest
@@ -42,4 +55,16 @@ interface AuthApiService {
     suspend fun signin(
         @Body request: SigninRequest
     ): Response<AuthResponse>
+
+    // ? NUEVO: Endpoint para refrescar token
+    @POST("auth/refresh")
+    suspend fun refreshToken(
+        @Body request: RefreshTokenRequest
+    ): Response<RefreshTokenResponse>
+
+    // ? NUEVO: Endpoint para logout
+    @POST("auth/logout")
+    suspend fun logout(
+        @Body request: RefreshTokenRequest
+    ): Response<Unit>
 }
