@@ -72,7 +72,7 @@ fun SidebarMenu(
                 SidebarButton(text = "Estadisticas", onClick = onReport)
                 SidebarButton(text = "Gestión de Compras", onClick = onPurchases)
                 if (isSuperAdmin) {
-                    SidebarButton(text = "👥 Gestionar Usuarios", onClick = onManageUsers)
+                    SidebarButton(text = "Gestionar Usuarios", onClick = onManageUsers)
                 }
             }
 
