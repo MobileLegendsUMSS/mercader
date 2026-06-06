@@ -13,6 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import android.view.WindowManager
 
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -74,6 +75,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        actionBar?.hide()
 
         setContent {
             MercaderTheme {

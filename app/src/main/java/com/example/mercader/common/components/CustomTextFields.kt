@@ -120,23 +120,21 @@ fun NumberTextField(
         OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
+                // Caso simple: si está vacío, actualizar
+                if (newValue.isEmpty()) {
+                    onValueChange("")
+                    return@OutlinedTextField
+                }
+
+                // Filtrar solo números (y punto si se permite)
                 val filtered = if (allowDecimals) {
                     newValue.filter { it.isDigit() || it == '.' }
                 } else {
                     newValue.filter { it.isDigit() }
                 }
 
-                val shouldUpdate = when {
-                    filtered.isEmpty() -> true
-                    minValue != null || maxValue != null -> {
-                        val numValue = filtered.toIntOrNull() ?: return@OutlinedTextField
-                        (minValue == null || numValue >= minValue) &&
-                                (maxValue == null || numValue <= maxValue)
-                    }
-                    else -> true
-                }
-
-                if (shouldUpdate) {
+                // Si el filtro cambió, no actualizar (evita bugs)
+                if (filtered == newValue) {
                     onValueChange(filtered)
                 }
             },
