@@ -1,5 +1,5 @@
 # Mercader App
-
+## Codigo Fuente en app/src/main/java/com/example/mercader
 ## Requisitos previos
 - JDK 17
 - IntelliJ IDEA
