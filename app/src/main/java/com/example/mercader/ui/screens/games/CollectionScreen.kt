@@ -214,7 +214,7 @@ fun CollectionScreen(
                 selectedGame = null
                 onNavigateToReviews?.invoke(gameForReviews)
             },
-            isAdmin = isAdmin
+            //isAdmin = isAdmin
         )
     }
 }

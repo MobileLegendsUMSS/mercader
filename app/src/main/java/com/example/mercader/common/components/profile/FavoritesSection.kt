@@ -172,7 +172,7 @@ import com.example.mercader.ui.screens.profile.ProfileViewModel
                 selectedGame = null
                 viewModel.loadFavorites()
             },
-            isAdmin=false
+            //isAdmin=false
         )
     }
 }

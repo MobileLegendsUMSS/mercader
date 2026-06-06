@@ -16,4 +16,6 @@ interface GameRepository {
     suspend fun getMostSoldGames(): Result<List<Game>>
     suspend fun getMostBorrowedGames(): Result<List<Game>>
     suspend fun deleteGame(id: String, justificacionRetiro: String): Result<Unit>
+
+    suspend fun getGameServices(gameId: String): Result<List<String>>
 }

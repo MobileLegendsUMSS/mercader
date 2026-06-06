@@ -6,11 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 interface ITokenRepository {
-    suspend fun saveToken(token: String, rol: String)
-    suspend fun getToken(): String?
+    suspend fun saveTokens(accessToken: String, refreshToken: String, rol: String)
+    suspend fun getAccessToken(): String?
+    suspend fun getRefreshToken(): String?
     suspend fun getRol(): String?
     suspend fun isTokenValid(): Boolean
-    suspend fun clearToken()
+    suspend fun clearTokens()
     suspend fun updateLastAccessTime()
     suspend fun getDaysUntilExpiration(): Int
 }
@@ -21,16 +22,18 @@ class TokenRepository(context: Context) : ITokenRepository {
         context.getSharedPreferences("mercader_auth", Context.MODE_PRIVATE)
 
     companion object {
-        private const val TOKEN_KEY = "jwt_token"
+        private const val ACCESS_TOKEN_KEY = "access_token"
+        private const val REFRESH_TOKEN_KEY = "refresh_token"
         private const val ROL_KEY = "user_rol"
         private const val LAST_ACCESS_KEY = "last_access_time"
         private const val FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000L
     }
 
-    override suspend fun saveToken(token: String, rol: String) {
+    override suspend fun saveTokens(accessToken: String, refreshToken: String, rol: String) {
         withContext(Dispatchers.IO) {
             sharedPreferences.edit().apply {
-                putString(TOKEN_KEY, token)
+                putString(ACCESS_TOKEN_KEY, accessToken)
+                putString(REFRESH_TOKEN_KEY, refreshToken)
                 putString(ROL_KEY, rol)
                 putLong(LAST_ACCESS_KEY, System.currentTimeMillis())
                 apply()
@@ -38,13 +41,19 @@ class TokenRepository(context: Context) : ITokenRepository {
         }
     }
 
-    override suspend fun getToken(): String? {
+    override suspend fun getAccessToken(): String? {
         return withContext(Dispatchers.IO) {
             if (!isTokenValid()) {
-                clearToken()
+                clearTokens()
                 return@withContext null
             }
-            sharedPreferences.getString(TOKEN_KEY, null)
+            sharedPreferences.getString(ACCESS_TOKEN_KEY, null)
+        }
+    }
+
+    override suspend fun getRefreshToken(): String? {
+        return withContext(Dispatchers.IO) {
+            sharedPreferences.getString(REFRESH_TOKEN_KEY, null)
         }
     }
 
@@ -56,7 +65,7 @@ class TokenRepository(context: Context) : ITokenRepository {
 
     override suspend fun isTokenValid(): Boolean {
         return withContext(Dispatchers.IO) {
-            val token = sharedPreferences.getString(TOKEN_KEY, null)
+            val token = sharedPreferences.getString(ACCESS_TOKEN_KEY, null)
             if (token == null) return@withContext false
 
             val lastAccessTime = sharedPreferences.getLong(LAST_ACCESS_KEY, 0)
@@ -69,10 +78,11 @@ class TokenRepository(context: Context) : ITokenRepository {
         }
     }
 
-    override suspend fun clearToken() {
+    override suspend fun clearTokens() {
         withContext(Dispatchers.IO) {
             sharedPreferences.edit().apply {
-                remove(TOKEN_KEY)
+                remove(ACCESS_TOKEN_KEY)
+                remove(REFRESH_TOKEN_KEY)
                 remove(ROL_KEY)
                 remove(LAST_ACCESS_KEY)
                 apply()

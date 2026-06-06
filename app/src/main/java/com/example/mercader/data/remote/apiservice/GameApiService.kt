@@ -37,6 +37,11 @@ interface GameApiService {
     @GET("juegos/")
     suspend fun getGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
 
+    @GET("juegos/servicios")
+    suspend fun getGameServices(
+        @Query("id_juego") gameId: String
+    ): Response<GameServicesResponseDTO>
+
     @PATCH("juegos/")
     suspend fun editGame(
         @Query("id_juego") id: String,

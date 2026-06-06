@@ -21,7 +21,9 @@ fun SidebarMenu(
     onProfile: () -> Unit,
     onLoanManagement: () -> Unit,
     onReport: () -> Unit,
-    onPurchases: () -> Unit
+    onPurchases: () -> Unit,
+    onManageUsers: () -> Unit,
+    isSuperAdmin: Boolean = false
 ) {
     Box(
         modifier = Modifier
@@ -60,7 +62,7 @@ fun SidebarMenu(
                     }
                 }
 
-                Divider()
+                HorizontalDivider()
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -69,13 +71,16 @@ fun SidebarMenu(
                 SidebarButton(text = "Gestión de Préstamos", onClick = onLoanManagement)
                 SidebarButton(text = "Estadisticas", onClick = onReport)
                 SidebarButton(text = "Gestión de Compras", onClick = onPurchases)
+                if (isSuperAdmin) {
+                    SidebarButton(text = "Gestionar Usuarios", onClick = onManageUsers)
+                }
             }
 
             // Parte inferior del menú - Perfil y Logout
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Divider()
+                HorizontalDivider()
 
                 // Opción de Perfil
                 SidebarButton(

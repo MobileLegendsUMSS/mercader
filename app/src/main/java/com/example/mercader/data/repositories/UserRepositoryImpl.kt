@@ -188,7 +188,7 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getUserLoans(): Result<List<UserLoan>> {
         return withContext(Dispatchers.IO) {
             try {
-                val token = tokenRepository.getToken() ?: ""
+                val token = tokenRepository.getAccessToken() ?: ""
                 val host = "mercader-server.onrender.com"
                 val path = "/api/servicios/usuarios/prestamos"
                 val jsonBody = """{"vigent":true,"collected":false,"returned":false}"""
