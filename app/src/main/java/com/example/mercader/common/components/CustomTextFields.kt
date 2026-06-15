@@ -112,30 +112,26 @@ fun NumberTextField(
     isError: Boolean = false,
     errorMessage: String = "",
     enabled: Boolean = true,
-    allowDecimals: Boolean = false,
-    minValue: Int? = null,
-    maxValue: Int? = null
+    allowDecimals: Boolean = false
 ) {
     Column(modifier = modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
-                // Caso simple: si está vacío, actualizar
+                // Validar: vacío o solo números (y punto si permite decimales)
                 if (newValue.isEmpty()) {
                     onValueChange("")
                     return@OutlinedTextField
                 }
 
-                // Filtrar solo números (y punto si se permite)
-                val filtered = if (allowDecimals) {
-                    newValue.filter { it.isDigit() || it == '.' }
+                val isValid = if (allowDecimals) {
+                    newValue.matches(Regex("^\\d*\\.?\\d*$"))
                 } else {
-                    newValue.filter { it.isDigit() }
+                    newValue.all { it.isDigit() }
                 }
 
-                // Si el filtro cambió, no actualizar (evita bugs)
-                if (filtered == newValue) {
-                    onValueChange(filtered)
+                if (isValid) {
+                    onValueChange(newValue)
                 }
             },
             label = { Text(label, style = MaterialTheme.typography.bodySmall) },
@@ -146,7 +142,7 @@ fun NumberTextField(
             singleLine = true,
             enabled = enabled,
             isError = isError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(keyboardType = if (allowDecimals) KeyboardType.Number else KeyboardType.Number),
             textStyle = MaterialTheme.typography.bodyMedium,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface,

@@ -91,13 +91,14 @@ fun EnumSlider(
     sliderType: SliderType,
     value: Float,
     onValueChange: (Float) -> Unit,
+    label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
     CustomSlider(
         value = value,
         onValueChange = onValueChange,
-        label = sliderType.label,
+        label = label,
         modifier = modifier,
         valueRange = sliderType.range,
         steps = sliderType.steps,

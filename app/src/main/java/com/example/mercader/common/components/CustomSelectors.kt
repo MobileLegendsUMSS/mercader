@@ -1,6 +1,7 @@
 package com.example.mercader.common.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> CustomSelector(
@@ -28,32 +30,53 @@ fun <T> CustomSelector(
     var showDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
+
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled = enabled) { showDialog = true }
+            modifier = Modifier.fillMaxWidth()
         ) {
+
             OutlinedTextField(
-                value = value?.let { itemToString(it) } ?: "",
+                value = value?.let(itemToString) ?: "",
                 onValueChange = {},
-                label = { Text(label, style = MaterialTheme.typography.bodySmall) },
-                placeholder = { Text(placeholder) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(62.dp),
                 readOnly = true,
-                enabled = false,
+                enabled = enabled,
                 isError = isError,
+                label = {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                },
+                placeholder = {
+                    Text(placeholder)
+                },
                 trailingIcon = {
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Desplegar opciones"
+                        contentDescription = "Abrir selector"
                     )
                 },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(62.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 )
+            )
+
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(
+                        enabled = enabled,
+                        indication = null,
+                        interactionSource = remember {
+                            MutableInteractionSource()
+                        }
+                    ) {
+                        showDialog = true
+                    }
             )
         }
 
@@ -62,7 +85,10 @@ fun <T> CustomSelector(
                 text = errorMessage,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 12.dp, top = 2.dp)
+                modifier = Modifier.padding(
+                    start = 12.dp,
+                    top = 2.dp
+                )
             )
         }
     }
@@ -70,7 +96,9 @@ fun <T> CustomSelector(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Seleccionar $label") },
+            title = {
+                Text("Seleccionar $label")
+            },
             text = {
                 LazyColumn(
                     modifier = Modifier
@@ -78,6 +106,7 @@ fun <T> CustomSelector(
                         .heightIn(max = 400.dp)
                 ) {
                     items(options) { option ->
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -85,9 +114,13 @@ fun <T> CustomSelector(
                                     onValueChange(option)
                                     showDialog = false
                                 }
-                                .padding(vertical = 12.dp, horizontal = 16.dp),
+                                .padding(
+                                    horizontal = 16.dp,
+                                    vertical = 12.dp
+                                ),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+
                             RadioButton(
                                 selected = option == value,
                                 onClick = {
@@ -95,7 +128,11 @@ fun <T> CustomSelector(
                                     showDialog = false
                                 }
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Spacer(
+                                modifier = Modifier.width(8.dp)
+                            )
+
                             Text(
                                 text = itemToString(option),
                                 style = MaterialTheme.typography.bodyLarge
@@ -105,48 +142,12 @@ fun <T> CustomSelector(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(
+                    onClick = { showDialog = false }
+                ) {
                     Text("Cancelar")
                 }
             }
         )
     }
-}
-// StringSelector mejorado - trabaja con objetos por debajo
-@Composable
-fun StringSelector(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    options: List<String>,
-    modifier: Modifier = Modifier,
-    isError: Boolean = false,
-    errorMessage: String = "",
-    enabled: Boolean = true,
-    placeholder: String = "Seleccionar..."
-) {
-    // Convertir lista de strings a objetos con id y descripción
-    val mappedOptions = remember(options) {
-        options.map { Pair(it, it) } // id = string, descripcion = string
-    }
-
-    // Encontrar el objeto correspondiente al valor actual
-    val selectedOption = remember(value, mappedOptions) {
-        mappedOptions.find { it.first == value }
-    }
-
-    CustomSelector(
-        value = selectedOption,
-        onValueChange = { selectedPair ->
-            onValueChange(selectedPair.first)
-        },
-        label = label,
-        options = mappedOptions,
-        modifier = modifier,
-        isError = isError,
-        errorMessage = errorMessage,
-        enabled = enabled,
-        itemToString = { it.second }, // Muestra la descripción
-        placeholder = placeholder
-    )
 }

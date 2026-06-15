@@ -267,7 +267,7 @@ fun SignupScreen(
         val currentError = localErrorMessage ?: (authState as? AuthState.Error)?.message
         currentError?.let {
             Text(
-                text = it,
+                text = it.parseErrorMessage(),
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -298,8 +298,6 @@ fun SignupScreen(
                 }
                 localErrorMessage = null
 
-                // Modifica los parámetros de firma en tu AuthViewModel.signin si es necesario
-                // pasándole las nuevas propiedades.
                 viewModel.signin(
                     nombre = nameTrimmed,
                     contrasenna = contrasenna,

@@ -70,13 +70,15 @@ class MainActivity : ComponentActivity() {
     lateinit var reserveManager: ReserveManager
 
     @Inject
-    lateinit var refreshTokenService: RefreshTokenService  // ? INYECTAR RefreshTokenService
+    lateinit var refreshTokenService: RefreshTokenService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        actionBar?.hide()
+        @Suppress("DEPRECATION")
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
 
         setContent {
             MercaderTheme {

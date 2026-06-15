@@ -130,24 +130,28 @@ fun GameFormScreen(
                 EnumSlider(
                     sliderType = SliderType.PEOPLE_COUNT,
                     value = state.nMinPerson.toFloat(),
+                    label = "Numero de Personas Minimo",
                     onValueChange = { viewModel.updateMinPerson(it) }
                 )
 
                 EnumSlider(
                     sliderType = SliderType.PEOPLE_COUNT,
                     value = state.nMaxPerson.toFloat(),
+                    label = "Numero de Personas Maximo",
                     onValueChange = { viewModel.updateMaxPerson(it) }
                 )
 
                 EnumSlider(
                     sliderType = SliderType.DURATION_HOURS,
                     value = state.minMinutes.toFloat(),
+                    label = "Duracion Minima",
                     onValueChange = { viewModel.updateMinTime(it) }
                 )
 
                 EnumSlider(
                     sliderType = SliderType.DURATION_HOURS,
                     value = state.maxMinutes.toFloat(),
+                    label = "Duracion Maxima",
                     onValueChange = { viewModel.updateMaxTime(it) }
                 )
 
@@ -170,15 +174,16 @@ fun GameFormScreen(
                 )
 
                 NumberTextField(
-                    value = state.stock.toString(),
+                    value = if (state.stock == 0) "" else state.stock.toString(),
                     onValueChange = { viewModel.updateStock(it) },
                     label = "Stock",
                 )
 
                 NumberTextField(
-                    value = state.price.toString(),
+                    value = if (state.price == 0f) "" else state.price.toString(),
                     onValueChange = { viewModel.updatePrice(it) },
                     label = "Precio",
+                    allowDecimals = true
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))

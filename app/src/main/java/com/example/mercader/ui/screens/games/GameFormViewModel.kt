@@ -165,11 +165,13 @@ class GameFormViewModel @Inject constructor(
     }
 
     fun updateStock(stock: String) {
-        _state.update { it.copy(stock = stock.toIntOrNull() ?: 0) }
+        val stockValue = if (stock.isEmpty()) 0 else stock.toIntOrNull() ?: 0
+        _state.update { it.copy(stock = stockValue) }
     }
 
     fun updatePrice(price: String) {
-        _state.update { it.copy(price = price.toFloatOrNull() ?: 0f) }
+        val priceValue = if (price.isEmpty()) 0f else price.toFloatOrNull() ?: 0f
+        _state.update { it.copy(price = priceValue) }
     }
 
     fun updatePurchaseAvailable(checked: Boolean) {

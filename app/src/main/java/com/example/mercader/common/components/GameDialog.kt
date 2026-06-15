@@ -167,17 +167,7 @@ fun GameDetailDialog(
                         }
                     }
 
-                    // Botón cerrar
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Text(
-                            text = "?",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    BackButton(onClick = onDismiss)
                 }
 
                 // ? Columna Principal
