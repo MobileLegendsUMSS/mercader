@@ -59,6 +59,7 @@ sealed class AppScreen {
     object Reports      : AppScreen()
     object AdminPurchaseManagement : AppScreen()
     object AdminManageUsers : AppScreen()
+    object AdminAttributes : AppScreen()
 }
 
 @AndroidEntryPoint
@@ -183,6 +184,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToLoanManagement = { currentScreen = AppScreen.AdminLoanManagement },
                                 onNavigateToPurchases = { currentScreen = AppScreen.AdminPurchaseManagement },
                                 onNavigateToManageUsers = { currentScreen = AppScreen.AdminManageUsers },
+                                onNavigateToAttributes = { currentScreen = AppScreen.AdminAttributes },
                                 isSuperAdmin = rol == "superadmin"
                             )
                         }
@@ -316,6 +318,12 @@ class MainActivity : ComponentActivity() {
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }
+                            )
+                        }
+
+                        is AppScreen.AdminAttributes -> {
+                            com.example.mercader.ui.screens.admin.AdminAttributesScreen(
+                                onBack = { currentScreen = AppScreen.AdminHome }
                             )
                         }
                     }

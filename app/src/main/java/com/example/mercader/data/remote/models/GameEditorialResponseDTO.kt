@@ -10,7 +10,8 @@ data class GameEditorial(
 
 data class Editorial(
     val id: String,
-    val nombre: String
+    val nombre: String,
+    val pais: String = ""
 )
 data class GameEditorialResponseDTO<T>(
     val success: Boolean,

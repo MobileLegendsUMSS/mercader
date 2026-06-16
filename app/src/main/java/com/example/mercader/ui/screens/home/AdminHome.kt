@@ -24,6 +24,7 @@ fun AdminHome(
     onNavigateToReports: () -> Unit,
     onNavigateToPurchases: () -> Unit,
     onNavigateToManageUsers: () -> Unit,
+    onNavigateToAttributes: () -> Unit,
     isSuperAdmin: Boolean = false
 ) {
     var sidebarVisible by remember { mutableStateOf(false) }
@@ -128,6 +129,13 @@ fun AdminHome(
                         onClick = onNavigateToProfile
                     )
 
+                    GestionOption(
+                        emoji = "🏷️",
+                        title = "Categorías y Editoriales",
+                        description = "Gestionar categorías y editoriales del sistema",
+                        onClick = onNavigateToAttributes
+                    )
+
                     // Solo superadmin puede gestionar usuarios
                     if (isSuperAdmin) {
                         GestionOption(
@@ -173,6 +181,10 @@ fun AdminHome(
                     onNavigateToPurchases()
                 },
                 onManageUsers = onNavigateToManageUsers,
+                onAttributes = {
+                    sidebarVisible = false
+                    onNavigateToAttributes()
+                },
                 isSuperAdmin = isSuperAdmin
             )
         }

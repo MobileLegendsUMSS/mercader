@@ -23,6 +23,7 @@ fun SidebarMenu(
     onReport: () -> Unit,
     onPurchases: () -> Unit,
     onManageUsers: () -> Unit,
+    onAttributes: () -> Unit,
     isSuperAdmin: Boolean = false
 ) {
     Box(
@@ -71,6 +72,7 @@ fun SidebarMenu(
                 SidebarButton(text = "Gestión de Préstamos", onClick = onLoanManagement)
                 SidebarButton(text = "Estadisticas", onClick = onReport)
                 SidebarButton(text = "Gestión de Compras", onClick = onPurchases)
+                SidebarButton(text = "Categorías y Editoriales", onClick = onAttributes)
                 if (isSuperAdmin) {
                     SidebarButton(text = "Gestionar Usuarios", onClick = onManageUsers)
                 }
