@@ -24,6 +24,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.MultipartBody
 import android.net.Uri
+import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
+import kotlin.time.Duration.Companion.milliseconds
 
 class GameRepositoryImpl @Inject constructor(
     private val apiService: GameApiService,
@@ -444,4 +447,136 @@ class GameRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+
+    private fun getFileFromUri(uri: Uri): File? {
+        return try {
+            val contentResolver = context.contentResolver
+
+            // Verificar que el URI existe
+            val inputStream = contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                Log.e("GameRepository", "No se pudo abrir el stream para URI: $uri")
+                return null
+            }
+
+            // Obtener el nombre del archivo
+            val fileName = if (uri.scheme == "content") {
+                val cursor = contentResolver.query(uri, null, null, null, null)
+                cursor?.use {
+                    if (it.moveToFirst()) {
+                        val nameIndex = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (nameIndex != -1) it.getString(nameIndex) else "image_${System.currentTimeMillis()}.jpg"
+                    } else {
+                        "image_${System.currentTimeMillis()}.jpg"
+                    }
+                } ?: "image_${System.currentTimeMillis()}.jpg"
+            } else {
+                uri.path?.substringAfterLast("/") ?: "image_${System.currentTimeMillis()}.jpg"
+            }
+
+            // Crear archivo temporal
+            val tempFile = File(context.cacheDir, fileName)
+
+            // Copiar el archivo
+            inputStream.use { input ->
+                tempFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            // Verificar que el archivo se creó correctamente
+            if (tempFile.exists() && tempFile.length() > 0) {
+                Log.d("GameRepository", "✅ Archivo creado: ${tempFile.absolutePath}, tamaño: ${tempFile.length()} bytes")
+                tempFile
+            } else {
+                Log.e("GameRepository", "❌ Archivo vacío o no creado")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("GameRepository", "❌ Error al obtener archivo desde URI: ${e.message}")
+            e.printStackTrace()
+            null
+        }
+    }
+
+    // En GameRepositoryImpl.kt - updateGameImage
+    override suspend fun updateGameImage(
+        gameId: String,
+        imageUri: Uri,
+        fieldName: String ,
+        fieldValue: String
+    ): Result<Unit> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) {
+                return Result.failure(IOException("No hay conexión a internet"))
+            }
+
+            Log.d("GameRepository", "Subiendo imagen para juego $gameId")
+            Log.d("GameRepository", "URI: $imageUri")
+
+            val file = getFileFromUri(imageUri)
+            if (file == null) {
+                return Result.failure(Exception("No se pudo obtener el archivo de imagen"))
+            }
+
+            val mimeType = context.contentResolver.getType(imageUri)
+            if (mimeType != null && !mimeType.startsWith("image/")) {
+                return Result.failure(Exception("El archivo seleccionado no es una imagen válida."))
+            }
+
+            val mediaType = mimeType?.toMediaTypeOrNull() ?: "image/jpeg".toMediaTypeOrNull()
+            val requestBody = file.asRequestBody(mediaType)
+            val portadaPart = MultipartBody.Part.createFormData(
+                "portada",
+                file.name,
+                requestBody
+            )
+
+            Log.d("GameRepository", "Enviando imagen: ${file.name}, tamaño: ${file.length()} bytes")
+            Log.d("GameRepository", "fieldName: $fieldName, fieldValue: $fieldValue")
+
+
+            val filePart = MultipartBody.Part.createFormData(
+                "portada",
+                file.name,
+                file.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+            val correcto1 = fieldName.toRequestBody("text/plain".toMediaTypeOrNull())
+            val correcto2 = fieldValue.toRequestBody("text/plain".toMediaTypeOrNull())
+            // IMPORTANTE: Agregar timeout y manejar cancelación
+            val response = withTimeoutOrNull(60000L.milliseconds) {
+                apiService.updateGameWithImage(
+                    gameId = gameId,
+                    fieldName = correcto1,
+                    fieldValue = correcto2,
+                    portada = portadaPart
+                )
+            }
+
+            if (response == null) {
+                Log.e("GameRepository", "❌ Timeout - La solicitud tomó más de 60 segundos")
+                return Result.failure(Exception("Tiempo de espera agotado. Intenta con una imagen más pequeña."))
+            }
+
+            if (response.isSuccessful) {
+                Log.d("GameRepository", "✅ Imagen subida correctamente")
+                Result.success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = errorBody ?: "Error al subir la imagen (${response.code()})"
+                Log.e("GameRepository", "❌ Error al subir imagen: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: java.util.concurrent.CancellationException) {
+            Log.e("GameRepository", "❌ Solicitud cancelada: ${e.message}")
+            Result.failure(Exception("La operación fue cancelada. Intenta nuevamente."))
+        } catch (e: Exception) {
+            Log.e("GameRepository", "❌ Error inesperado al subir imagen: ${e.message}")
+            e.printStackTrace()
+            Result.failure(e)
+        }
+    }
+
+
 }
