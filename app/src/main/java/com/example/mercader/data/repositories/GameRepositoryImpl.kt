@@ -179,7 +179,7 @@ class GameRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 val gameEditorialResponse = response.body()
                 if (gameEditorialResponse != null && gameEditorialResponse.success) {
-                    val gameEditorials  = gameEditorialResponse.data.map {Editorial(it._id,it.nombre)  }
+                    val gameEditorials  = gameEditorialResponse.data.map {Editorial(it._id, it.nombre, it.pais ?: "")  }
                     Result.success(gameEditorials)
                 } else {
                     Result.failure(Exception("Error en la respuesta del servidor"))
@@ -190,6 +190,96 @@ class GameRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun createCategory(descripcion: String): Result<Category> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.createCategory(CreateCategoryDTO(descripcion))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    Result.success(Category(body.data._id, body.data.descripcion))
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al crear"))
+                }
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun updateCategory(id: String, descripcion: String): Result<Category> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.editCategory(id, CreateCategoryDTO(descripcion))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    Result.success(Category(body.data._id, body.data.descripcion))
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al actualizar"))
+                }
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun deleteCategory(id: String): Result<Unit> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.deleteCategory(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al eliminar"))
+                }
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun createEditorial(nombre: String, pais: String): Result<Editorial> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.createEditorial(CreateEditorialDTO(nombre, pais))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    Result.success(Editorial(body.data._id, body.data.nombre, body.data.pais ?: ""))
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al crear"))
+                }
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun updateEditorial(id: String, nombre: String, pais: String): Result<Editorial> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.editEditorial(id, CreateEditorialDTO(nombre, pais))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    Result.success(Editorial(body.data._id, body.data.nombre, body.data.pais ?: ""))
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al actualizar"))
+                }
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
+    }
+
+    override suspend fun deleteEditorial(id: String): Result<Unit> {
+        return try {
+            if (!networkHandler.isNetworkAvailable()) return Result.failure(IOException("No hay conexión"))
+            val response = apiService.deleteEditorial(id)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(body?.message ?: "Error al eliminar"))
+                }
+            } else Result.failure(HttpException(response))
+        } catch (e: Exception) { Result.failure(e) }
     }
 
     private fun mapResponseToGames(data: List<GameResponseDTO>?): List<Game> {
@@ -208,7 +298,7 @@ class GameRepositoryImpl @Inject constructor(
                 it.duracion_min ?: 30,
                 it.duracion_max ?: 60,
                 if (it.id_dificultad != null) Difficulty(it.id_dificultad._id, it.id_dificultad.descripcion) else Difficulty("", ""),
-                if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre) else Editorial("", ""),
+                if (it.id_editorial != null) Editorial(it.id_editorial._id, it.id_editorial.nombre, it.id_editorial.pais ?: "") else Editorial("", ""),
                 it.activo==true,
                 it.cantidad ?: 0,
                 it.precio ?: 0.0f,

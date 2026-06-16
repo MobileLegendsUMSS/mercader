@@ -28,11 +28,30 @@ interface GameApiService {
 
     @GET("categorias/")
     suspend fun getGameTypes(): Response<GameCategoryResponseDTO<List<GameCategory>>>
+
+    @POST("categorias/")
+    suspend fun createCategory(@Body category: CreateCategoryDTO): Response<GenericResponseDTO<GameCategory>>
+
+    @retrofit2.http.PATCH("categorias/{id}")
+    suspend fun editCategory(@retrofit2.http.Path("id") id: String, @Body category: CreateCategoryDTO): Response<GenericResponseDTO<GameCategory>>
+
+    @retrofit2.http.DELETE("categorias/{id}")
+    suspend fun deleteCategory(@retrofit2.http.Path("id") id: String): Response<GenericResponseDTO<Unit>>
+
     @GET("dificultades/")
     suspend fun getDifficulties(): Response<GameDifficultyResponseDTO<List<GameDifficulty>>>
 
     @GET("editoriales/")
     suspend fun getEditorials(): Response<GameEditorialResponseDTO<List<GameEditorial>>>
+
+    @POST("editoriales/")
+    suspend fun createEditorial(@Body editorial: CreateEditorialDTO): Response<GenericResponseDTO<GameEditorial>>
+
+    @retrofit2.http.PATCH("editoriales/{id}")
+    suspend fun editEditorial(@retrofit2.http.Path("id") id: String, @Body editorial: CreateEditorialDTO): Response<GenericResponseDTO<GameEditorial>>
+
+    @retrofit2.http.DELETE("editoriales/{id}")
+    suspend fun deleteEditorial(@retrofit2.http.Path("id") id: String): Response<GenericResponseDTO<Unit>>
 
     @GET("juegos/")
     suspend fun getGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>
