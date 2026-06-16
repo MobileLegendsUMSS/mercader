@@ -4,6 +4,8 @@ import com.example.mercader.data.remote.dto.DeleteGameRequestDto
 import com.example.mercader.data.remote.dto.DeleteGameResponseDto
 import com.example.mercader.data.remote.models.*
 import com.example.mercader.domain.models.Game
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -53,6 +55,15 @@ interface GameApiService {
         @Query("id") id: String,
         @Body body: DeleteGameRequestDto
     ) : DeleteGameResponseDto
+
+    @Multipart
+    @PATCH("juegos/")
+    suspend fun updateGameWithImage(
+        @Query("id_juego") gameId: String,
+        @Part("fieldName") fieldName: RequestBody,
+        @Part("fieldValue") fieldValue: RequestBody,
+        @Part portada: MultipartBody.Part
+    ): Response<Unit>
 
     @GET("juegos/sistema/recientes")
     suspend fun getRecentGames(): Response<AllGamesResponseDTO<List<GameResponseDTO>>>

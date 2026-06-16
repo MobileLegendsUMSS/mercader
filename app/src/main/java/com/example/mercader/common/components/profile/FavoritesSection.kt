@@ -1,5 +1,7 @@
 package com.example.mercader.common.components.profile
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,8 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.example.mercader.common.components.GameCard
 import com.example.mercader.common.components.GameDetailDialog
 import com.example.mercader.common.utils.CartManager
@@ -47,7 +51,7 @@ import com.example.mercader.ui.screens.profile.ProfileViewModel
 ) {
     var currentPage by remember { mutableStateOf(0) }
     var selectedGame by remember { mutableStateOf<Game?>(null) }
-
+    val context = LocalContext.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -172,7 +176,16 @@ import com.example.mercader.ui.screens.profile.ProfileViewModel
                 selectedGame = null
                 viewModel.loadFavorites()
             },
-            //isAdmin=false
+            onTutorial = {
+                try {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(game.tutorial)
+                    )
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                }
+            }
         )
     }
 }

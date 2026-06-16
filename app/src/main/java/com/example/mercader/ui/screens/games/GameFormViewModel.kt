@@ -116,7 +116,8 @@ class GameFormViewModel @Inject constructor(
             editorials = _state.value.editorials,
             isPurchaseAvailable=game.isPurchaseAvailable,
             isLoanAvailable = game.isLoanAvailable,
-            isRentAvailable = game.isRentAvailable
+            isRentAvailable = game.isRentAvailable,
+            imageUri = null
         )
 
         // Guardar el estado original para comparar cambios
@@ -189,6 +190,8 @@ class GameFormViewModel @Inject constructor(
     fun updateImageUri(uri: android.net.Uri?) {
         _state.update { it.copy(imageUri = uri) }
     }
+
+    // En GameFormViewModel.kt
     fun saveGame() {
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, errorMessage = null) }
@@ -204,7 +207,7 @@ class GameFormViewModel @Inject constructor(
                     }
                     return@launch
                 }
-                
+
                 if (currentState.category.id.isEmpty() || currentState.difficulty.id.isEmpty() || currentState.editorial.id.isEmpty()) {
                     _state.update {
                         it.copy(
@@ -226,13 +229,31 @@ class GameFormViewModel @Inject constructor(
                 }
 
                 val result = if (isEditMode) {
-                    val updatedFields = getUpdatedFields()
-                    if (updatedFields.isNotEmpty()) {
-                        gameRepository.updateGamePartial(currentState.id, updatedFields)
+                    // Si hay imagen nueva, subirla primero con los campos actuales
+                    var imageResult = Result.success(Unit)
+                    if (currentState.imageUri != null && currentState.imageUri != originalState?.imageUri) {
+
+                        imageResult = gameRepository.updateGameImage(
+                            gameId = currentState.id,
+                            imageUri = currentState.imageUri,
+                            fieldName = "titulo",
+                            fieldValue = currentState.title
+                        )
+                    }
+
+                    // Si la imagen se subió bien o no había imagen nueva, actualizar el resto
+                    if (imageResult.isSuccess) {
+                        val updatedFields = getUpdatedFields()
+                        if (updatedFields.isNotEmpty()) {
+                            gameRepository.updateGamePartial(currentState.id, updatedFields)
+                        } else {
+                            Result.success(Unit)
+                        }
                     } else {
-                        Result.success(Unit)
+                        imageResult
                     }
                 } else {
+                    // Para crear nuevo juego
                     val game = createFullGame(currentState)
                     gameRepository.saveGame(game)
                 }

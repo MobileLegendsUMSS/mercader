@@ -1,6 +1,9 @@
 // ui/screens/games/CollectionScreen.kt
 package com.example.mercader.ui.screens.games
 
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -13,8 +16,10 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import com.example.mercader.common.components.BackButton
 import com.example.mercader.common.components.GameCard
 import com.example.mercader.common.components.GameDetailDialog
@@ -25,7 +30,9 @@ import com.example.mercader.common.utils.GameFilter
 import com.example.mercader.common.utils.CartManager
 import com.example.mercader.common.utils.ReserveManager
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.core.net.toUri
 
+@SuppressLint("QueryPermissionsNeeded")
 @Composable
 fun CollectionScreen(
     viewModel: CollectionViewModel,
@@ -44,6 +51,7 @@ fun CollectionScreen(
     var selectedGame by remember { mutableStateOf<Game?>(null) }
     var searchQuery by remember { mutableStateOf(initialSearchQuery) }
     val favoriteViewModel: FavoriteViewModel = hiltViewModel()
+    val context = LocalContext.current
     LaunchedEffect(initialFilters) {
         if (initialFilters != null && GameFilter.hasActiveFilters(initialFilters)) {
             viewModel.updateFilters(initialFilters)
@@ -204,6 +212,16 @@ fun CollectionScreen(
                 selectedGame = null
                 favoriteViewModel.loadFavorites()
             },
+            onTutorial = {
+                try {
+                    val intent = Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse(game.tutorial)
+                    )
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                }
+            },
             onEditGame = { gameToEdit ->
                 selectedGame = null
                 onEditGame?.invoke(gameToEdit)
@@ -214,7 +232,6 @@ fun CollectionScreen(
                 selectedGame = null
                 onNavigateToReviews?.invoke(gameForReviews)
             },
-            //isAdmin = isAdmin
         )
     }
 }

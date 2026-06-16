@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 fun GameDetailDialog(
     game: Game,
     onDismiss: () -> Unit,
-    onTutorial: () -> Unit = {},
+    onTutorial: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: DeleteViewModel = hiltViewModel(),
     favoriteViewModel: FavoriteViewModel = hiltViewModel(),
@@ -219,8 +219,12 @@ fun GameDetailDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SecondaryButton(
+
                             text = "\uD83D\uDD17 Tutorial",
-                            onClick = onTutorial,
+                            onClick = {
+                                Log.d("TUTORIAL", "BOTON PRESIONADO")
+                                onTutorial()
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp)
@@ -366,7 +370,7 @@ fun GameDetailDialog(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             SecondaryButton(
-                                text = "✏\uFE0FEditar Juego",
+                                text = "Editar Juego",
                                 onClick = {
                                     onEditGame?.invoke(game)
                                     onDismiss()
@@ -374,15 +378,11 @@ fun GameDetailDialog(
                                 modifier = Modifier.weight(1f)
                             )
 
-                            Button(
-                                onClick = { showDeleteConfirmation = true },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Text("\uD83D\uDDD1\uFE0F Eliminar")
-                            }
+                            SecondaryButton(
+                                text = "Retirar Juego",
+                                onClick = { showModal = true },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     } else {
                         // ? MODO USUARIO: Botones de Retirar y Préstamo
@@ -390,11 +390,6 @@ fun GameDetailDialog(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            SecondaryButton(
-                                text = "Retirar Juego",
-                                onClick = { showModal = true },
-                                modifier = Modifier.weight(1f)
-                            )
 
                             // Botón Solicitar Préstamo con validación de disponibilidad (de dev)
                             Button(
